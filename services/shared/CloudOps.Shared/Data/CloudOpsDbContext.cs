@@ -48,28 +48,6 @@ public class CloudOpsDbContext : DbContext
 
     private static void SeedData(ModelBuilder modelBuilder)
     {
-        var projectId = Guid.Parse("11111111-1111-1111-1111-111111111111");
-        var envId = Guid.Parse("22222222-2222-2222-2222-222222222222");
-
-        modelBuilder.Entity<Project>().HasData(new
-        {
-            Id = projectId,
-            Name = "Demo Project",
-            Description = "Sample project for CloudOps Control Plane",
-            CreatedAt = DateTime.UtcNow,
-            TeamsWebhookUrl = (string?)null,
-            EmailRecipients = "[\"admin@example.com\"]"
-        });
-
-        modelBuilder.Entity<Models.Environment>().HasData(new
-        {
-            Id = envId,
-            ProjectId = projectId,
-            Name = "Development",
-            Type = "dev",
-            CreatedAt = DateTime.UtcNow,
-            TtlMinutes = (int?)null,
-            ExpiresAt = (DateTime?)null
-        });
+        // Seed data removed - will be added via API endpoints
     }
 }

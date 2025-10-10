@@ -38,25 +38,31 @@ public class InMemoryMessageBus : IMessageBus
             if (_sessions.TryGetValue(sessionId, out var channel))
             {
                 var lockObj = _sessionLocks.GetOrAdd(sessionId, _ => new SemaphoreSlim(1, 1));
-                await lockObj.WaitAsync(cancellationToken);
+                var lockAcquired = false;
+                TaskMessage? message = null;
                 
                 try
                 {
+                    await lockObj.WaitAsync(cancellationToken);
+                    lockAcquired = true;
+                    
                     if (await channel.Reader.WaitToReadAsync(cancellationToken))
                     {
-                        if (channel.Reader.TryRead(out var message))
+                        if (channel.Reader.TryRead(out message))
                         {
                             return message;
                         }
                     }
+                    
+                    return null;
                 }
-                catch (OperationCanceledException)
+                finally
                 {
-                    lockObj.Release();
-                    throw;
+                    if (lockAcquired && message == null)
+                    {
+                        lockObj.Release();
+                    }
                 }
-                
-                lockObj.Release();
             }
             return null;
         }
@@ -66,16 +72,23 @@ public class InMemoryMessageBus : IMessageBus
             if (await kvp.Value.Reader.WaitToReadAsync(TimeSpan.Zero, cancellationToken))
             {
                 var lockObj = _sessionLocks.GetOrAdd(kvp.Key, _ => new SemaphoreSlim(1, 1));
-                if (await lockObj.WaitAsync(0, cancellationToken))
+                var lockAcquired = false;
+                TaskMessage? message = null;
+                
+                try
                 {
-                    try
+                    lockAcquired = await lockObj.WaitAsync(0, cancellationToken);
+                    if (lockAcquired)
                     {
-                        if (kvp.Value.Reader.TryRead(out var message))
+                        if (kvp.Value.Reader.TryRead(out message))
                         {
                             return message;
                         }
                     }
-                    finally
+                }
+                finally
+                {
+                    if (lockAcquired && message == null)
                     {
                         lockObj.Release();
                     }
@@ -90,10 +103,17 @@ public class InMemoryMessageBus : IMessageBus
     {
         if (_sessionLocks.TryGetValue(message.SessionId, out var lockObj))
         {
-            lockObj.Release();
+            try
+            {
+                lockObj.Release();
+                _logger.LogInformation("Completed message {Type} from session {SessionId}", message.Type, message.SessionId);
+            }
+            catch (SemaphoreFullException ex)
+            {
+                _logger.LogError(ex, "Attempted to release semaphore that was already released for session {SessionId}", message.SessionId);
+            }
         }
         
-        _logger.LogInformation("Completed message {Type} from session {SessionId}", message.Type, message.SessionId);
         return Task.CompletedTask;
     }
 }

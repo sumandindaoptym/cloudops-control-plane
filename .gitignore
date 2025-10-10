@@ -32,6 +32,8 @@ dist/
 data/artifacts/*
 data/backups/*
 data/platform/*
+services/api/CloudOps.Api/data/artifacts/*
+services/api/CloudOps.Api/data/backups/*
 !data/artifacts/.gitkeep
 !data/backups/.gitkeep
 !data/platform/.gitkeep

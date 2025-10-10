@@ -27,6 +27,7 @@ builder.Services.AddDbContext<CloudOpsDbContext>(options =>
 });
 
 builder.Services.AddSingleton<IMessageBus, InMemoryMessageBus>();
+builder.Services.AddHostedService<CloudOps.Api.TaskWorker>();
 builder.Services.AddSignalR();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
