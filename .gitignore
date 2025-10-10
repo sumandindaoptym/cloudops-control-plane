@@ -1,0 +1,53 @@
+# .NET
+bin/
+obj/
+*.user
+*.suo
+*.cache
+*.dll
+*.nupkg
+*.snupkg
+*.log
+*.vsidx
+*.v2
+.vs/
+
+# Node.js
+node_modules/
+.pnp/
+.pnp.js
+.next/
+out/
+build/
+dist/
+
+# Environment
+.env
+.env*.local
+*.db
+*.db-shm
+*.db-wal
+
+# Data directories
+data/artifacts/*
+data/backups/*
+data/platform/*
+!data/artifacts/.gitkeep
+!data/backups/.gitkeep
+!data/platform/.gitkeep
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Replit
+.config/
+.cache/
+.upm/
