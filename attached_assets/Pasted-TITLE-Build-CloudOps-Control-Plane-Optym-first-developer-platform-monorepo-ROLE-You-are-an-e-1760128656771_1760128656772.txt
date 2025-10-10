@@ -1,0 +1,168 @@
+TITLE: Build "CloudOps Control Plane" – Optym-first developer platform (monorepo)
+
+ROLE
+You are an expert full‑stack engineer (TypeScript/React + .NET 8) and DevOps architect. Generate a production‑grade, test‑covered **monorepo** that implements the **MVP slice** of a CloudOps control plane with: queue‑based task orchestration (sequential per resource), one‑click deployment (demo), sandbox envs, DB backup/restore stubs for Azure Postgres & Azure SQL, pod restart, real‑time task updates, and notifications (Microsoft Teams + email). Optimize for fast load times, high concurrency, and safe async processing. Target **Azure** in production, but run in **Replit** with **demo mode** and mock adapters.
+
+SCOPE & DELIVERABLES
+1) Monorepo structure with reproducible local dev in Replit:
+   - `replit.nix` to install Node.js (latest LTS), pnpm, .NET SDK 9.x
+   - `.replit` to start the dev environment via a single `bash` script that runs web, API, and worker
+   - `scripts/dev.sh` that concurrently runs:
+       - Next.js web on port 3000
+       - ASP.NET Core API on port 5056
+       - ASP.NET Core Worker on port 5057
+   - `README.md` with quickstart and env var matrix
+   - `docs/architecture.md` with an ASCII architecture diagram, queue/notification flows, and sequence diagrams
+   - `Makefile` (or `justfile`) with targets: `install`, `dev`, `lint`, `test`, `seed`, `build`
+
+2) Tech stack (exact choices):
+   - **Frontend:** Next.js (App Router, TypeScript), Tailwind, TanStack Query, Azure AD (OIDC) stub in demo mode; SignalR client for real‑time task updates; Use IOS 26 liquid glass reference for UI kits, inputs and others.
+   - **Backend API:** ASP.NET Core 9 minimal APIs; OpenAPI (Swashbuckle); Serilog; FluentValidation; MediatR
+   - **Worker/Orchestration:** ASP.NET Core Worker Service using Azure Service Bus (prod) with **Session‑based** processing (FIFO per `sessionId`) and an **in‑memory queue** fallback (demo)
+   - **Real‑time:** SignalR (Azure SignalR compatible); server pushes step updates/logs
+   - **Data:** EF Core with **SQLite** in demo/dev and **PostgreSQL** in prod; Redis optional (not required for Replit)
+   - **Secrets:** .env + typed options; Azure Key Vault adapter (stubbed)
+   - **Notifications:** Microsoft Teams via Incoming Webhook (prod & demo) + Email via SendGrid (prod) and Console (demo)
+   - **Observability:** OpenTelemetry (traces/metrics/logs) to console in demo; structure ready for Azure App Insights in prod
+
+3) Domain & features (minimum MVP):
+   - AuthN/AuthZ: Email‑less demo auth (mock user) + pluggable Azure Entra ID OIDC provider (disabled by default)
+   - Projects & Environments: CRUD; env has `envId`, `name`, `type` (sandbox/dev/stage/prod), `ttl` for sandbox
+   - Tasks: `Task` aggregate with `id`, `type`, `status`, `createdAt`, `updatedAt`, `entityId`, `correlationId`, `steps[]`
+   - **Queue orchestration:** 
+       - API enqueues commands as messages with `sessionId = entityId` for **sequential per‑entity** processing
+       - Worker pulls with **max concurrent sessions**, honoring per‑session FIFO
+       - Status updates streamed to clients via SignalR; persisted to DB
+       - Idempotency keys supported (unique constraint + Redis/Memory cache fallback)
+       - Retries with exponential backoff; DLQ table for demo (visualize & retry)
+   - **One‑click deployment (demo flow):** Simulate Helm/Terraform by running a 3‑step orchestrated job:
+       1) Validate inputs
+       2) "Plan" (generate and store a fake plan file in `./data/artifacts`)
+       3) "Apply" (sleep, emit logs, and mark success/failure)
+     Provide extension points for real Azure (commented code + interfaces).
+   - **Sandbox environments:** Create ephemeral env records with TTL; worker job to auto‑expire and emit a notification
+   - **DB backup/restore stubs:**
+       - Engines: `azure-postgres`, `azure-sql`
+       - Backup: create artifact metadata + simulate streaming to Blob (write file to `./data/backups`)
+       - Restore: validate artifact, simulate import, emit steps; include interfaces for real `pg_dump/pg_restore` and `SqlPackage`
+   - **Restart pods:** Use Kubernetes client interface; demo adapter simulates K8s API; design a real adapter that would use official .NET K8s client when `KUBECONFIG` is present
+   - **Cost estimator (MVP):** Accept a simple resource list (CPU/mem/storage), return a computed monthly estimate using static sample pricing JSON in repo; interface for Azure Retail Prices API later
+   - **Notifications:** 
+       - Teams: send an Adaptive Card (title, task type, status, duration, deep link)
+       - Email: simple HTML summary
+     Notification preferences stored at project level: `teamsWebhookUrl?`, `emailList[]`
+   - **Dashboard (web):**
+       - Home: cards for projects/envs, current queue depth, recent tasks
+       - Task list & details: live step stream, logs, retry/cancel (cancel simulated)
+       - “Run” buttons: One‑click deploy, Backup DB, Restore DB, Restart Pods, Create Sandbox
+       - Settings: notification routes, demo auth toggle
+
+4) APIs (document in OpenAPI and README):
+   - `POST /api/deployments` { projectId, envId, templateId, params } → returns { taskId }
+   - `POST /api/db/{engine}/{instanceId}/backup` → { taskId }
+   - `POST /api/db/{engine}/{instanceId}/restore` { artifactId, target } → { taskId }
+   - `POST /api/k8s/workloads/{ns}/{name}:restart` → { taskId }
+   - `POST /api/sandboxes` { projectId, ttlMinutes } → { taskId }
+   - `GET  /api/tasks/{id}` → details + steps
+   - `GET  /api/tasks/stream/{id}` → SignalR hub route docs; also provide `GET /api/tasks/{id}/sse` fallback
+   - `POST /api/notifications/test` → test Teams + email with current settings
+   - `GET  /api/cost/estimate` → accepts basic query or JSON body with resource plan
+
+5) Non‑functional requirements:
+   - Latency: P95 < 200 ms for read endpoints (demo)
+   - Concurrency: Worker supports configurable `MAX_CONCURRENT_SESSIONS` and `MAX_MESSAGES_PER_SESSION`
+   - Reliability: retries with jitter; DLQ table with admin UI to retry/skip
+   - Security: role‑based guards in API (demo roles: viewer, operator, admin); input validation everywhere
+   - Tests: unit tests for queue orchestration and notification formatting; a couple of API integration tests
+   - Lint/format: ESLint/Prettier for web; `dotnet format` & analyzers for C#
+   - CI (local): GitHub Actions yaml stub included in `./.github/workflows/ci.yml`
+
+ARCHITECTURE NOTES (mirror these in docs)
+- **API** receives request → validates → creates Task row (idempotency) → publishes message `{type, entityId, payload}` to **MessageBus**.
+- **MessageBus**: 
+   - **Production:** Azure Service Bus Queue with **Sessions** (`sessionId=entityId`) for FIFO per resource.
+   - **Demo:** In‑memory keyed FIFO with an async processor ensuring one active consumer per `sessionId`.
+- **Worker** locks a session and runs an orchestration pipeline:
+   - Persist step start/stop, logs; periodically send SignalR updates
+   - On completion/failure → emit Notification events
+- **Notifications Service**:
+   - Teams Webhook POST of an Adaptive Card
+   - Email via SendGrid (prod) or console (demo); rate‑limit to avoid spam
+- **Real‑time:** SignalR hub `/hubs/tasks` pushes `{taskId, step, status, message, percent}`
+
+CODE ORGANIZATION
+- `/web` — Next.js app
+  - Routes: `/`, `/projects`, `/tasks`, `/tasks/[id]`, `/settings`
+  - Components: `TaskTimeline`, `LiveLogs`, `ActionButtons`, `CostEstimatorForm`
+  - Client: `signalr.ts` handles hub connection & reconnection
+- `/services/api` — ASP.NET Core minimal API
+  - Folders: `Contracts`, `Endpoints`, `Domain`, `Infrastructure`, `Notifications`, `Auth`, `Validation`
+  - Expose OpenAPI; use EF Core with SQLite by default
+- `/services/worker` — ASP.NET Core Worker Service
+  - Folders: `Handlers` (Deploy, DbBackup, DbRestore, RestartPods, Sandbox), `Bus`, `Orchestration`, `Adapters` (K8s, Azure, Storage), `Notifications`
+  - Implement `IMessageBus` with two providers: `AzureServiceBusMessageBus` and `InMemoryMessageBus`
+  - Implement `IArtifactStore` writing to `./data/*` in demo and Azure Blob adapter stub
+- `/libs/shared` — shared DTOs and domain events
+- `/tests` — xUnit for .NET and Vitest/Playwright for web
+
+ENV VARS & FEATURE FLAGS (document in README)
+- `DEMO_MODE=true` (default in Replit) → use SQLite, InMemoryMessageBus, console email, Teams webhook optional
+- `PLATFORM_DB_CONN` (Postgres Npgsql) or auto‑fallback to `Data Source=./data/platform.db` (SQLite)
+- `AZURE_SERVICEBUS_CONNECTION_STRING` (enables real queue)
+- `TEAMS_WEBHOOK_URL` (demo & prod)
+- `SENDGRID_API_KEY` (prod email)
+- `AZURE_TENANT_ID`, `AZURE_CLIENT_ID`, `AZURE_CLIENT_SECRET` (for future Graph/KeyVault)
+- `KUBECONFIG` (optional; if present, enable real K8s adapter)
+- `MAX_CONCURRENT_SESSIONS`, `MAX_MESSAGES_PER_SESSION` (worker tuning)
+
+REPLIT INTEGRATION
+- Create `replit.nix` that installs: `nodejs`, `pnpm`, `dotnet-sdk`, `bash`
+- Create `.replit` to run: `bash -lc "chmod +x scripts/dev.sh && scripts/dev.sh"`
+- `scripts/dev.sh` should:
+   - `pnpm -C web install && pnpm -C web dev` (port 3000)
+   - `dotnet restore ./services/api && dotnet watch --project ./services/api`
+   - `dotnet restore ./services/worker && dotnet watch --project ./services/worker`
+   (Run the API and worker in the background, print their URLs, and keep the web process in foreground)
+
+UX REQUIREMENTS
+- Navbar with quick actions (deploy, backup, restore, restart pods)
+- Task details page with:
+   - header (status chip, duration, entityId)
+   - **live timeline** (step cards with timestamps)
+   - **live logs** (autoscroll; capped buffer)
+   - retry/cancel buttons (cancel is simulated)
+- Settings page for Teams webhook & email recipients; include a “Send test notification” action
+
+QUALITY & TESTS
+- Add unit tests for:
+   - InMemoryMessageBus sequential per‑session behavior (prove no parallel step executions for the same `entityId`)
+   - Retry/backoff behavior
+   - Teams Adaptive Card payload generation
+- Add API integration tests for: create task → stream updates → completion
+
+ACCEPTANCE CRITERIA (Definition of Done)
+- `pnpm install` + `dotnet restore` succeed in Replit; `Run` starts web on 3000 and API/worker in background
+- Visiting `/` shows dashboard with sample data
+- Clicking “One‑click deploy (demo)” creates a task and streams live updates to the UI
+- Creating a sandbox with TTL creates a task and marks it for auto‑expiry
+- Backup/Restore and Restart Pods actions create tasks and show simulated steps
+- If `TEAMS_WEBHOOK_URL` is set, completing a task posts a card to Teams
+- OpenAPI is reachable at `/swagger`
+- `docs/architecture.md` exists with an ASCII diagram matching the blueprint
+
+NICE‑TO‑HAVE (if time allows; keep behind flags)
+- SSE fallback for environments without websockets
+- Basic RBAC roles and guard middleware
+- Cost estimator form with a local sample pricing JSON
+
+IMPLEMENTATION NOTES
+- Keep external calls behind interfaces with **Demo** and **Azure** implementations
+- Use **Service Bus Sessions** concepts even in demo (model the API and data)
+- Ensure **idempotency**: accept `Idempotency-Key` header on mutating endpoints
+- Use **OpenTelemetry**; export to console in demo
+- Prefer **async streams** for log/step pushes; keep memory bounded
+- Clean error messages; map to actionable hints in the UI
+
+OUTPUT
+- Generate the full codebase, config files, and docs described above.
+- At the end, print concise “Run in Replit” instructions with any required env vars.
