@@ -1,36 +1,40 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { apiFetch, API_URL } from '@/lib/api';
 
 export default function Home() {
   const [health, setHealth] = useState<any>(null);
   const [projects, setProjects] = useState<any[]>([]);
+  const [apiUrl, setApiUrl] = useState<string>('');
 
   useEffect(() => {
-    fetch('http://localhost:5056/api/health')
-      .then(r => r.json())
+    setApiUrl(API_URL);
+    
+    apiFetch('/health')
       .then(setHealth)
       .catch(console.error);
 
-    fetch('http://localhost:5056/api/projects')
-      .then(r => r.json())
+    apiFetch('/projects')
       .then(setProjects)
       .catch(console.error);
   }, []);
 
   const triggerDeploy = async () => {
-    const res = await fetch('http://localhost:5056/api/deployments', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        projectId: '11111111-1111-1111-1111-111111111111',
-        envId: '22222222-2222-2222-2222-222222222222',
-        templateId: 'demo-template',
-        parameters: {}
-      })
-    });
-    const data = await res.json();
-    alert(`Task created: ${data.taskId}`);
+    try {
+      const data = await apiFetch('/deployments', {
+        method: 'POST',
+        body: JSON.stringify({
+          projectId: '11111111-1111-1111-1111-111111111111',
+          envId: '22222222-2222-2222-2222-222222222222',
+          templateId: 'demo-template',
+          parameters: {}
+        })
+      });
+      alert(`Task created: ${data.taskId}`);
+    } catch (error) {
+      alert(`Error: ${error}`);
+    }
   };
 
   return (
@@ -99,7 +103,7 @@ export default function Home() {
         </div>
 
         <div className="mt-8 text-center text-slate-500 text-sm">
-          <p>API: <a href="http://localhost:5056/swagger" target="_blank" className="text-blue-400 hover:underline">http://localhost:5056/swagger</a></p>
+          <p>API: <a href={`${apiUrl}/swagger`} target="_blank" className="text-blue-400 hover:underline">{apiUrl}/swagger</a></p>
         </div>
       </div>
     </div>
