@@ -13,7 +13,7 @@ export default function DashboardNav({ user }: DashboardNavProps) {
       <div className="max-w-7xl mx-auto px-6 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-8">
-            <span className="text-2xl font-bold" style={{ color: 'var(--foreground)' }}>optym</span>
+            <img src="/optym-logo.png" alt="Optym" className="h-8" />
             <span className="text-xl" style={{ color: 'var(--foreground)' }}>CloudOps</span>
           </div>
 

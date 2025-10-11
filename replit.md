@@ -43,7 +43,7 @@ Enterprise CloudOps Control Plane - Optym's first developer platform monorepo wi
      - All components use var(--color-name) - zero hardcoded colors
      - Variables exposed via @theme inline for Tailwind integration
    - **Landing Page**:
-     - Navigation header with "optym" and "CloudOps" branding
+     - Navigation header with Optym logo image and "CloudOps" branding
      - Hero section with large heading and description
      - 4 feature cards with cyan icons (One-Click Deploy, Task Tracking, Real-time Analytics, Secure Access)
      - CTA section with "Start Managing Resources" button
@@ -236,6 +236,11 @@ curl -X POST http://localhost:5056/api/deployments \
 
 ## Development History
 - **October 11, 2025** (Latest):
+  - Integrated Optym brand logo (two-color: blue arc + white text) in navigation
+  - Logo displays on both landing page and dashboard header
+  - Logo stored in web/public/optym-logo.png for optimal Next.js asset handling
+  
+- **October 11, 2025** (Earlier):
   - Implemented comprehensive CSS custom property system with exact HSL color codes
   - Created translucent badge variants using modern CSS syntax: hsl(204 100% 59% / 0.2)
   - Updated all components to use CSS variables exclusively (zero hardcoded colors)
