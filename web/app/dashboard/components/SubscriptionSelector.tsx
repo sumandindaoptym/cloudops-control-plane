@@ -21,6 +21,14 @@ export default function SubscriptionSelector() {
         const sessionResponse = await fetch('/api/auth/session');
         const session = await sessionResponse.json();
         
+        // Check if token refresh failed
+        if (session?.error === 'RefreshAccessTokenError') {
+          console.error('Session expired. Please sign in again.');
+          // Optionally trigger sign-in
+          window.location.href = '/api/auth/signin';
+          return;
+        }
+        
         if (!session?.accessToken) {
           throw new Error('No access token available');
         }
@@ -33,6 +41,12 @@ export default function SubscriptionSelector() {
         });
         
         if (!response.ok) {
+          // If unauthorized, trigger re-authentication
+          if (response.status === 401) {
+            console.error('Token expired. Please sign in again.');
+            window.location.href = '/api/auth/signin';
+            return;
+          }
           throw new Error('Failed to fetch subscriptions');
         }
         

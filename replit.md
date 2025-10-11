@@ -239,13 +239,17 @@ curl -X POST http://localhost:5056/api/deployments \
 - **October 11, 2025** (Latest):
   - Implemented Azure subscription fetching using **user's access token** (not service principal)
   - Updated NextAuth to request Azure Resource Manager scope (`https://management.azure.com/user_impersonation`)
+  - Added `offline_access` scope for refresh token support
+  - Implemented **automatic token refresh** to prevent expiration errors
   - Created custom `AccessTokenCredential` class to use user's Azure AD token
   - Frontend passes user's access token to backend API via Authorization header
   - Backend uses user's token to fetch subscriptions they have access to
   - Dashboard displays Azure subscriptions based on **logged-in user's RBAC permissions**
+  - Graceful error handling: redirects to sign-in if token refresh fails
   - Selection persists in localStorage for user convenience
   
   **Note**: The user will see only subscriptions where they have at least Reader role
+  **Important**: Users must sign out and sign in again to get refresh tokens (after adding offline_access scope)
   
 - **October 11, 2025** (Earlier):
   - Updated landing page UX: removed top-right sign-in button, simplified navigation

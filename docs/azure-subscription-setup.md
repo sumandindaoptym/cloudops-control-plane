@@ -46,13 +46,25 @@ Each user needs appropriate Azure RBAC roles on subscriptions:
 - Works with any Azure RBAC role (Reader, Contributor, Owner, etc.)
 
 ### 3. **NextAuth Configuration**
-The auth configuration requests the Azure Resource Manager scope:
+The auth configuration requests the Azure Resource Manager scope with refresh token support:
 
 ```typescript
-scope: 'openid profile email User.Read https://management.azure.com/user_impersonation'
+scope: 'openid profile email User.Read https://management.azure.com/user_impersonation offline_access'
+prompt: 'consent'
 ```
 
-This allows the user's access token to be used for Azure Resource Manager API calls.
+**Scopes Explained:**
+- `openid profile email`: Basic user info
+- `User.Read`: Microsoft Graph API access
+- `https://management.azure.com/user_impersonation`: Azure Resource Manager delegated access
+- `offline_access`: Enables refresh tokens for automatic token renewal
+
+### 4. **Token Refresh**
+The implementation includes automatic token refresh:
+- Access tokens are automatically refreshed before expiration
+- No user interruption when tokens expire
+- Graceful fallback: redirects to sign-in if refresh fails
+- Refresh tokens stored securely in JWT session
 
 ## How It Works
 
