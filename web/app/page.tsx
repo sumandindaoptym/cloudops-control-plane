@@ -4,76 +4,110 @@ import { signIn } from 'next-auth/react';
 
 export default function LandingPage() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-blue-950 to-slate-950 flex items-center justify-center p-8">
-      <div className="max-w-4xl w-full">
-        {/* Hero Section */}
-        <div className="text-center mb-12">
-          <h1 className="text-6xl font-bold mb-6 text-white">
-            CloudOps Control Plane
-          </h1>
-          <p className="text-2xl text-slate-300 mb-4">
-            Enterprise Developer Platform
-          </p>
-          <p className="text-lg text-slate-400 max-w-2xl mx-auto">
-            Streamline your cloud operations with queue-based task orchestration,
-            real-time updates, and one-click deployments.
-          </p>
+    <div className="min-h-screen bg-slate-900">
+      {/* Navigation */}
+      <nav className="border-b border-slate-800">
+        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-8">
+            <div className="flex items-center gap-3">
+              <span className="text-2xl font-bold text-white">optym</span>
+            </div>
+            <span className="text-xl text-white">CloudOps</span>
+          </div>
+          <button
+            onClick={() => signIn('azure-ad', { callbackUrl: '/dashboard' })}
+            className="px-6 py-2 bg-cyan-500 hover:bg-cyan-600 text-white font-medium rounded-lg transition-colors"
+          >
+            Sign In
+          </button>
         </div>
+      </nav>
 
-        {/* Features Grid */}
-        <div className="grid md:grid-cols-3 gap-6 mb-12">
-          <div className="bg-slate-800/50 backdrop-blur border border-slate-700 rounded-lg p-6">
-            <div className="text-3xl mb-3">🚀</div>
-            <h3 className="text-lg font-semibold text-white mb-2">One-Click Deploy</h3>
+      {/* Hero Section */}
+      <div className="max-w-5xl mx-auto px-6 pt-24 pb-16 text-center">
+        <h1 className="text-6xl font-bold text-white mb-6">
+          CloudOps
+        </h1>
+        <p className="text-xl text-slate-400 mb-10 max-w-3xl mx-auto">
+          Comprehensive organizational management platform for teams and projects. Track
+          allocations, manage resources, and drive operational excellence.
+        </p>
+        <button
+          onClick={() => signIn('azure-ad', { callbackUrl: '/dashboard' })}
+          className="px-8 py-3 bg-cyan-500 hover:bg-cyan-600 text-white font-medium rounded-lg transition-colors text-lg"
+        >
+          Get Started
+        </button>
+      </div>
+
+      {/* Features Grid */}
+      <div className="max-w-7xl mx-auto px-6 py-16">
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-8 text-center">
+            <div className="w-16 h-16 mx-auto mb-6 flex items-center justify-center">
+              <svg className="w-12 h-12 text-cyan-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+              </svg>
+            </div>
+            <h3 className="text-xl font-bold text-white mb-3">One-Click Deploy</h3>
             <p className="text-slate-400 text-sm">
               Deploy applications with a single click using automated workflows
             </p>
           </div>
 
-          <div className="bg-slate-800/50 backdrop-blur border border-slate-700 rounded-lg p-6">
-            <div className="text-3xl mb-3">📊</div>
-            <h3 className="text-lg font-semibold text-white mb-2">Real-Time Updates</h3>
+          <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-8 text-center">
+            <div className="w-16 h-16 mx-auto mb-6 flex items-center justify-center">
+              <svg className="w-12 h-12 text-cyan-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+            </div>
+            <h3 className="text-xl font-bold text-white mb-3">Task Tracking</h3>
             <p className="text-slate-400 text-sm">
-              Monitor task progress with live updates via SignalR
+              Track time allocation month-over-month with automatic validation to prevent over-allocation
             </p>
           </div>
 
-          <div className="bg-slate-800/50 backdrop-blur border border-slate-700 rounded-lg p-6">
-            <div className="text-3xl mb-3">🔄</div>
-            <h3 className="text-lg font-semibold text-white mb-2">Task Orchestration</h3>
+          <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-8 text-center">
+            <div className="w-16 h-16 mx-auto mb-6 flex items-center justify-center">
+              <svg className="w-12 h-12 text-cyan-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+              </svg>
+            </div>
+            <h3 className="text-xl font-bold text-white mb-3">Real-time Analytics</h3>
             <p className="text-slate-400 text-sm">
-              FIFO queue-based processing ensures reliable execution
+              Get insights into resource utilization with comprehensive dashboards and reports
+            </p>
+          </div>
+
+          <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-8 text-center">
+            <div className="w-16 h-16 mx-auto mb-6 flex items-center justify-center">
+              <svg className="w-12 h-12 text-cyan-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+              </svg>
+            </div>
+            <h3 className="text-xl font-bold text-white mb-3">Secure Access</h3>
+            <p className="text-slate-400 text-sm">
+              Role-based permissions ensure data security with admin, manager, and employee access levels
             </p>
           </div>
         </div>
+      </div>
 
-        {/* Login Section */}
-        <div className="bg-slate-800/50 backdrop-blur border border-slate-700 rounded-lg p-8 text-center">
-          <h2 className="text-2xl font-bold text-white mb-4">
-            Access Your Dashboard
+      {/* CTA Section */}
+      <div className="max-w-7xl mx-auto px-6 py-20">
+        <div className="bg-slate-800/50 border border-slate-700 rounded-2xl p-12 text-center">
+          <h2 className="text-3xl font-bold text-white mb-4">
+            Ready to optimize your team's productivity?
           </h2>
-          <p className="text-slate-400 mb-6">
-            Sign in with your Azure AD account to manage your cloud operations
+          <p className="text-slate-400 mb-8 text-lg">
+            Join hundreds of companies using CloudOps to manage their organizations efficiently.
           </p>
-          
           <button
             onClick={() => signIn('azure-ad', { callbackUrl: '/dashboard' })}
-            className="px-8 py-4 bg-cyan-500 hover:bg-cyan-600 text-white font-semibold rounded-lg transition-all transform hover:scale-105 inline-flex items-center gap-3"
+            className="px-8 py-3 bg-cyan-500 hover:bg-cyan-600 text-white font-medium rounded-lg transition-colors text-lg"
           >
-            <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M11.4 24H0V12.6h11.4V24zM24 24H12.6V12.6H24V24zM11.4 11.4H0V0h11.4v11.4zm12.6 0H12.6V0H24v11.4z"/>
-            </svg>
-            Sign in with Microsoft
+            Start Managing Resources
           </button>
-
-          <p className="text-slate-500 text-sm mt-6">
-            Secure enterprise authentication powered by Azure AD
-          </p>
-        </div>
-
-        {/* Footer */}
-        <div className="mt-12 text-center text-slate-500 text-sm">
-          <p>CloudOps Control Plane v1.0 | Optym Enterprise Platform</p>
         </div>
       </div>
     </div>
