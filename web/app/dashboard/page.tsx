@@ -40,7 +40,7 @@ export default function Dashboard() {
   return (
     <div className="text-white p-8">
       <div className="max-w-7xl mx-auto">
-        <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+        <h1 className="text-4xl font-bold mb-4 text-white">
           Dashboard
         </h1>
         <p className="text-slate-300 text-lg mb-8">
@@ -71,7 +71,7 @@ export default function Dashboard() {
           <div className="flex flex-wrap gap-4">
             <button 
               onClick={triggerDeploy}
-              className="px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 rounded-lg font-semibold transition-all"
+              className="px-6 py-3 bg-cyan-500 hover:bg-cyan-600 rounded-lg font-semibold transition-all"
             >
               🚀 One-Click Deploy (Demo)
             </button>
@@ -107,7 +107,7 @@ export default function Dashboard() {
         </div>
 
         <div className="mt-8 text-center text-slate-500 text-sm">
-          <p>API: <a href={`${apiUrl}/swagger`} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">{apiUrl}/swagger</a></p>
+          <p>API: <a href={`${apiUrl}/swagger`} target="_blank" rel="noopener noreferrer" className="text-cyan-400 hover:underline">{apiUrl}/swagger</a></p>
         </div>
       </div>
     </div>
