@@ -42,8 +42,8 @@ export default function Dashboard() {
   return (
     <div className="p-8 space-y-8">
       <div>
-        <h1 className="text-4xl font-bold text-white mb-2">Dashboard</h1>
-        <p className="text-slate-400">Monitor your cloud operations in real-time</p>
+        <h1 className="text-4xl font-bold mb-2" style={{ color: 'var(--foreground)' }}>Dashboard</h1>
+        <p style={{ color: 'var(--muted-foreground)' }}>Monitor your cloud operations in real-time</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -77,8 +77,11 @@ export default function Dashboard() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
-          <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-6">
-            <h2 className="text-2xl font-bold text-white mb-6">Recent Activity</h2>
+          <div className="rounded-xl p-6" style={{ 
+            backgroundColor: 'var(--card)', 
+            border: '1px solid var(--border)' 
+          }}>
+            <h2 className="text-2xl font-bold mb-6" style={{ color: 'var(--card-foreground)' }}>Recent Activity</h2>
             <div className="space-y-3">
               <TaskItem
                 type="Deployment"
@@ -113,60 +116,82 @@ export default function Dashboard() {
         </div>
 
         <div className="space-y-6">
-          <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-6">
-            <h3 className="text-lg font-bold text-white mb-4">Quick Actions</h3>
+          <div className="rounded-xl p-6" style={{ 
+            backgroundColor: 'var(--card)', 
+            border: '1px solid var(--border)' 
+          }}>
+            <h3 className="text-lg font-bold mb-4" style={{ color: 'var(--card-foreground)' }}>Quick Actions</h3>
             <div className="space-y-3">
               <button 
                 onClick={triggerDeploy}
-                className="w-full px-4 py-3 bg-cyan-500 hover:bg-cyan-600 rounded-lg font-medium text-white transition-colors flex items-center justify-center gap-2"
+                className="w-full px-4 py-3 rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
+                style={{ 
+                  backgroundColor: 'var(--primary)', 
+                  color: 'var(--primary-foreground)' 
+                }}
               >
                 <span>🚀</span>
                 <span>Deploy Now</span>
               </button>
-              <button className="w-full px-4 py-3 bg-slate-700 hover:bg-slate-600 border border-slate-600 rounded-lg font-medium text-white transition-colors flex items-center justify-center gap-2">
+              <button className="w-full px-4 py-3 rounded-lg font-medium transition-colors flex items-center justify-center gap-2" style={{ 
+                backgroundColor: 'var(--secondary)', 
+                color: 'var(--secondary-foreground)',
+                border: '1px solid var(--border)' 
+              }}>
                 <span>💾</span>
                 <span>Backup DB</span>
               </button>
-              <button className="w-full px-4 py-3 bg-slate-700 hover:bg-slate-600 border border-slate-600 rounded-lg font-medium text-white transition-colors flex items-center justify-center gap-2">
+              <button className="w-full px-4 py-3 rounded-lg font-medium transition-colors flex items-center justify-center gap-2" style={{ 
+                backgroundColor: 'var(--secondary)', 
+                color: 'var(--secondary-foreground)',
+                border: '1px solid var(--border)' 
+              }}>
                 <span>🔄</span>
                 <span>Restart Pods</span>
               </button>
-              <button className="w-full px-4 py-3 bg-slate-700 hover:bg-slate-600 border border-slate-600 rounded-lg font-medium text-white transition-colors flex items-center justify-center gap-2">
+              <button className="w-full px-4 py-3 rounded-lg font-medium transition-colors flex items-center justify-center gap-2" style={{ 
+                backgroundColor: 'var(--secondary)', 
+                color: 'var(--secondary-foreground)',
+                border: '1px solid var(--border)' 
+              }}>
                 <span>🧪</span>
                 <span>New Sandbox</span>
               </button>
             </div>
           </div>
 
-          <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-6">
-            <h3 className="text-lg font-bold text-white mb-4">System Status</h3>
+          <div className="rounded-xl p-6" style={{ 
+            backgroundColor: 'var(--card)', 
+            border: '1px solid var(--border)' 
+          }}>
+            <h3 className="text-lg font-bold mb-4" style={{ color: 'var(--card-foreground)' }}>System Status</h3>
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <span className="text-slate-400 text-sm">API Server</span>
+                <span className="text-sm" style={{ color: 'var(--muted-foreground)' }}>API Server</span>
                 <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
-                  <span className="text-emerald-400 text-sm font-medium">Online</span>
+                  <div className="w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: 'var(--success)' }} />
+                  <span className="text-sm font-medium" style={{ color: 'var(--success)' }}>Online</span>
                 </div>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-slate-400 text-sm">Task Queue</span>
+                <span className="text-sm" style={{ color: 'var(--muted-foreground)' }}>Task Queue</span>
                 <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
-                  <span className="text-emerald-400 text-sm font-medium">Active</span>
+                  <div className="w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: 'var(--success)' }} />
+                  <span className="text-sm font-medium" style={{ color: 'var(--success)' }}>Active</span>
                 </div>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-slate-400 text-sm">Database</span>
+                <span className="text-sm" style={{ color: 'var(--muted-foreground)' }}>Database</span>
                 <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
-                  <span className="text-emerald-400 text-sm font-medium">Connected</span>
+                  <div className="w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: 'var(--success)' }} />
+                  <span className="text-sm font-medium" style={{ color: 'var(--success)' }}>Connected</span>
                 </div>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-slate-400 text-sm">SignalR Hub</span>
+                <span className="text-sm" style={{ color: 'var(--muted-foreground)' }}>SignalR Hub</span>
                 <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
-                  <span className="text-emerald-400 text-sm font-medium">Running</span>
+                  <div className="w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: 'var(--success)' }} />
+                  <span className="text-sm font-medium" style={{ color: 'var(--success)' }}>Running</span>
                 </div>
               </div>
             </div>
@@ -175,19 +200,29 @@ export default function Dashboard() {
       </div>
 
       {projects.length > 0 && (
-        <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-6">
-          <h2 className="text-2xl font-bold text-white mb-6">Projects</h2>
+        <div className="rounded-xl p-6" style={{ 
+          backgroundColor: 'var(--card)', 
+          border: '1px solid var(--border)' 
+        }}>
+          <h2 className="text-2xl font-bold mb-6" style={{ color: 'var(--card-foreground)' }}>Projects</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {projects.map(project => (
-              <div key={project.id} className="p-4 rounded-lg bg-slate-700/50 border border-slate-600 hover:border-cyan-500/50 transition-colors">
+              <div key={project.id} className="p-4 rounded-lg transition-colors" style={{ 
+                backgroundColor: 'var(--secondary)', 
+                border: '1px solid var(--border)' 
+              }}>
                 <div className="flex items-start justify-between mb-3">
-                  <h3 className="text-lg font-semibold text-white">{project.name}</h3>
-                  <span className="px-2 py-1 bg-cyan-500/20 text-cyan-400 text-xs font-semibold rounded border border-cyan-500/50">
+                  <h3 className="text-lg font-semibold" style={{ color: 'var(--card-foreground)' }}>{project.name}</h3>
+                  <span className="px-2 py-1 text-xs font-semibold rounded" style={{ 
+                    backgroundColor: 'var(--primary-bg)', 
+                    color: 'var(--primary)',
+                    border: '1px solid var(--primary)' 
+                  }}>
                     Active
                   </span>
                 </div>
-                <p className="text-slate-400 text-sm mb-3">{project.description}</p>
-                <div className="flex items-center gap-2 text-xs text-slate-500">
+                <p className="text-sm mb-3" style={{ color: 'var(--muted-foreground)' }}>{project.description}</p>
+                <div className="flex items-center gap-2 text-xs" style={{ color: 'var(--muted-foreground)' }}>
                   <span>🌍 {project.environments?.length || 0} environments</span>
                 </div>
               </div>
@@ -196,8 +231,10 @@ export default function Dashboard() {
         </div>
       )}
 
-      <div className="text-center text-slate-500 text-sm">
-        <p>API: <a href={`${apiUrl}/swagger`} target="_blank" rel="noopener noreferrer" className="text-cyan-400 hover:text-cyan-300 hover:underline transition-colors">{apiUrl}/swagger</a></p>
+      <div className="text-center text-sm">
+        <p style={{ color: 'var(--muted-foreground)' }}>
+          API: <a href={`${apiUrl}/swagger`} target="_blank" rel="noopener noreferrer" className="hover:underline transition-colors" style={{ color: 'var(--primary)' }}>{apiUrl}/swagger</a>
+        </p>
       </div>
     </div>
   );

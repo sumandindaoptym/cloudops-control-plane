@@ -7,25 +7,34 @@ interface TaskItemProps {
 }
 
 export default function TaskItem({ type, title, status, timestamp, icon }: TaskItemProps) {
-  const statusColors = {
-    pending: 'bg-slate-600/50 text-slate-300 border-slate-600',
-    running: 'bg-cyan-500/20 text-cyan-400 border-cyan-500/50',
-    completed: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/50',
-    failed: 'bg-red-500/20 text-red-400 border-red-500/50',
+  const getStatusStyle = (status: string) => {
+    switch (status) {
+      case 'running':
+        return { backgroundColor: 'var(--primary-bg)', color: 'var(--primary)', border: '1px solid var(--primary)' };
+      case 'completed':
+        return { backgroundColor: 'var(--success-bg)', color: 'var(--success)', border: '1px solid var(--success)' };
+      case 'failed':
+        return { backgroundColor: 'var(--destructive-bg)', color: 'var(--destructive)', border: '1px solid var(--destructive)' };
+      default:
+        return { backgroundColor: 'var(--secondary-bg)', color: 'var(--secondary-foreground)', border: '1px solid var(--border)' };
+    }
   };
 
   return (
-    <div className="flex items-center gap-4 p-4 rounded-lg bg-slate-800/50 border border-slate-700 hover:border-cyan-500/50 transition-colors">
+    <div className="flex items-center gap-4 p-4 rounded-lg transition-colors" style={{ 
+      backgroundColor: 'var(--card)', 
+      border: '1px solid var(--border)' 
+    }}>
       <div className="text-2xl">{icon}</div>
       <div className="flex-1 min-w-0">
-        <p className="text-white font-medium truncate">{title}</p>
-        <p className="text-slate-400 text-sm">{type}</p>
+        <p className="font-medium truncate" style={{ color: 'var(--card-foreground)' }}>{title}</p>
+        <p className="text-sm" style={{ color: 'var(--muted-foreground)' }}>{type}</p>
       </div>
       <div className="flex items-center gap-3">
-        <span className={`px-3 py-1 rounded-lg text-xs font-semibold border ${statusColors[status]}`}>
+        <span className="px-3 py-1 rounded-lg text-xs font-semibold" style={getStatusStyle(status)}>
           {status}
         </span>
-        <span className="text-slate-500 text-xs whitespace-nowrap">{timestamp}</span>
+        <span className="text-xs whitespace-nowrap" style={{ color: 'var(--muted-foreground)' }}>{timestamp}</span>
       </div>
     </div>
   );

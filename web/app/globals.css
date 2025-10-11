@@ -1,22 +1,70 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: hsl(215, 20%, 14%);
+  --foreground: hsl(210, 30%, 98%);
+  --muted: hsl(220deg 25% 14.12%);
+  --muted-foreground: hsl(215, 15%, 65%);
+  --popover: hsl(215, 25%, 12%);
+  --popover-foreground: hsl(210, 30%, 98%);
+  --card: hsl(215, 30%, 8%);
+  --card-foreground: hsl(210, 30%, 98%);
+  --border: hsl(215, 20%, 24%);
+  --input: hsl(215, 25%, 16%);
+  --primary: hsl(204, 100%, 59%);
+  --primary-foreground: hsl(215, 30%, 8%);
+  --secondary: hsl(215, 20%, 20%);
+  --secondary-foreground: hsl(210, 30%, 85%);
+  --accent: hsl(204, 100%, 59%);
+  --accent-foreground: hsl(215, 30%, 8%);
+  --destructive: hsl(0, 62.8%, 50%);
+  --destructive-foreground: hsl(0, 0%, 98%);
+  --ring: hsl(204, 100%, 59%);
+  --radius: .75rem;
+  --success: hsl(122, 39%, 55%);
+  --success-foreground: hsl(215, 30%, 8%);
+  --warning: hsl(43, 96%, 65%);
+  --warning-foreground: hsl(215, 30%, 8%);
+  --info: hsl(204, 100%, 59%);
+  --info-foreground: hsl(215, 30%, 8%);
+  
+  /* Translucent variants for badges */
+  --primary-bg: hsl(204 100% 59% / 0.2);
+  --secondary-bg: hsl(215 20% 20% / 0.5);
+  --success-bg: hsl(122 39% 55% / 0.2);
+  --destructive-bg: hsl(0 62.8% 50% / 0.2);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary-bg: var(--primary-bg);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary-bg: var(--secondary-bg);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-success-bg: var(--success-bg);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-destructive-bg: var(--destructive-bg);
+  --color-info: var(--info);
+  --color-info-foreground: var(--info-foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
 }
 
 body {

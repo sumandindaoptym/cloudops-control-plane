@@ -8,13 +8,16 @@ interface StatCardProps {
 
 export default function StatCard({ title, value, change, icon, trend }: StatCardProps) {
   return (
-    <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-6 hover:border-cyan-500/50 transition-colors">
+    <div className="rounded-xl p-6 transition-colors" style={{ 
+      backgroundColor: 'var(--card)', 
+      border: '1px solid var(--border)' 
+    }}>
       <div className="flex items-start justify-between">
         <div className="flex-1">
-          <p className="text-slate-400 text-sm font-medium mb-2">{title}</p>
-          <p className="text-3xl font-bold text-white mb-1">{value}</p>
+          <p className="text-sm font-medium mb-2" style={{ color: 'var(--muted-foreground)' }}>{title}</p>
+          <p className="text-3xl font-bold mb-1" style={{ color: 'var(--card-foreground)' }}>{value}</p>
           {change && (
-            <p className={`text-sm font-medium ${trend === 'up' ? 'text-emerald-400' : 'text-red-400'}`}>
+            <p className="text-sm font-medium" style={{ color: trend === 'up' ? 'var(--success)' : 'var(--destructive)' }}>
               {trend === 'up' ? '↑' : '↓'} {change}
             </p>
           )}

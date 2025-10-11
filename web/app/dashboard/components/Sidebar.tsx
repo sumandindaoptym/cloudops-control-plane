@@ -24,7 +24,10 @@ export default function Sidebar() {
   const [activeItem, setActiveItem] = useState('/dashboard');
 
   return (
-    <aside className="w-64 h-screen sticky top-0 bg-slate-800/50 border-r border-slate-700">
+    <aside className="w-64 h-screen sticky top-0" style={{ 
+      backgroundColor: 'var(--card)', 
+      borderRight: '1px solid var(--border)' 
+    }}>
       <div className="p-6">
         <nav className="space-y-2">
           {navItems.map((item) => (
@@ -32,16 +35,21 @@ export default function Sidebar() {
               key={item.href}
               href={item.href}
               onClick={() => setActiveItem(item.href)}
-              className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
+              className="flex items-center gap-3 px-4 py-3 rounded-lg transition-colors"
+              style={
                 activeItem === item.href
-                  ? 'bg-cyan-500 text-white'
-                  : 'text-slate-400 hover:text-white hover:bg-slate-700/50'
-              }`}
+                  ? { backgroundColor: 'var(--primary)', color: 'var(--primary-foreground)' }
+                  : { color: 'var(--muted-foreground)' }
+              }
             >
               <span className="text-xl">{item.icon}</span>
               <span className="font-medium">{item.label}</span>
               {item.badge && (
-                <span className="ml-auto bg-cyan-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
+                <span className="ml-auto text-xs font-bold px-2 py-0.5 rounded-full" style={{ 
+                  backgroundColor: 'var(--primary-bg)', 
+                  color: 'var(--primary)',
+                  border: '1px solid var(--primary)'
+                }}>
                   {item.badge}
                 </span>
               )}
@@ -49,9 +57,9 @@ export default function Sidebar() {
           ))}
         </nav>
 
-        <div className="mt-8 pt-6 border-t border-slate-700">
-          <div className="flex items-center gap-2 text-slate-400 text-sm">
-            <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
+        <div className="mt-8 pt-6" style={{ borderTop: '1px solid var(--border)' }}>
+          <div className="flex items-center gap-2 text-sm" style={{ color: 'var(--muted-foreground)' }}>
+            <div className="w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: 'var(--success)' }} />
             <span>API Status: Healthy</span>
           </div>
         </div>
