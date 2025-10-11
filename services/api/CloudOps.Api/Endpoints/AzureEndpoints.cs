@@ -1,6 +1,7 @@
 using Azure.Identity;
 using Azure.ResourceManager;
 using Microsoft.AspNetCore.Mvc;
+using CloudOps.Api.Auth;
 
 namespace CloudOps.Api.Endpoints;
 
@@ -17,107 +18,47 @@ public static class AzureEndpoints
     }
 
     private static async Task<IResult> GetSubscriptions(
+        HttpContext httpContext,
         IConfiguration configuration,
         ILogger<Program> logger)
     {
         try
         {
-            var tenantId = configuration["AZURE_AD_TENANT_ID"];
-            var clientId = configuration["AZURE_AD_CLIENT_ID"];
-            var clientSecret = configuration["AZURE_AD_CLIENT_SECRET"];
-
-            if (string.IsNullOrEmpty(tenantId) || string.IsNullOrEmpty(clientId) || string.IsNullOrEmpty(clientSecret))
+            // Get user's access token from Authorization header
+            var authHeader = httpContext.Request.Headers["Authorization"].ToString();
+            
+            if (string.IsNullOrEmpty(authHeader) || !authHeader.StartsWith("Bearer "))
             {
-                logger.LogError("Azure credentials not configured");
-                return Results.Problem("Azure credentials not configured", statusCode: 500);
+                logger.LogError("No bearer token provided");
+                return Results.Unauthorized();
             }
 
-            // Create credential using the service principal
-            var credential = new ClientSecretCredential(tenantId, clientId, clientSecret);
+            var userAccessToken = authHeader.Substring("Bearer ".Length).Trim();
             
-            // Create ARM client
+            // Create credential using user's access token
+            var credential = new AccessTokenCredential(userAccessToken);
+            
+            // Create ARM client with user's credentials
             var armClient = new ArmClient(credential);
+            
+            var tenantId = configuration["AZURE_AD_TENANT_ID"];
 
             // Get all subscriptions
             var subscriptions = new List<SubscriptionDto>();
             
-            try
+            await foreach (var subscription in armClient.GetSubscriptions())
             {
-                await foreach (var subscription in armClient.GetSubscriptions())
-                {
-                    subscriptions.Add(new SubscriptionDto
-                    {
-                        Id = subscription.Id.ToString(),
-                        Name = subscription.Data.DisplayName,
-                        SubscriptionId = subscription.Data.SubscriptionId.ToString(),
-                        TenantId = subscription.Data.TenantId.ToString(),
-                        State = subscription.Data.State.ToString()
-                    });
-                }
-            }
-            catch (Azure.RequestFailedException ex) when (ex.Status == 403)
-            {
-                logger.LogWarning("Service principal lacks permissions to list subscriptions. Using mock data for development.");
-                
-                // Return mock subscriptions for development
                 subscriptions.Add(new SubscriptionDto
                 {
-                    Id = "mock-prod",
-                    Name = "Production Subscription (Mock)",
-                    SubscriptionId = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
-                    TenantId = tenantId ?? "unknown",
-                    State = "Enabled"
-                });
-                subscriptions.Add(new SubscriptionDto
-                {
-                    Id = "mock-dev",
-                    Name = "Development Subscription (Mock)",
-                    SubscriptionId = "yyyyyyyy-yyyy-yyyy-yyyy-yyyyyyyyyyyy",
-                    TenantId = tenantId ?? "unknown",
-                    State = "Enabled"
-                });
-                subscriptions.Add(new SubscriptionDto
-                {
-                    Id = "mock-staging",
-                    Name = "Staging Subscription (Mock)",
-                    SubscriptionId = "zzzzzzzz-zzzz-zzzz-zzzz-zzzzzzzzzzzz",
-                    TenantId = tenantId ?? "unknown",
-                    State = "Enabled"
+                    Id = subscription.Id.ToString(),
+                    Name = subscription.Data.DisplayName,
+                    SubscriptionId = subscription.Data.SubscriptionId.ToString(),
+                    TenantId = subscription.Data.TenantId?.ToString() ?? tenantId ?? "unknown",
+                    State = subscription.Data.State?.ToString() ?? "Unknown"
                 });
             }
 
-            if (subscriptions.Count == 0)
-            {
-                logger.LogWarning("No Azure subscriptions found. The service principal may not have access to any subscriptions. Using mock data for development.");
-                
-                // Return mock subscriptions for development
-                subscriptions.Add(new SubscriptionDto
-                {
-                    Id = "mock-prod",
-                    Name = "Production Subscription (Mock)",
-                    SubscriptionId = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
-                    TenantId = tenantId ?? "unknown",
-                    State = "Enabled"
-                });
-                subscriptions.Add(new SubscriptionDto
-                {
-                    Id = "mock-dev",
-                    Name = "Development Subscription (Mock)",
-                    SubscriptionId = "yyyyyyyy-yyyy-yyyy-yyyy-yyyyyyyyyyyy",
-                    TenantId = tenantId ?? "unknown",
-                    State = "Enabled"
-                });
-                subscriptions.Add(new SubscriptionDto
-                {
-                    Id = "mock-staging",
-                    Name = "Staging Subscription (Mock)",
-                    SubscriptionId = "zzzzzzzz-zzzz-zzzz-zzzz-zzzzzzzzzzzz",
-                    TenantId = tenantId ?? "unknown",
-                    State = "Enabled"
-                });
-            }
-
-            logger.LogInformation("Retrieved {Count} Azure subscriptions", subscriptions.Count);
+            logger.LogInformation("Retrieved {Count} Azure subscriptions for user", subscriptions.Count);
             return Results.Ok(subscriptions);
         }
         catch (Exception ex)

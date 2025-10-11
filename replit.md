@@ -237,16 +237,15 @@ curl -X POST http://localhost:5056/api/deployments \
 
 ## Development History
 - **October 11, 2025** (Latest):
-  - Implemented Azure subscription fetching using Azure SDK (Azure.Identity, Azure.ResourceManager)
-  - Created /api/azure/subscriptions endpoint to list user's Azure subscriptions
-  - Frontend fetches subscriptions from API instead of using mock data
-  - Automatic fallback to mock data when service principal lacks permissions
-  - Dashboard displays real Azure subscriptions (or mock data for development)
+  - Implemented Azure subscription fetching using **user's access token** (not service principal)
+  - Updated NextAuth to request Azure Resource Manager scope (`https://management.azure.com/user_impersonation`)
+  - Created custom `AccessTokenCredential` class to use user's Azure AD token
+  - Frontend passes user's access token to backend API via Authorization header
+  - Backend uses user's token to fetch subscriptions they have access to
+  - Dashboard displays Azure subscriptions based on **logged-in user's RBAC permissions**
   - Selection persists in localStorage for user convenience
   
-  **Note**: To fetch real Azure subscriptions in production:
-  - Azure AD app registration needs "Reader" role on subscriptions
-  - Grant access via Azure Portal → Subscriptions → Access Control (IAM)
+  **Note**: The user will see only subscriptions where they have at least Reader role
   
 - **October 11, 2025** (Earlier):
   - Updated landing page UX: removed top-right sign-in button, simplified navigation

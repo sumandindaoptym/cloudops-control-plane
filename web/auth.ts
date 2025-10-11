@@ -11,7 +11,7 @@ export const { auth, signIn, signOut, handlers } = NextAuth({
       issuer: `https://login.microsoftonline.com/${process.env.AZURE_AD_TENANT_ID!}/v2.0`,
       authorization: {
         params: {
-          scope: 'openid profile email User.Read',
+          scope: 'openid profile email User.Read https://management.azure.com/user_impersonation',
         },
       },
     }),
@@ -29,6 +29,7 @@ export const { auth, signIn, signOut, handlers } = NextAuth({
       if (session.user) {
         session.user.id = token.id as string;
       }
+      session.accessToken = token.accessToken as string;
       return session;
     },
   },

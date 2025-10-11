@@ -1,15 +1,15 @@
 # Azure Subscription Integration
 
 ## Overview
-The CloudOps platform integrates with Azure to fetch and display subscriptions that the logged-in user has access to. This allows users to select the appropriate subscription context for their operations.
+The CloudOps platform integrates with Azure to fetch and display subscriptions that the **logged-in user** has access to. This allows users to select the appropriate subscription context for their operations based on their own Azure RBAC permissions.
 
 ## Current Implementation
 
 ### Backend
 - **API Endpoint**: `GET /api/azure/subscriptions`
 - **SDK**: Azure.Identity + Azure.ResourceManager (latest .NET SDK)
-- **Authentication**: ClientSecretCredential using Azure AD app credentials
-- **Fallback**: Returns mock subscriptions when no real subscriptions are accessible
+- **Authentication**: User's Azure AD access token (delegated permissions)
+- **Custom Credential**: `AccessTokenCredential` class to wrap user's token
 
 ### Frontend
 - **Component**: `SubscriptionSelector.tsx`
@@ -22,67 +22,57 @@ The CloudOps platform integrates with Azure to fetch and display subscriptions t
 
 ## Azure AD Permissions Required
 
-To fetch real Azure subscriptions, the Azure AD app registration (service principal) needs proper permissions:
+The implementation uses **user delegation** - the logged-in user's own permissions determine which subscriptions they can see.
 
-### 1. **Assign Reader Role**
-The service principal must be granted **Reader** role on the subscriptions you want to access:
+### 1. **App Registration API Permissions**
+The Azure AD app registration needs delegated permissions:
 
 **Steps:**
 1. Go to [Azure Portal](https://portal.azure.com)
-2. Navigate to **Subscriptions**
-3. Select each subscription you want to access
-4. Click **Access control (IAM)**
-5. Click **+ Add** → **Add role assignment**
-6. Select **Reader** role
-7. In **Members** tab, select **Service principal**
-8. Search for your app registration name
-9. Click **Select** and **Review + assign**
+2. Navigate to **Azure Active Directory** → **App registrations**
+3. Select your CloudOps app registration
+4. Click **API permissions**
+5. Click **+ Add a permission**
+6. Select **Azure Service Management**
+7. Check **user_impersonation** (Delegated permission)
+8. Click **Add permissions**
+9. Click **Grant admin consent** (admin consent required)
 
-### 2. **Verify App Registration**
-Ensure your app registration has the following:
+### 2. **User RBAC Permissions**
+Each user needs appropriate Azure RBAC roles on subscriptions:
 
-- **Client ID**: `AZURE_AD_CLIENT_ID` (already configured)
-- **Client Secret**: `AZURE_AD_CLIENT_SECRET` (already configured)
-- **Tenant ID**: `AZURE_AD_TENANT_ID` (already configured)
+- Users will see **only** subscriptions where they have at least **Reader** role
+- No additional configuration needed - uses user's existing Azure permissions
+- Works with any Azure RBAC role (Reader, Contributor, Owner, etc.)
 
-### 3. **API Permissions (Optional)**
-If you need additional Azure Resource Manager API access, add these permissions:
+### 3. **NextAuth Configuration**
+The auth configuration requests the Azure Resource Manager scope:
 
-1. Go to your app registration in Azure Portal
-2. Navigate to **API permissions**
-3. Click **+ Add a permission**
-4. Select **Azure Service Management**
-5. Add **user_impersonation** permission
-6. Grant admin consent
+```typescript
+scope: 'openid profile email User.Read https://management.azure.com/user_impersonation'
+```
 
-## Development Mode
+This allows the user's access token to be used for Azure Resource Manager API calls.
 
-When the service principal lacks permissions or returns no subscriptions, the API automatically returns mock data:
+## How It Works
 
-```json
-[
-  {
-    "id": "mock-prod",
-    "name": "Production Subscription (Mock)",
-    "subscriptionId": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
-    "tenantId": "...",
-    "state": "Enabled"
-  },
-  {
-    "id": "mock-dev",
-    "name": "Development Subscription (Mock)",
-    "subscriptionId": "yyyyyyyy-yyyy-yyyy-yyyy-yyyyyyyyyyyy",
-    "tenantId": "...",
-    "state": "Enabled"
-  },
-  {
-    "id": "mock-staging",
-    "name": "Staging Subscription (Mock)",
-    "subscriptionId": "zzzzzzzz-zzzz-zzzz-zzzz-zzzzzzzzzzzz",
-    "tenantId": "...",
-    "state": "Enabled"
-  }
-]
+### Authentication Flow
+1. User signs in with Microsoft (Azure AD)
+2. NextAuth requests access token with Azure Resource Manager scope
+3. Access token is stored in user's session
+4. Frontend fetches session and passes access token to backend API
+5. Backend uses user's token to call Azure Resource Manager API
+6. API returns subscriptions the user has access to based on their RBAC permissions
+
+### Token Flow Diagram
+```
+User Browser → NextAuth (Azure AD) → Access Token (with ARM scope)
+                                              ↓
+Frontend (session.accessToken) → Backend API (Authorization: Bearer <token>)
+                                              ↓
+                            Azure Resource Manager API
+                                              ↓
+                            Subscriptions (filtered by user's RBAC)
 ```
 
 ## Testing

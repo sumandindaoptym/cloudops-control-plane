@@ -17,7 +17,21 @@ export default function SubscriptionSelector() {
   useEffect(() => {
     const fetchSubscriptions = async () => {
       try {
-        const response = await fetch('/api/azure/subscriptions');
+        // Get the user's session to retrieve access token
+        const sessionResponse = await fetch('/api/auth/session');
+        const session = await sessionResponse.json();
+        
+        if (!session?.accessToken) {
+          throw new Error('No access token available');
+        }
+        
+        // Fetch subscriptions with user's access token
+        const response = await fetch('/api/azure/subscriptions', {
+          headers: {
+            'Authorization': `Bearer ${session.accessToken}`
+          }
+        });
+        
         if (!response.ok) {
           throw new Error('Failed to fetch subscriptions');
         }
