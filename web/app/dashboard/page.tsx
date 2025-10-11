@@ -48,12 +48,8 @@ export default function Dashboard() {
         backgroundColor: 'var(--card)',
         borderBottom: '1px solid var(--border)'
       }}>
-        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-          <img src="/optym-logo.png" alt="Optym" className="h-8" />
-          
-          <div className="flex items-center gap-4">
-            <SubscriptionSelector />
-          </div>
+        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-end">
+          <SubscriptionSelector />
         </div>
       </header>
 
