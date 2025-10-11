@@ -237,20 +237,23 @@ curl -X POST http://localhost:5056/api/deployments \
 
 ## Development History
 - **October 11, 2025** (Latest):
+  - **FIXED: Automatic logout issue** - Removed conflicting `User.Read` scope that caused wrong token audience
+  - NextAuth now requests ONLY Azure Resource Manager scope (`https://management.azure.com/user_impersonation`)
+  - Users now get correct token for Azure subscriptions without being logged out
+  - Backend properly returns 401 for invalid tokens, triggering automatic logout
+  - Dashboard header simplified: just Optym logo and subscription selector
+  
+- **October 11, 2025** (Earlier):
   - Implemented Azure subscription fetching using **user's access token** (not service principal)
-  - Updated NextAuth to request Azure Resource Manager scope (`https://management.azure.com/user_impersonation`)
-  - Added `offline_access` scope for refresh token support
   - Created custom `AccessTokenCredential` class to use user's Azure AD token
   - Frontend passes user's access token to backend API via Authorization header
   - Backend uses user's token to fetch subscriptions they have access to
   - Dashboard displays Azure subscriptions based on **logged-in user's RBAC permissions**
   - **Token validation**: Checks if access token is expired on each request
   - **Automatic sign-out**: Signs out user if token is invalid or expired (prevents infinite loops)
-  - Added **Sign Out button** in dashboard header for manual logout
   - Selection persists in localStorage for user convenience
   
   **Note**: The user will see only subscriptions where they have at least Reader role
-  **Important**: Click "Sign Out" and sign in again to get a fresh token with all required scopes
   
 - **October 11, 2025** (Earlier):
   - Updated landing page UX: removed top-right sign-in button, simplified navigation
