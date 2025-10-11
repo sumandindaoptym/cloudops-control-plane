@@ -24,8 +24,24 @@ Enterprise CloudOps Control Plane - Optym's first developer platform monorepo wi
    - Environment secrets: AZURE_AD_CLIENT_ID, AZURE_AD_CLIENT_SECRET, AZURE_AD_TENANT_ID, NEXTAUTH_SECRET, NEXTAUTH_URL
 
 0.5. **Olympus Theme UI**
-   - Clean, minimal design matching Olympus brand guidelines
-   - **Color Scheme**: Solid dark background (bg-slate-900) with cyan accents (cyan-500)
+   - Clean, minimal design matching Olympus brand guidelines with exact HSL color specifications
+   - **Color System** (CSS Custom Properties):
+     - Background: hsl(215, 20%, 14%) - Main page background
+     - Card: hsl(215, 30%, 8%) - Card backgrounds
+     - Border: hsl(215, 20%, 24%) - All borders
+     - Primary: hsl(204, 100%, 59%) - Cyan accent color
+     - Secondary: hsl(215, 20%, 20%) - Secondary elements
+     - Success: hsl(122, 39%, 55%) - Success indicators
+     - Destructive: hsl(0, 62.8%, 50%) - Error/destructive actions
+     - **Translucent Variants** (for badges):
+       - --primary-bg: hsl(204 100% 59% / 0.2)
+       - --secondary-bg: hsl(215 20% 20% / 0.5)
+       - --success-bg: hsl(122 39% 55% / 0.2)
+       - --destructive-bg: hsl(0 62.8% 50% / 0.2)
+   - **Implementation**:
+     - All colors defined as CSS custom properties in web/app/globals.css
+     - All components use var(--color-name) - zero hardcoded colors
+     - Variables exposed via @theme inline for Tailwind integration
    - **Landing Page**:
      - Navigation header with "optym" and "CloudOps" branding
      - Hero section with large heading and description
@@ -33,22 +49,22 @@ Enterprise CloudOps Control Plane - Optym's first developer platform monorepo wi
      - CTA section with "Start Managing Resources" button
    - **Dashboard Components**:
      - StatCard: Stat cards with clean borders and hover effects
-     - TaskItem: Activity feed items with status indicators
-     - Sidebar: Navigation sidebar with active state highlighting
+     - TaskItem: Activity feed items with status-based translucent badges
+     - Sidebar: Navigation sidebar with active state highlighting and translucent badges
    - **Visual Effects**:
-     - Solid backgrounds (bg-slate-900)
-     - Cards with bg-slate-800/50 and border-slate-700
-     - Cyan primary buttons (bg-cyan-500 hover:bg-cyan-600)
+     - Solid dark backgrounds using exact HSL values
+     - Cards with precise background and border colors
+     - Primary buttons with exact cyan specification
      - Clean hover states with cyan accents
      - Simple, professional aesthetic
    - **Dashboard Layout**:
-     - Sidebar navigation with icons and badges
+     - Sidebar navigation with icons and translucent badges
      - Stats overview with trend indicators
-     - Recent activity feed with status indicators
+     - Recent activity feed with color-coded status indicators
      - Quick action buttons (Deploy, Backup, Restart, Sandbox)
      - System status monitoring
-     - Projects grid with environment counts
-   - Files: web/app/page.tsx, web/app/dashboard/components/{StatCard,TaskItem,Sidebar}.tsx
+     - Projects grid with environment counts and translucent badges
+   - Files: web/app/globals.css, web/app/page.tsx, web/app/dashboard/components/{StatCard,TaskItem,Sidebar}.tsx
 1. **Monorepo Structure**
    - services/api: ASP.NET Core API with integrated Worker
    - services/shared: Shared libraries, models, DTOs
@@ -220,9 +236,18 @@ curl -X POST http://localhost:5056/api/deployments \
 
 ## Development History
 - **October 11, 2025** (Latest):
+  - Implemented comprehensive CSS custom property system with exact HSL color codes
+  - Created translucent badge variants using modern CSS syntax: hsl(204 100% 59% / 0.2)
+  - Updated all components to use CSS variables exclusively (zero hardcoded colors)
+  - Fixed Sidebar and TaskItem badges to use translucent backgrounds
+  - All status indicators (running, completed, failed, pending) use correct translucent colors
+  - Exposed all color variables via @theme inline for Tailwind integration
+  - Complete theme implementation architect-verified and production-ready
+
+- **October 11, 2025** (Earlier):
   - Updated entire theme to match exact Olympus design specifications
-  - Implemented clean, minimal UI with solid dark backgrounds (bg-slate-900)
-  - Changed from gradient-based design to solid cyan accents (cyan-500)
+  - Implemented clean, minimal UI with solid dark backgrounds
+  - Changed from gradient-based design to solid cyan accents
   - Updated landing page with Olympus branding, feature cards, and CTA section
   - Simplified dashboard components removing glassmorphism effects
   - Created cleaner card designs with simple borders and hover states
