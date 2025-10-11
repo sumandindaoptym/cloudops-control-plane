@@ -237,10 +237,16 @@ curl -X POST http://localhost:5056/api/deployments \
 
 ## Development History
 - **October 11, 2025** (Latest):
-  - Added Azure subscription selector component to dashboard for setting cloud context
-  - Dropdown allows users to select from available Azure subscriptions
-  - Selection persists in localStorage and logs context change
-  - Prepared for future Azure API integration to fetch real subscriptions
+  - Implemented Azure subscription fetching using Azure SDK (Azure.Identity, Azure.ResourceManager)
+  - Created /api/azure/subscriptions endpoint to list user's Azure subscriptions
+  - Frontend fetches subscriptions from API instead of using mock data
+  - Automatic fallback to mock data when service principal lacks permissions
+  - Dashboard displays real Azure subscriptions (or mock data for development)
+  - Selection persists in localStorage for user convenience
+  
+  **Note**: To fetch real Azure subscriptions in production:
+  - Azure AD app registration needs "Reader" role on subscriptions
+  - Grant access via Azure Portal → Subscriptions → Access Control (IAM)
   
 - **October 11, 2025** (Earlier):
   - Updated landing page UX: removed top-right sign-in button, simplified navigation

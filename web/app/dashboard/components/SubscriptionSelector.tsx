@@ -15,38 +15,41 @@ export default function SubscriptionSelector() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // TODO: Replace with actual Azure API call to fetch user's subscriptions
-    // For now, using mock data
-    const mockSubscriptions: Subscription[] = [
-      {
-        id: '1',
-        name: 'Production Subscription',
-        subscriptionId: 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx',
-        tenantId: 'yyyyyyyy-yyyy-yyyy-yyyy-yyyyyyyyyyyy'
-      },
-      {
-        id: '2',
-        name: 'Development Subscription',
-        subscriptionId: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
-        tenantId: 'yyyyyyyy-yyyy-yyyy-yyyy-yyyyyyyyyyyy'
-      },
-      {
-        id: '3',
-        name: 'Staging Subscription',
-        subscriptionId: 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb',
-        tenantId: 'yyyyyyyy-yyyy-yyyy-yyyy-yyyyyyyyyyyy'
+    const fetchSubscriptions = async () => {
+      try {
+        const response = await fetch('/api/azure/subscriptions');
+        if (!response.ok) {
+          throw new Error('Failed to fetch subscriptions');
+        }
+        
+        const data: Subscription[] = await response.json();
+        setSubscriptions(data);
+        
+        // Check if there's a saved subscription in localStorage
+        const saved = localStorage.getItem('selectedSubscription');
+        if (saved) {
+          const savedSub = JSON.parse(saved);
+          const exists = data.find(s => s.subscriptionId === savedSub.subscriptionId);
+          if (exists) {
+            setSelectedSubscription(exists.id);
+            setIsLoading(false);
+            return;
+          }
+        }
+        
+        // Otherwise, set first subscription as default
+        if (data.length > 0) {
+          setSelectedSubscription(data[0].id);
+        }
+      } catch (error) {
+        console.error('Error fetching Azure subscriptions:', error);
+        // Fall back to showing error state or empty
+      } finally {
+        setIsLoading(false);
       }
-    ];
+    };
 
-    // Simulate API call
-    setTimeout(() => {
-      setSubscriptions(mockSubscriptions);
-      // Set first subscription as default
-      if (mockSubscriptions.length > 0) {
-        setSelectedSubscription(mockSubscriptions[0].id);
-      }
-      setIsLoading(false);
-    }, 500);
+    fetchSubscriptions();
   }, []);
 
   const handleSubscriptionChange = (subscriptionId: string) => {

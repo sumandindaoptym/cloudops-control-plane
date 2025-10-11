@@ -5,6 +5,7 @@ using CloudOps.Shared.Models;
 using CloudOps.Shared.DTOs;
 using Serilog;
 using Microsoft.AspNetCore.SignalR;
+using CloudOps.Api.Endpoints;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -131,6 +132,9 @@ app.MapGet("/api/tasks/{id}", async (Guid id, CloudOpsDbContext db) => await db.
 app.MapGet("/api/projects", async (CloudOpsDbContext db) => Results.Ok(await db.Projects.Include(p => p.Environments).ToListAsync()));
 app.MapGet("/api/cost/estimate", () => Results.Ok(new { monthlyCost = 450.00, breakdown = new[] { new { resource = "Compute (4 vCPU, 16GB RAM)", cost = 250.00 }, new { resource = "Storage (500GB)", cost = 100.00 }, new { resource = "Network (1TB egress)", cost = 100.00 } } }));
 app.MapGet("/", () => Results.Redirect("/swagger"));
+
+// Map Azure endpoints
+app.MapAzureEndpoints();
 
 app.Run("http://0.0.0.0:5056");
 
