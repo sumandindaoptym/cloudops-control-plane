@@ -1,109 +1,79 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { apiFetch, API_URL } from '@/lib/api';
+import { signIn } from 'next-auth/react';
 
-export default function Home() {
-  const [health, setHealth] = useState<any>(null);
-  const [projects, setProjects] = useState<any[]>([]);
-  const [apiUrl, setApiUrl] = useState<string>('');
-
-  useEffect(() => {
-    setApiUrl(API_URL);
-    
-    apiFetch('/health')
-      .then(setHealth)
-      .catch(console.error);
-
-    apiFetch('/projects')
-      .then(setProjects)
-      .catch(console.error);
-  }, []);
-
-  const triggerDeploy = async () => {
-    try {
-      const data = await apiFetch('/deployments', {
-        method: 'POST',
-        body: JSON.stringify({
-          projectId: '11111111-1111-1111-1111-111111111111',
-          envId: '22222222-2222-2222-2222-222222222222',
-          templateId: 'demo-template',
-          parameters: {}
-        })
-      });
-      alert(`Task created: ${data.taskId}`);
-    } catch (error) {
-      alert(`Error: ${error}`);
-    }
-  };
-
+export default function LandingPage() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white p-8">
-      <div className="max-w-7xl mx-auto">
-        <h1 className="text-5xl font-bold mb-4 bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-          CloudOps Control Plane
-        </h1>
-        <p className="text-slate-300 text-lg mb-8">
-          Enterprise developer platform with queue-based orchestration
-        </p>
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center p-8">
+      <div className="max-w-4xl w-full">
+        {/* Hero Section */}
+        <div className="text-center mb-12">
+          <h1 className="text-6xl font-bold mb-6 bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+            CloudOps Control Plane
+          </h1>
+          <p className="text-2xl text-slate-300 mb-4">
+            Enterprise Developer Platform
+          </p>
+          <p className="text-lg text-slate-400 max-w-2xl mx-auto">
+            Streamline your cloud operations with queue-based task orchestration,
+            real-time updates, and one-click deployments.
+          </p>
+        </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        {/* Features Grid */}
+        <div className="grid md:grid-cols-3 gap-6 mb-12">
           <div className="bg-slate-800/50 backdrop-blur border border-slate-700 rounded-lg p-6">
-            <h3 className="text-sm font-semibold text-slate-400 mb-2">API Status</h3>
-            <p className="text-2xl font-bold">
-              {health?.status === 'healthy' ? '✅ Healthy' : '⏳ Loading...'}
+            <div className="text-3xl mb-3">🚀</div>
+            <h3 className="text-lg font-semibold text-white mb-2">One-Click Deploy</h3>
+            <p className="text-slate-400 text-sm">
+              Deploy applications with a single click using automated workflows
             </p>
           </div>
 
           <div className="bg-slate-800/50 backdrop-blur border border-slate-700 rounded-lg p-6">
-            <h3 className="text-sm font-semibold text-slate-400 mb-2">Projects</h3>
-            <p className="text-2xl font-bold">{projects.length}</p>
+            <div className="text-3xl mb-3">📊</div>
+            <h3 className="text-lg font-semibold text-white mb-2">Real-Time Updates</h3>
+            <p className="text-slate-400 text-sm">
+              Monitor task progress with live updates via SignalR
+            </p>
           </div>
 
           <div className="bg-slate-800/50 backdrop-blur border border-slate-700 rounded-lg p-6">
-            <h3 className="text-sm font-semibold text-slate-400 mb-2">Queue Depth</h3>
-            <p className="text-2xl font-bold">0</p>
+            <div className="text-3xl mb-3">🔄</div>
+            <h3 className="text-lg font-semibold text-white mb-2">Task Orchestration</h3>
+            <p className="text-slate-400 text-sm">
+              FIFO queue-based processing ensures reliable execution
+            </p>
           </div>
         </div>
 
-        <div className="bg-slate-800/50 backdrop-blur border border-slate-700 rounded-lg p-6 mb-8">
-          <h2 className="text-2xl font-bold mb-4">Quick Actions</h2>
-          <div className="flex flex-wrap gap-4">
-            <button 
-              onClick={triggerDeploy}
-              className="px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 rounded-lg font-semibold transition-all"
-            >
-              🚀 One-Click Deploy (Demo)
-            </button>
-            <button className="px-6 py-3 bg-slate-700 hover:bg-slate-600 rounded-lg font-semibold transition-all">
-              💾 Backup Database
-            </button>
-            <button className="px-6 py-3 bg-slate-700 hover:bg-slate-600 rounded-lg font-semibold transition-all">
-              🔄 Restart Pods
-            </button>
-            <button className="px-6 py-3 bg-slate-700 hover:bg-slate-600 rounded-lg font-semibold transition-all">
-              🧪 Create Sandbox
-            </button>
-          </div>
+        {/* Login Section */}
+        <div className="bg-slate-800/50 backdrop-blur border border-slate-700 rounded-lg p-8 text-center">
+          <h2 className="text-2xl font-bold text-white mb-4">
+            Access Your Dashboard
+          </h2>
+          <p className="text-slate-400 mb-6">
+            Sign in with your Azure AD account to manage your cloud operations
+          </p>
+          
+          <button
+            onClick={() => signIn('azure-ad', { callbackUrl: '/dashboard' })}
+            className="px-8 py-4 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white font-semibold rounded-lg transition-all transform hover:scale-105 inline-flex items-center gap-3"
+          >
+            <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M11.4 24H0V12.6h11.4V24zM24 24H12.6V12.6H24V24zM11.4 11.4H0V0h11.4v11.4zm12.6 0H12.6V0H24v11.4z"/>
+            </svg>
+            Sign in with Microsoft
+          </button>
+
+          <p className="text-slate-500 text-sm mt-6">
+            Secure enterprise authentication powered by Azure AD
+          </p>
         </div>
 
-        <div className="bg-slate-800/50 backdrop-blur border border-slate-700 rounded-lg p-6">
-          <h2 className="text-2xl font-bold mb-4">Projects</h2>
-          {projects.map(project => (
-            <div key={project.id} className="border-b border-slate-700 last:border-0 py-4">
-              <h3 className="text-lg font-semibold">{project.name}</h3>
-              <p className="text-slate-400 text-sm">{project.description}</p>
-              <div className="mt-2">
-                <span className="text-xs bg-slate-700 px-2 py-1 rounded">
-                  {project.environments?.length || 0} environments
-                </span>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        <div className="mt-8 text-center text-slate-500 text-sm">
-          <p>API: <a href={`${apiUrl}/swagger`} target="_blank" className="text-blue-400 hover:underline">{apiUrl}/swagger</a></p>
+        {/* Footer */}
+        <div className="mt-12 text-center text-slate-500 text-sm">
+          <p>CloudOps Control Plane v1.0 | Optym Enterprise Platform</p>
         </div>
       </div>
     </div>
