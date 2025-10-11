@@ -21,16 +21,19 @@ export default function SubscriptionSelector() {
         const sessionResponse = await fetch('/api/auth/session');
         const session = await sessionResponse.json();
         
-        // Check if token refresh failed
-        if (session?.error === 'RefreshAccessTokenError') {
-          console.error('Session expired. Please sign in again.');
-          // Optionally trigger sign-in
-          window.location.href = '/api/auth/signin';
+        // Check if token is expired (compare with current time)
+        if (session?.accessTokenExpires && Date.now() >= session.accessTokenExpires) {
+          console.error('Token expired. Signing out...');
+          const { signOut } = await import('next-auth/react');
+          await signOut({ callbackUrl: '/', redirect: true });
           return;
         }
         
         if (!session?.accessToken) {
-          throw new Error('No access token available');
+          console.error('No access token available. Signing out...');
+          const { signOut } = await import('next-auth/react');
+          await signOut({ callbackUrl: '/', redirect: true });
+          return;
         }
         
         // Fetch subscriptions with user's access token
@@ -41,10 +44,11 @@ export default function SubscriptionSelector() {
         });
         
         if (!response.ok) {
-          // If unauthorized, trigger re-authentication
+          // If unauthorized, sign out and ask to re-login
           if (response.status === 401) {
-            console.error('Token expired. Please sign in again.');
-            window.location.href = '/api/auth/signin';
+            console.error('Unauthorized. Signing out...');
+            const { signOut } = await import('next-auth/react');
+            await signOut({ callbackUrl: '/', redirect: true });
             return;
           }
           throw new Error('Failed to fetch subscriptions');

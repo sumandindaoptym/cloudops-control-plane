@@ -5,6 +5,7 @@ import { apiFetch, API_URL } from '@/lib/api';
 import StatCard from './components/StatCard';
 import TaskItem from './components/TaskItem';
 import SubscriptionSelector from './components/SubscriptionSelector';
+import SignOutButton from './components/SignOutButton';
 
 export default function Dashboard() {
   const [health, setHealth] = useState<any>(null);
@@ -41,20 +42,32 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="p-8 space-y-8">
-      <div className="space-y-4">
-        <div>
-          <h1 className="text-4xl font-bold mb-2" style={{ color: 'var(--foreground)' }}>Dashboard</h1>
-          <p style={{ color: 'var(--muted-foreground)' }}>Monitor your cloud operations in real-time</p>
+    <div className="min-h-screen" style={{ backgroundColor: 'var(--background)' }}>
+      {/* Header */}
+      <header className="sticky top-0 z-10" style={{ 
+        backgroundColor: 'var(--card)',
+        borderBottom: '1px solid var(--border)'
+      }}>
+        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <img src="/optym-logo.png" alt="Optym" className="h-8" />
+            <h1 className="text-xl font-semibold" style={{ color: 'var(--foreground)' }}>CloudOps</h1>
+          </div>
+          
+          <div className="flex items-center gap-4">
+            <SubscriptionSelector />
+            <SignOutButton />
+          </div>
         </div>
-        
-        <div className="rounded-xl p-4" style={{ 
-          backgroundColor: 'var(--card)', 
-          border: '1px solid var(--border)' 
-        }}>
-          <SubscriptionSelector />
+      </header>
+
+      <div className="p-8 space-y-8">
+        <div className="space-y-4">
+          <div>
+            <h1 className="text-4xl font-bold mb-2" style={{ color: 'var(--foreground)' }}>Dashboard</h1>
+            <p style={{ color: 'var(--muted-foreground)' }}>Monitor your cloud operations in real-time</p>
+          </div>
         </div>
-      </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard
@@ -245,6 +258,7 @@ export default function Dashboard() {
         <p style={{ color: 'var(--muted-foreground)' }}>
           API: <a href={`${apiUrl}/swagger`} target="_blank" rel="noopener noreferrer" className="hover:underline transition-colors" style={{ color: 'var(--primary)' }}>{apiUrl}/swagger</a>
         </p>
+      </div>
       </div>
     </div>
   );
