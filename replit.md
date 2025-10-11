@@ -58,6 +58,7 @@ Enterprise CloudOps Control Plane - Optym's first developer platform monorepo wi
      - Clean hover states with cyan accents
      - Simple, professional aesthetic
    - **Dashboard Layout**:
+     - Azure subscription selector for setting cloud context
      - Sidebar navigation with icons and translucent badges
      - Stats overview with trend indicators
      - Recent activity feed with color-coded status indicators
@@ -236,6 +237,12 @@ curl -X POST http://localhost:5056/api/deployments \
 
 ## Development History
 - **October 11, 2025** (Latest):
+  - Added Azure subscription selector component to dashboard for setting cloud context
+  - Dropdown allows users to select from available Azure subscriptions
+  - Selection persists in localStorage and logs context change
+  - Prepared for future Azure API integration to fetch real subscriptions
+  
+- **October 11, 2025** (Earlier):
   - Updated landing page UX: removed top-right sign-in button, simplified navigation
   - Changed hero CTA to "Sign in With Microsoft" with Microsoft logo icon
   - Replaced "Task Tracking" feature card with "Database Management" card

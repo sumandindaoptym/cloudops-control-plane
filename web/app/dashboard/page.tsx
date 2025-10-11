@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { apiFetch, API_URL } from '@/lib/api';
 import StatCard from './components/StatCard';
 import TaskItem from './components/TaskItem';
+import SubscriptionSelector from './components/SubscriptionSelector';
 
 export default function Dashboard() {
   const [health, setHealth] = useState<any>(null);
@@ -41,9 +42,18 @@ export default function Dashboard() {
 
   return (
     <div className="p-8 space-y-8">
-      <div>
-        <h1 className="text-4xl font-bold mb-2" style={{ color: 'var(--foreground)' }}>Dashboard</h1>
-        <p style={{ color: 'var(--muted-foreground)' }}>Monitor your cloud operations in real-time</p>
+      <div className="space-y-4">
+        <div>
+          <h1 className="text-4xl font-bold mb-2" style={{ color: 'var(--foreground)' }}>Dashboard</h1>
+          <p style={{ color: 'var(--muted-foreground)' }}>Monitor your cloud operations in real-time</p>
+        </div>
+        
+        <div className="rounded-xl p-4" style={{ 
+          backgroundColor: 'var(--card)', 
+          border: '1px solid var(--border)' 
+        }}>
+          <SubscriptionSelector />
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
