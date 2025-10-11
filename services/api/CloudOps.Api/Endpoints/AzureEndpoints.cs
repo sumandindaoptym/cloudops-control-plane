@@ -1,3 +1,4 @@
+using Azure;
 using Azure.Identity;
 using Azure.ResourceManager;
 using Microsoft.AspNetCore.Mvc;
@@ -60,6 +61,12 @@ public static class AzureEndpoints
 
             logger.LogInformation("Retrieved {Count} Azure subscriptions for user", subscriptions.Count);
             return Results.Ok(subscriptions);
+        }
+        catch (RequestFailedException ex) when (ex.Status == 401)
+        {
+            // Token is invalid, expired, or has wrong audience - return 401 so frontend can sign out
+            logger.LogError(ex, "Unauthorized: Invalid or expired token");
+            return Results.Unauthorized();
         }
         catch (Exception ex)
         {

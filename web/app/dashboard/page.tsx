@@ -49,14 +49,10 @@ export default function Dashboard() {
         borderBottom: '1px solid var(--border)'
       }}>
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <img src="/optym-logo.png" alt="Optym" className="h-8" />
-            <h1 className="text-xl font-semibold" style={{ color: 'var(--foreground)' }}>CloudOps</h1>
-          </div>
+          <img src="/optym-logo.png" alt="Optym" className="h-8" />
           
           <div className="flex items-center gap-4">
             <SubscriptionSelector />
-            <SignOutButton />
           </div>
         </div>
       </header>
