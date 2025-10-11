@@ -14,6 +14,14 @@ Enterprise CloudOps Control Plane - Optym's first developer platform monorepo wi
 ## Current Status (October 11, 2025)
 
 ### ✅ Completed Features
+
+0. **Authentication & Authorization**
+   - Azure AD authentication via NextAuth.js v5 (beta)
+   - Landing page with "Sign in with Microsoft" button
+   - Protected dashboard accessible only after login
+   - Session management with JWT strategy
+   - User info display and sign-out functionality
+   - Environment secrets: AZURE_AD_CLIENT_ID, AZURE_AD_CLIENT_SECRET, AZURE_AD_TENANT_ID, NEXTAUTH_SECRET, NEXTAUTH_URL
 1. **Monorepo Structure**
    - services/api: ASP.NET Core API with integrated Worker
    - services/shared: Shared libraries, models, DTOs

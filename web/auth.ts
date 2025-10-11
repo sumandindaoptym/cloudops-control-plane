@@ -1,14 +1,14 @@
 import NextAuth from 'next-auth';
-import AzureADProvider from 'next-auth/providers/azure-ad';
+import AzureAD from 'next-auth/providers/azure-ad';
 import { authConfig } from './auth.config';
 
 export const { auth, signIn, signOut, handlers } = NextAuth({
   ...authConfig,
   providers: [
-    AzureADProvider({
+    AzureAD({
       clientId: process.env.AZURE_AD_CLIENT_ID!,
       clientSecret: process.env.AZURE_AD_CLIENT_SECRET!,
-      tenantId: process.env.AZURE_AD_TENANT_ID!,
+      issuer: `https://login.microsoftonline.com/${process.env.AZURE_AD_TENANT_ID!}/v2.0`,
       authorization: {
         params: {
           scope: 'openid profile email User.Read',

@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation';
-import { auth } from '@/app/auth';
+import { auth } from '@/auth';
 import DashboardNav from './DashboardNav';
 
 export default async function DashboardLayout({
