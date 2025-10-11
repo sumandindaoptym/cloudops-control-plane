@@ -14,16 +14,6 @@ export default function LandingPage() {
             </div>
             <span className="text-xl" style={{ color: 'var(--foreground)' }}>CloudOps</span>
           </div>
-          <button
-            onClick={() => signIn('azure-ad', { callbackUrl: '/dashboard' })}
-            className="px-6 py-2 font-medium rounded-lg transition-colors"
-            style={{ 
-              backgroundColor: 'var(--primary)', 
-              color: 'var(--primary-foreground)' 
-            }}
-          >
-            Sign In
-          </button>
         </div>
       </nav>
 
@@ -38,13 +28,16 @@ export default function LandingPage() {
         </p>
         <button
           onClick={() => signIn('azure-ad', { callbackUrl: '/dashboard' })}
-          className="px-8 py-3 font-medium rounded-lg transition-colors text-lg"
+          className="px-8 py-3 font-medium rounded-lg transition-colors text-lg flex items-center gap-3 mx-auto"
           style={{ 
             backgroundColor: 'var(--primary)', 
             color: 'var(--primary-foreground)' 
           }}
         >
-          Get Started
+          <svg className="w-6 h-6" viewBox="0 0 23 23" fill="currentColor">
+            <path d="M0 0h10.93v10.93H0V0zm12.07 0H23v10.93H12.07V0zM0 12.07h10.93V23H0V12.07zm12.07 0H23V23H12.07V12.07z"/>
+          </svg>
+          Sign in With Microsoft
         </button>
       </div>
 
@@ -72,12 +65,12 @@ export default function LandingPage() {
           }}>
             <div className="w-16 h-16 mx-auto mb-6 flex items-center justify-center">
               <svg className="w-12 h-12" fill="none" stroke="var(--primary)" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" />
               </svg>
             </div>
-            <h3 className="text-xl font-bold mb-3" style={{ color: 'var(--card-foreground)' }}>Task Tracking</h3>
+            <h3 className="text-xl font-bold mb-3" style={{ color: 'var(--card-foreground)' }}>Database Management</h3>
             <p className="text-sm" style={{ color: 'var(--muted-foreground)' }}>
-              Track time allocation month-over-month with automatic validation to prevent over-allocation
+              Automated database backups and restores with one-click operations across all environments
             </p>
           </div>
 
@@ -119,11 +112,8 @@ export default function LandingPage() {
           backgroundColor: 'var(--card)', 
           border: '1px solid var(--border)' 
         }}>
-          <h2 className="text-3xl font-bold mb-4" style={{ color: 'var(--card-foreground)' }}>
-            Ready to optimize your team's productivity?
-          </h2>
-          <p className="mb-8 text-lg" style={{ color: 'var(--muted-foreground)' }}>
-            Join hundreds of companies using CloudOps to manage their organizations efficiently.
+          <p className="mb-8 text-2xl font-semibold" style={{ color: 'var(--card-foreground)' }}>
+            Ease your daily devops tasks with CloudOps platform tool.
           </p>
           <button
             onClick={() => signIn('azure-ad', { callbackUrl: '/dashboard' })}

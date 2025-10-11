@@ -43,10 +43,10 @@ Enterprise CloudOps Control Plane - Optym's first developer platform monorepo wi
      - All components use var(--color-name) - zero hardcoded colors
      - Variables exposed via @theme inline for Tailwind integration
    - **Landing Page**:
-     - Navigation header with Optym logo image and "CloudOps" branding
-     - Hero section with large heading and description
-     - 4 feature cards with cyan icons (One-Click Deploy, Task Tracking, Real-time Analytics, Secure Access)
-     - CTA section with "Start Managing Resources" button
+     - Navigation header with Optym logo image and "CloudOps" branding (no sign-in button)
+     - Hero section with large heading and "Sign in With Microsoft" button with Microsoft logo
+     - 4 feature cards with cyan icons (One-Click Deploy, Database Management, Real-time Analytics, Secure Access)
+     - CTA section with simplified message about easing daily DevOps tasks
    - **Dashboard Components**:
      - StatCard: Stat cards with clean borders and hover effects
      - TaskItem: Activity feed items with status-based translucent badges
@@ -236,6 +236,12 @@ curl -X POST http://localhost:5056/api/deployments \
 
 ## Development History
 - **October 11, 2025** (Latest):
+  - Updated landing page UX: removed top-right sign-in button, simplified navigation
+  - Changed hero CTA to "Sign in With Microsoft" with Microsoft logo icon
+  - Replaced "Task Tracking" feature card with "Database Management" card
+  - Simplified CTA section message to focus on easing DevOps tasks
+  
+- **October 11, 2025** (Earlier):
   - Integrated Optym brand logo (two-color: blue arc + white text) in navigation
   - Logo displays on both landing page and dashboard header
   - Logo stored in web/public/optym-logo.png for optimal Next.js asset handling
