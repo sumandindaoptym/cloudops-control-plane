@@ -4,8 +4,6 @@ import { useEffect, useState } from 'react';
 import { apiFetch, API_URL } from '@/lib/api';
 import StatCard from './components/StatCard';
 import TaskItem from './components/TaskItem';
-import SubscriptionSelector from './components/SubscriptionSelector';
-import SignOutButton from './components/SignOutButton';
 
 export default function Dashboard() {
   const [health, setHealth] = useState<any>(null);
@@ -42,17 +40,6 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: 'var(--background)' }}>
-      {/* Header */}
-      <header className="sticky top-0 z-10" style={{ 
-        backgroundColor: 'var(--card)',
-        borderBottom: '1px solid var(--border)'
-      }}>
-        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-end">
-          <SubscriptionSelector />
-        </div>
-      </header>
-
       <div className="p-8 space-y-8">
         <div className="space-y-4">
           <div>
@@ -252,6 +239,5 @@ export default function Dashboard() {
         </p>
       </div>
       </div>
-    </div>
   );
 }
