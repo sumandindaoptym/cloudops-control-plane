@@ -42,6 +42,7 @@ The platform is built as a monorepo with the following core technologies and des
 - Swagger UI is available for API documentation.
 
 ## Recent Changes (October 11, 2025)
+- **Added loading indicator**: Cyan progress bar appears at top during page navigation (nextjs-toploader)
 - **Created dashboard navigation pages**: Added 6 new pages accessible via sidebar
   - Deployments (/dashboard/deployments) - View deployment history, stats, create new deployments
   - Databases (/dashboard/databases) - Manage database instances, backups, restores (needs backend integration)

@@ -23,6 +23,7 @@
   "homepage": "https://github.com/sumandindaoptym/cloudops-control-plane#readme",
   "dependencies": {
     "@auth/core": "^0.34.2",
-    "next-auth": "^4.24.11"
+    "next-auth": "^4.24.11",
+    "nextjs-toploader": "^3.9.17"
   }
 }
