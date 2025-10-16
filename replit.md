@@ -50,7 +50,7 @@ The platform is built as a monorepo with the following core technologies and des
   - Environments (/dashboard/environments) - Manage deployment environments
   - Settings (/dashboard/settings) - Platform configuration (needs backend persistence)
 - **Updated dashboard layout**: Sidebar now appears on all dashboard pages
-- **Simplified navigation**: Header shows only Azure subscription selector
+- **Updated navigation header**: Shows Azure subscription selector and Sign Out button with user info
 - **Known limitations**: Pages need improved error handling; some need full backend integration
 
 ## External Dependencies
