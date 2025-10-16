@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 
 interface NavItem {
   icon: string;
@@ -21,7 +21,7 @@ const navItems: NavItem[] = [
 ];
 
 export default function Sidebar() {
-  const [activeItem, setActiveItem] = useState('/dashboard');
+  const pathname = usePathname();
 
   return (
     <aside className="w-64 h-screen sticky top-0" style={{ 
@@ -30,31 +30,34 @@ export default function Sidebar() {
     }}>
       <div className="p-6">
         <nav className="space-y-2">
-          {navItems.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              onClick={() => setActiveItem(item.href)}
-              className="flex items-center gap-3 px-4 py-3 rounded-lg transition-colors"
-              style={
-                activeItem === item.href
-                  ? { backgroundColor: 'var(--primary)', color: 'var(--primary-foreground)' }
-                  : { color: 'var(--muted-foreground)' }
-              }
-            >
-              <span className="text-xl">{item.icon}</span>
-              <span className="font-medium">{item.label}</span>
-              {item.badge && (
-                <span className="ml-auto text-xs font-bold px-2 py-0.5 rounded-full" style={{ 
-                  backgroundColor: 'var(--primary-bg)', 
-                  color: 'var(--primary)',
-                  border: '1px solid var(--primary)'
-                }}>
-                  {item.badge}
-                </span>
-              )}
-            </Link>
-          ))}
+          {navItems.map((item) => {
+            const isActive = pathname === item.href;
+            
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className="flex items-center gap-3 px-4 py-3 rounded-lg transition-colors"
+                style={
+                  isActive
+                    ? { backgroundColor: 'var(--primary)', color: 'var(--primary-foreground)' }
+                    : { color: 'var(--muted-foreground)' }
+                }
+              >
+                <span className="text-xl">{item.icon}</span>
+                <span className="font-medium">{item.label}</span>
+                {item.badge && (
+                  <span className="ml-auto text-xs font-bold px-2 py-0.5 rounded-full" style={{ 
+                    backgroundColor: 'var(--primary-bg)', 
+                    color: 'var(--primary)',
+                    border: '1px solid var(--primary)'
+                  }}>
+                    {item.badge}
+                  </span>
+                )}
+              </Link>
+            );
+          })}
         </nav>
 
         <div className="mt-8 pt-6" style={{ borderTop: '1px solid var(--border)' }}>

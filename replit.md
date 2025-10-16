@@ -41,7 +41,11 @@ The platform is built as a monorepo with the following core technologies and des
 - A `dev.sh` script starts both API (port 5056) and Frontend (port 5000).
 - Swagger UI is available for API documentation.
 
-## Recent Changes (October 11, 2025)
+## Recent Changes (October 16, 2025)
+- **Enhanced UX interactions**:
+  - Added cursor pointer styles for all interactive elements (buttons, links, selects)
+  - Disabled elements show "not-allowed" cursor for better feedback
+  - Updated sidebar to use usePathname for accurate active state tracking
 - **Added loading indicator**: Cyan progress bar appears at top during page navigation (nextjs-toploader)
 - **Created dashboard navigation pages**: Added 6 new pages accessible via sidebar
   - Deployments (/dashboard/deployments) - View deployment history, stats, create new deployments
