@@ -1,13 +1,9 @@
 'use client';
 
-import { signIn } from 'next-auth/react';
-
 export default function LandingPage() {
-  const handleSignIn = async () => {
-    await signIn('azure-ad', { 
-      callbackUrl: '/dashboard',
-      redirect: true 
-    });
+  const handleSignIn = () => {
+    // Force full page redirect to avoid iframe issues with Microsoft login
+    window.location.href = '/api/auth/signin?callbackUrl=' + encodeURIComponent('/dashboard');
   };
 
   return (
