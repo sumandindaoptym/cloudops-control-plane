@@ -4,6 +4,7 @@ import { authConfig } from './auth.config';
 
 export const { auth, signIn, signOut, handlers } = NextAuth({
   ...authConfig,
+  trustHost: true,
   providers: [
     AzureAD({
       clientId: process.env.AZURE_AD_CLIENT_ID!,

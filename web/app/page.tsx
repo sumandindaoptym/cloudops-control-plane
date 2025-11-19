@@ -2,8 +2,8 @@
 
 export default function LandingPage() {
   const handleSignIn = () => {
-    // Force full page redirect to avoid iframe issues with Microsoft login
-    window.location.href = '/api/auth/signin?callbackUrl=' + encodeURIComponent('/dashboard');
+    // Force full page redirect directly to Azure AD to avoid iframe issues with Microsoft login
+    window.location.href = '/api/auth/signin/azure-ad?callbackUrl=' + encodeURIComponent('/dashboard');
   };
 
   return (
