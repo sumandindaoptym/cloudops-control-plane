@@ -47,11 +47,12 @@ The platform is built as a monorepo with the following core technologies and des
 - Swagger UI is available for API documentation.
 
 ## Recent Changes (November 19, 2025)
-- **Fixed Microsoft login**: Resolved X-Frame-Options error
-  - Changed from client-side signIn() to server-side form POST
-  - Login now does full page redirect to Microsoft instead of iframe
+- **Fixed Microsoft login**: Resolved X-Frame-Options error and React errors
+  - Changed from NextAuth signIn() to direct window.location.href navigation
+  - Made landing page a client component ('use client')
+  - Login now does full page redirect to Microsoft login page
   - Fixes "Refused to display in a frame" error
-  - Both hero and CTA buttons now properly redirect to Azure AD
+  - Both hero and CTA buttons work correctly without React hook errors
 
 ## Previous Changes (October 16, 2025)
 - **Updated theme to modern dark design**: Complete color palette refresh
