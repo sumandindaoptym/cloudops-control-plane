@@ -1,0 +1,80 @@
+@page
+@model CloudOps.Web.Pages.Dashboard.DatabasesModel
+@{
+    ViewData["Title"] = "Databases";
+    Layout = "Shared/_DashboardLayout";
+}
+
+<h1 class="page-title">Databases</h1>
+<p class="page-description">Manage database instances, backups, and restore operations</p>
+
+<div class="grid grid-4" style="margin-bottom: 2rem;">
+    <div class="stat-card">
+        <div class="stat-label">Total Databases</div>
+        <div class="stat-value">8</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Active Backups</div>
+        <div class="stat-value">24</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Total Size</div>
+        <div class="stat-value">156 GB</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Last Backup</div>
+        <div class="stat-value">2h ago</div>
+    </div>
+</div>
+
+<div class="card">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+        <h2 style="font-size: 1.25rem; font-weight: 600; color: var(--foreground);">Database Instances</h2>
+        <button class="btn btn-primary">Create Backup</button>
+    </div>
+    
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Database Name</th>
+                <th>Environment</th>
+                <th>Size</th>
+                <th>Status</th>
+                <th>Last Backup</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>production-db</td>
+                <td>Production</td>
+                <td>52 GB</td>
+                <td><span class="badge badge-success">Healthy</span></td>
+                <td>2 hours ago</td>
+                <td>
+                    <button class="btn btn-primary" style="padding: 0.375rem 0.75rem; font-size: 0.875rem;">Backup</button>
+                </td>
+            </tr>
+            <tr>
+                <td>staging-db</td>
+                <td>Staging</td>
+                <td>38 GB</td>
+                <td><span class="badge badge-success">Healthy</span></td>
+                <td>4 hours ago</td>
+                <td>
+                    <button class="btn btn-primary" style="padding: 0.375rem 0.75rem; font-size: 0.875rem;">Backup</button>
+                </td>
+            </tr>
+            <tr>
+                <td>dev-db</td>
+                <td>Development</td>
+                <td>12 GB</td>
+                <td><span class="badge badge-success">Healthy</span></td>
+                <td>1 day ago</td>
+                <td>
+                    <button class="btn btn-primary" style="padding: 0.375rem 0.75rem; font-size: 0.875rem;">Backup</button>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</div>

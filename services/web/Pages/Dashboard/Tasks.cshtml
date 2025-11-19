@@ -1,0 +1,79 @@
+@page
+@model CloudOps.Web.Pages.Dashboard.TasksModel
+@{
+    ViewData["Title"] = "Tasks";
+    Layout = "Shared/_DashboardLayout";
+}
+
+<h1 class="page-title">Background Tasks</h1>
+<p class="page-description">Monitor and manage background operations and jobs</p>
+
+<div class="grid grid-4" style="margin-bottom: 2rem;">
+    <div class="stat-card">
+        <div class="stat-label">Total Tasks</div>
+        <div class="stat-value">342</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Running</div>
+        <div class="stat-value">3</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Completed</div>
+        <div class="stat-value">328</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Failed</div>
+        <div class="stat-value">11</div>
+    </div>
+</div>
+
+<div class="card">
+    <h2 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 1.5rem; color: var(--foreground);">Active & Recent Tasks</h2>
+    
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Task ID</th>
+                <th>Type</th>
+                <th>Resource</th>
+                <th>Status</th>
+                <th>Progress</th>
+                <th>Started</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>#3421</td>
+                <td>Deployment</td>
+                <td>MyApp-Production</td>
+                <td><span class="badge badge-warning">Running</span></td>
+                <td>75%</td>
+                <td>5 minutes ago</td>
+            </tr>
+            <tr>
+                <td>#3420</td>
+                <td>Database Backup</td>
+                <td>production-db</td>
+                <td><span class="badge badge-success">Completed</span></td>
+                <td>100%</td>
+                <td>2 hours ago</td>
+            </tr>
+            <tr>
+                <td>#3419</td>
+                <td>Pod Restart</td>
+                <td>Backend-Service</td>
+                <td><span class="badge badge-success">Completed</span></td>
+                <td>100%</td>
+                <td>3 hours ago</td>
+            </tr>
+            <tr>
+                <td>#3418</td>
+                <td>Deployment</td>
+                <td>Frontend-Staging</td>
+                <td><span class="badge badge-success">Completed</span></td>
+                <td>100%</td>
+                <td>5 hours ago</td>
+            </tr>
+        </tbody>
+    </table>
+</div>

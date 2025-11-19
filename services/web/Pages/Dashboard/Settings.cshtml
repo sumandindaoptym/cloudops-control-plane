@@ -1,0 +1,107 @@
+@page
+@model CloudOps.Web.Pages.Dashboard.SettingsModel
+@{
+    ViewData["Title"] = "Settings";
+    Layout = "Shared/_DashboardLayout";
+}
+
+<h1 class="page-title">Settings</h1>
+<p class="page-description">Configure platform settings and preferences</p>
+
+<div class="grid grid-2">
+    <div class="card">
+        <h2 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 1rem; color: var(--foreground);">
+            General Settings
+        </h2>
+        <div style="display: flex; flex-direction: column; gap: 1rem;">
+            <div>
+                <label style="display: block; margin-bottom: 0.5rem; color: var(--foreground); font-weight: 500;">
+                    Platform Name
+                </label>
+                <input type="text" value="CloudOps" class="select" style="width: 100%;" />
+            </div>
+            <div>
+                <label style="display: block; margin-bottom: 0.5rem; color: var(--foreground); font-weight: 500;">
+                    Default Azure Subscription
+                </label>
+                <select class="select" style="width: 100%;">
+                    <option>Production</option>
+                    <option>Development</option>
+                    <option>Staging</option>
+                </select>
+            </div>
+        </div>
+    </div>
+    
+    <div class="card">
+        <h2 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 1rem; color: var(--foreground);">
+            Notification Settings
+        </h2>
+        <div style="display: flex; flex-direction: column; gap: 1rem;">
+            <div style="display: flex; align-items: center; justify-content: space-between;">
+                <div>
+                    <div style="font-weight: 500; color: var(--foreground);">Email Notifications</div>
+                    <div style="font-size: 0.875rem; color: var(--muted-foreground);">Receive email alerts for deployments</div>
+                </div>
+                <input type="checkbox" checked style="width: 1.25rem; height: 1.25rem;" />
+            </div>
+            <div style="display: flex; align-items: center; justify-content: space-between;">
+                <div>
+                    <div style="font-weight: 500; color: var(--foreground);">Teams Notifications</div>
+                    <div style="font-size: 0.875rem; color: var(--muted-foreground);">Send updates to Microsoft Teams</div>
+                </div>
+                <input type="checkbox" checked style="width: 1.25rem; height: 1.25rem;" />
+            </div>
+        </div>
+    </div>
+    
+    <div class="card">
+        <h2 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 1rem; color: var(--foreground);">
+            Deployment Settings
+        </h2>
+        <div style="display: flex; flex-direction: column; gap: 1rem;">
+            <div>
+                <label style="display: block; margin-bottom: 0.5rem; color: var(--foreground); font-weight: 500;">
+                    Default Deployment Strategy
+                </label>
+                <select class="select" style="width: 100%;">
+                    <option>Rolling Update</option>
+                    <option>Blue-Green</option>
+                    <option>Canary</option>
+                </select>
+            </div>
+            <div style="display: flex; align-items: center; justify-content: space-between;">
+                <div>
+                    <div style="font-weight: 500; color: var(--foreground);">Auto-restart on Failure</div>
+                    <div style="font-size: 0.875rem; color: var(--muted-foreground);">Automatically retry failed deployments</div>
+                </div>
+                <input type="checkbox" style="width: 1.25rem; height: 1.25rem;" />
+            </div>
+        </div>
+    </div>
+    
+    <div class="card">
+        <h2 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 1rem; color: var(--foreground);">
+            Database Settings
+        </h2>
+        <div style="display: flex; flex-direction: column; gap: 1rem;">
+            <div>
+                <label style="display: block; margin-bottom: 0.5rem; color: var(--foreground); font-weight: 500;">
+                    Backup Retention (days)
+                </label>
+                <input type="number" value="30" class="select" style="width: 100%;" />
+            </div>
+            <div style="display: flex; align-items: center; justify-content: space-between;">
+                <div>
+                    <div style="font-weight: 500; color: var(--foreground);">Auto Backup</div>
+                    <div style="font-size: 0.875rem; color: var(--muted-foreground);">Schedule automatic daily backups</div>
+                </div>
+                <input type="checkbox" checked style="width: 1.25rem; height: 1.25rem;" />
+            </div>
+        </div>
+    </div>
+</div>
+
+<div style="margin-top: 2rem;">
+    <button class="btn btn-primary btn-lg">Save Changes</button>
+</div>

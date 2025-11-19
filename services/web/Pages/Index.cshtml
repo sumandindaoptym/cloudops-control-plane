@@ -1,0 +1,90 @@
+@page
+@model IndexModel
+@{
+    ViewData["Title"] = "CloudOps Control Plane";
+    Layout = "Shared/_Layout";
+}
+
+<div style="min-height: 100vh; position: relative; background-color: var(--background);">
+    <div style="position: absolute; top: 0; left: 0; right: 0; height: 24rem; pointer-events: none; background: linear-gradient(180deg, hsla(175, 70%, 50%, 0.12) 0%, transparent 60%); z-index: 0;"></div>
+    
+    <nav class="nav" style="position: relative; z-index: 10;">
+        <div class="nav-content">
+            <div class="nav-logo">
+                <img src="/optym-logo.png" alt="Optym" />
+                <span class="nav-title">CloudOps</span>
+            </div>
+        </div>
+    </nav>
+
+    <div style="max-width: 80rem; margin: 0 auto; padding: 6rem 1.5rem 4rem; text-align: center; position: relative; z-index: 10;">
+        <h1 style="font-size: 3.75rem; font-weight: 700; margin-bottom: 1.5rem; color: var(--foreground);">
+            CloudOps
+        </h1>
+        <p style="font-size: 1.25rem; margin-bottom: 2.5rem; max-width: 48rem; margin-left: auto; margin-right: auto; color: var(--muted-foreground);">
+            Comprehensive organizational management platform for teams and projects. Track
+            allocations, manage resources, and drive operational excellence.
+        </p>
+        <a href="/MicrosoftIdentity/Account/SignIn" class="btn btn-primary btn-lg">
+            <svg style="width: 1.5rem; height: 1.5rem;" viewBox="0 0 23 23" fill="currentColor">
+                <path d="M0 0h10.93v10.93H0V0zm12.07 0H23v10.93H12.07V0zM0 12.07h10.93V23H0V12.07zm12.07 0H23V23H12.07V12.07z"/>
+            </svg>
+            Sign in With Microsoft
+        </a>
+    </div>
+
+    <div style="max-width: 88rem; margin: 0 auto; padding: 4rem 1.5rem;">
+        <div class="grid grid-4">
+            <div class="card">
+                <svg class="card-icon" style="width: 2rem; height: 2rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                </svg>
+                <h3 class="card-title">One-Click Deploy</h3>
+                <p class="card-description">
+                    Deploy applications with a single click using automated workflows
+                </p>
+            </div>
+            
+            <div class="card">
+                <svg class="card-icon" style="width: 2rem; height: 2rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4"></path>
+                </svg>
+                <h3 class="card-title">Database Management</h3>
+                <p class="card-description">
+                    Automated database backups and restore functionality for Azure SQL databases
+                </p>
+            </div>
+            
+            <div class="card">
+                <svg class="card-icon" style="width: 2rem; height: 2rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+                </svg>
+                <h3 class="card-title">Real-time Analytics</h3>
+                <p class="card-description">
+                    Get insights into resource utilization with comprehensive activity feeds
+                </p>
+            </div>
+            
+            <div class="card">
+                <svg class="card-icon" style="width: 2rem; height: 2rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                </svg>
+                <h3 class="card-title">Secure Access</h3>
+                <p class="card-description">
+                    Role-based permissions ensure data security with admin controls
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div style="max-width: 88rem; margin: 0 auto; padding: 4rem 1.5rem;">
+        <div class="card text-center" style="padding: 3rem;">
+            <p style="margin-bottom: 2rem; font-size: 1.5rem; font-weight: 600; color: var(--card-foreground);">
+                Ease your daily devops tasks with CloudOps platform tool.
+            </p>
+            <a href="/MicrosoftIdentity/Account/SignIn" class="btn btn-primary btn-lg" style="margin: 0 auto;">
+                Start Managing Resources
+            </a>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,70 @@
+@page
+@model CloudOps.Web.Pages.Dashboard.DeploymentsModel
+@{
+    ViewData["Title"] = "Deployments";
+    Layout = "Shared/_DashboardLayout";
+}
+
+<h1 class="page-title">Deployments</h1>
+<p class="page-description">Manage and monitor your application deployments</p>
+
+<div class="grid grid-4" style="margin-bottom: 2rem;">
+    <div class="stat-card">
+        <div class="stat-label">Total Deployments</div>
+        <div class="stat-value">124</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Successful</div>
+        <div class="stat-value">118</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Failed</div>
+        <div class="stat-value">6</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">In Progress</div>
+        <div class="stat-value">2</div>
+    </div>
+</div>
+
+<div class="card">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+        <h2 style="font-size: 1.25rem; font-weight: 600; color: var(--foreground);">Recent Deployments</h2>
+        <button class="btn btn-primary">New Deployment</button>
+    </div>
+    
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Application</th>
+                <th>Environment</th>
+                <th>Version</th>
+                <th>Status</th>
+                <th>Time</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>MyApp</td>
+                <td>Production</td>
+                <td>v2.1.3</td>
+                <td><span class="badge badge-success">Success</span></td>
+                <td>2 hours ago</td>
+            </tr>
+            <tr>
+                <td>BackendAPI</td>
+                <td>Staging</td>
+                <td>v1.8.0</td>
+                <td><span class="badge badge-success">Success</span></td>
+                <td>5 hours ago</td>
+            </tr>
+            <tr>
+                <td>Frontend</td>
+                <td>Development</td>
+                <td>v3.0.1</td>
+                <td><span class="badge badge-warning">In Progress</span></td>
+                <td>10 minutes ago</td>
+            </tr>
+        </tbody>
+    </table>
+</div>

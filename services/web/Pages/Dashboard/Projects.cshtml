@@ -1,0 +1,101 @@
+@page
+@model CloudOps.Web.Pages.Dashboard.ProjectsModel
+@{
+    ViewData["Title"] = "Projects";
+    Layout = "Shared/_DashboardLayout";
+}
+
+<h1 class="page-title">Projects</h1>
+<p class="page-description">Manage cloud projects and their configurations</p>
+
+<div class="grid grid-4" style="margin-bottom: 2rem;">
+    <div class="stat-card">
+        <div class="stat-label">Total Projects</div>
+        <div class="stat-value">8</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Active</div>
+        <div class="stat-value">6</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Archived</div>
+        <div class="stat-value">2</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Environments</div>
+        <div class="stat-value">15</div>
+    </div>
+</div>
+
+<div class="card">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+        <h2 style="font-size: 1.25rem; font-weight: 600; color: var(--foreground);">All Projects</h2>
+        <button class="btn btn-primary">Add Project</button>
+    </div>
+    
+    <div class="grid grid-2">
+        <div class="card" style="border: 1px solid var(--border);">
+            <div style="display: flex; justify-content: between; align-items: start; margin-bottom: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="font-size: 1.125rem; font-weight: 600; margin-bottom: 0.5rem; color: var(--foreground);">
+                        MyApp
+                    </h3>
+                    <p class="text-muted" style="font-size: 0.875rem;">Main customer-facing application</p>
+                </div>
+                <span class="badge badge-success">Active</span>
+            </div>
+            <div style="display: flex; gap: 1rem; font-size: 0.875rem; color: var(--muted-foreground);">
+                <div>Environments: 3</div>
+                <div>Deployments: 45</div>
+            </div>
+        </div>
+        
+        <div class="card" style="border: 1px solid var(--border);">
+            <div style="display: flex; justify-content: between; align-items: start; margin-bottom: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="font-size: 1.125rem; font-weight: 600; margin-bottom: 0.5rem; color: var(--foreground);">
+                        Backend API
+                    </h3>
+                    <p class="text-muted" style="font-size: 0.875rem;">Core API services and microservices</p>
+                </div>
+                <span class="badge badge-success">Active</span>
+            </div>
+            <div style="display: flex; gap: 1rem; font-size: 0.875rem; color: var(--muted-foreground);">
+                <div>Environments: 3</div>
+                <div>Deployments: 62</div>
+            </div>
+        </div>
+        
+        <div class="card" style="border: 1px solid var(--border);">
+            <div style="display: flex; justify-content: between; align-items: start; margin-bottom: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="font-size: 1.125rem; font-weight: 600; margin-bottom: 0.5rem; color: var(--foreground);">
+                        Analytics Service
+                    </h3>
+                    <p class="text-muted" style="font-size: 0.875rem;">Data processing and analytics</p>
+                </div>
+                <span class="badge badge-success">Active</span>
+            </div>
+            <div style="display: flex; gap: 1rem; font-size: 0.875rem; color: var(--muted-foreground);">
+                <div>Environments: 2</div>
+                <div>Deployments: 28</div>
+            </div>
+        </div>
+        
+        <div class="card" style="border: 1px solid var(--border);">
+            <div style="display: flex; justify-content: between; align-items: start; margin-bottom: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="font-size: 1.125rem; font-weight: 600; margin-bottom: 0.5rem; color: var(--foreground);">
+                        Admin Portal
+                    </h3>
+                    <p class="text-muted" style="font-size: 0.875rem;">Internal administration tools</p>
+                </div>
+                <span class="badge badge-success">Active</span>
+            </div>
+            <div style="display: flex; gap: 1rem; font-size: 0.875rem; color: var(--muted-foreground);">
+                <div>Environments: 2</div>
+                <div>Deployments: 31</div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,76 @@
+@page
+@model CloudOps.Web.Pages.Dashboard.IndexModel
+@{
+    ViewData["Title"] = "Dashboard";
+    Layout = "Shared/_DashboardLayout";
+}
+
+<h1 class="page-title">Dashboard</h1>
+<p class="page-description">Overview of your cloud resources and recent activity</p>
+
+<div class="grid grid-4" style="margin-bottom: 2rem;">
+    <div class="stat-card">
+        <div class="stat-label">Active Deployments</div>
+        <div class="stat-value">12</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Running Tasks</div>
+        <div class="stat-value">3</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Total Projects</div>
+        <div class="stat-value">8</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Environments</div>
+        <div class="stat-value">15</div>
+    </div>
+</div>
+
+<div class="grid grid-2">
+    <div class="card">
+        <h2 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 1rem; color: var(--foreground);">
+            Recent Activity
+        </h2>
+        <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem; background-color: var(--muted); border-radius: 0.375rem;">
+                <div>
+                    <div style="font-weight: 500; color: var(--foreground);">Deployment completed</div>
+                    <div style="font-size: 0.875rem; color: var(--muted-foreground);">MyApp-Production</div>
+                </div>
+                <span class="badge badge-success">Success</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem; background-color: var(--muted); border-radius: 0.375rem;">
+                <div>
+                    <div style="font-weight: 500; color: var(--foreground);">Database backup created</div>
+                    <div style="font-size: 0.875rem; color: var(--muted-foreground);">Production-DB</div>
+                </div>
+                <span class="badge badge-success">Success</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem; background-color: var(--muted); border-radius: 0.375rem;">
+                <div>
+                    <div style="font-weight: 500; color: var(--foreground);">Pods restarted</div>
+                    <div style="font-size: 0.875rem; color: var(--muted-foreground);">Backend-Service</div>
+                </div>
+                <span class="badge badge-success">Success</span>
+            </div>
+        </div>
+    </div>
+    
+    <div class="card">
+        <h2 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 1rem; color: var(--foreground);">
+            Quick Actions
+        </h2>
+        <div style="display: grid; gap: 0.75rem;">
+            <a href="/Dashboard/Deployments" class="btn btn-primary" style="width: 100%; justify-content: center;">
+                New Deployment
+            </a>
+            <a href="/Dashboard/Databases" class="btn btn-primary" style="width: 100%; justify-content: center; background-color: var(--secondary); color: var(--secondary-foreground);">
+                Backup Database
+            </a>
+            <a href="/Dashboard/Tasks" class="btn btn-primary" style="width: 100%; justify-content: center; background-color: var(--secondary); color: var(--secondary-foreground);">
+                View Tasks
+            </a>
+        </div>
+    </div>
+</div>

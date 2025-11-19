@@ -1,0 +1,90 @@
+@page
+@model CloudOps.Web.Pages.Dashboard.EnvironmentsModel
+@{
+    ViewData["Title"] = "Environments";
+    Layout = "Shared/_DashboardLayout";
+}
+
+<h1 class="page-title">Environments</h1>
+<p class="page-description">Manage deployment environments and configurations</p>
+
+<div class="grid grid-4" style="margin-bottom: 2rem;">
+    <div class="stat-card">
+        <div class="stat-label">Total Environments</div>
+        <div class="stat-value">15</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Production</div>
+        <div class="stat-value">5</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Staging</div>
+        <div class="stat-value">5</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Development</div>
+        <div class="stat-value">5</div>
+    </div>
+</div>
+
+<div class="card">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+        <h2 style="font-size: 1.25rem; font-weight: 600; color: var(--foreground);">All Environments</h2>
+        <button class="btn btn-primary">Add Environment</button>
+    </div>
+    
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Project</th>
+                <th>Type</th>
+                <th>Status</th>
+                <th>Last Deploy</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>MyApp-Production</td>
+                <td>MyApp</td>
+                <td><span class="badge badge-danger">Production</span></td>
+                <td><span class="badge badge-success">Healthy</span></td>
+                <td>2 hours ago</td>
+                <td>
+                    <button class="btn btn-primary" style="padding: 0.375rem 0.75rem; font-size: 0.875rem;">Deploy</button>
+                </td>
+            </tr>
+            <tr>
+                <td>MyApp-Staging</td>
+                <td>MyApp</td>
+                <td><span class="badge badge-warning">Staging</span></td>
+                <td><span class="badge badge-success">Healthy</span></td>
+                <td>5 hours ago</td>
+                <td>
+                    <button class="btn btn-primary" style="padding: 0.375rem 0.75rem; font-size: 0.875rem;">Deploy</button>
+                </td>
+            </tr>
+            <tr>
+                <td>MyApp-Development</td>
+                <td>MyApp</td>
+                <td><span class="badge" style="background-color: hsla(204, 100%, 59%, 0.15); color: hsl(204, 100%, 59%);">Development</span></td>
+                <td><span class="badge badge-success">Healthy</span></td>
+                <td>1 day ago</td>
+                <td>
+                    <button class="btn btn-primary" style="padding: 0.375rem 0.75rem; font-size: 0.875rem;">Deploy</button>
+                </td>
+            </tr>
+            <tr>
+                <td>Backend-Production</td>
+                <td>Backend API</td>
+                <td><span class="badge badge-danger">Production</span></td>
+                <td><span class="badge badge-success">Healthy</span></td>
+                <td>3 hours ago</td>
+                <td>
+                    <button class="btn btn-primary" style="padding: 0.375rem 0.75rem; font-size: 0.875rem;">Deploy</button>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</div>
