@@ -1,12 +1,20 @@
-'use client';
-
-import { signIn } from 'next-auth/react';
-
 export default function LandingPage() {
   return (
-    <div className="min-h-screen" style={{ backgroundColor: 'var(--background)' }}>
+    <div className="min-h-screen relative" style={{ backgroundColor: 'var(--background)' }}>
+      {/* Top gradient overlay */}
+      <div 
+        className="absolute top-0 left-0 right-0 h-96 pointer-events-none"
+        style={{
+          background: 'linear-gradient(180deg, hsl(175, 70%, 50%, 0.12) 0%, transparent 60%)',
+          zIndex: 0
+        }}
+      />
+      
       {/* Navigation */}
-      <nav style={{ borderBottom: '1px solid var(--border)' }}>
+      <nav className="relative z-10" style={{ 
+        background: 'linear-gradient(180deg, hsl(220, 15%, 12%) 0%, hsl(220, 15%, 6%) 100%)',
+        borderBottom: '1px solid var(--border)' 
+      }}>
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-8">
             <div className="flex items-center gap-3">
@@ -18,7 +26,7 @@ export default function LandingPage() {
       </nav>
 
       {/* Hero Section */}
-      <div className="max-w-5xl mx-auto px-6 pt-24 pb-16 text-center">
+      <div className="max-w-5xl mx-auto px-6 pt-24 pb-16 text-center relative z-10">
         <h1 className="text-6xl font-bold mb-6" style={{ color: 'var(--foreground)' }}>
           CloudOps
         </h1>
@@ -26,19 +34,22 @@ export default function LandingPage() {
           Comprehensive organizational management platform for teams and projects. Track
           allocations, manage resources, and drive operational excellence.
         </p>
-        <button
-          onClick={() => signIn('azure-ad', { callbackUrl: '/dashboard' })}
-          className="px-8 py-3 font-medium rounded-lg transition-colors text-lg flex items-center gap-3 mx-auto"
-          style={{ 
-            backgroundColor: 'var(--primary)', 
-            color: 'var(--primary-foreground)' 
-          }}
-        >
-          <svg className="w-6 h-6" viewBox="0 0 23 23" fill="currentColor">
-            <path d="M0 0h10.93v10.93H0V0zm12.07 0H23v10.93H12.07V0zM0 12.07h10.93V23H0V12.07zm12.07 0H23V23H12.07V12.07z"/>
-          </svg>
-          Sign in With Microsoft
-        </button>
+        <form action="/api/auth/signin/azure-ad" method="POST">
+          <input type="hidden" name="callbackUrl" value="/dashboard" />
+          <button
+            type="submit"
+            className="px-8 py-3 font-medium rounded-lg transition-colors text-lg flex items-center gap-3 mx-auto"
+            style={{ 
+              backgroundColor: 'var(--primary)', 
+              color: 'var(--primary-foreground)' 
+            }}
+          >
+            <svg className="w-6 h-6" viewBox="0 0 23 23" fill="currentColor">
+              <path d="M0 0h10.93v10.93H0V0zm12.07 0H23v10.93H12.07V0zM0 12.07h10.93V23H0V12.07zm12.07 0H23V23H12.07V12.07z"/>
+            </svg>
+            Sign in With Microsoft
+          </button>
+        </form>
       </div>
 
       {/* Features Grid */}
@@ -115,16 +126,19 @@ export default function LandingPage() {
           <p className="mb-8 text-2xl font-semibold" style={{ color: 'var(--card-foreground)' }}>
             Ease your daily devops tasks with CloudOps platform tool.
           </p>
-          <button
-            onClick={() => signIn('azure-ad', { callbackUrl: '/dashboard' })}
-            className="px-8 py-3 font-medium rounded-lg transition-colors text-lg"
-            style={{ 
-              backgroundColor: 'var(--primary)', 
-              color: 'var(--primary-foreground)' 
-            }}
-          >
-            Start Managing Resources
-          </button>
+          <form action="/api/auth/signin/azure-ad" method="POST" className="flex justify-center">
+            <input type="hidden" name="callbackUrl" value="/dashboard" />
+            <button
+              type="submit"
+              className="px-8 py-3 font-medium rounded-lg transition-colors text-lg"
+              style={{ 
+                backgroundColor: 'var(--primary)', 
+                color: 'var(--primary-foreground)' 
+              }}
+            >
+              Start Managing Resources
+            </button>
+          </form>
         </div>
       </div>
     </div>
