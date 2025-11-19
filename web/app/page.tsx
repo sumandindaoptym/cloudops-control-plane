@@ -1,8 +1,13 @@
 'use client';
 
+import { signIn } from 'next-auth/react';
+
 export default function LandingPage() {
-  const handleSignIn = () => {
-    window.location.href = '/api/auth/signin/azure-ad?callbackUrl=' + encodeURIComponent('/dashboard');
+  const handleSignIn = async () => {
+    await signIn('azure-ad', { 
+      callbackUrl: '/dashboard',
+      redirect: true 
+    });
   };
 
   return (
