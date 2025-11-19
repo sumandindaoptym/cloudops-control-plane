@@ -12,8 +12,8 @@ echo "Starting API on port 5056 (with integrated Worker)..."
 (cd "$PROJECT_ROOT/services/api/CloudOps.Api" && dotnet run --no-hot-reload) &
 API_PID=$!
 
-echo "Starting Next.js frontend on port 5000..."
-(cd "$PROJECT_ROOT/web" && pnpm dev --port 5000) &
+echo "Starting ASP.NET web frontend on port 5000..."
+(cd "$PROJECT_ROOT/services/web" && dotnet run --no-hot-reload) &
 WEB_PID=$!
 
 echo ""
