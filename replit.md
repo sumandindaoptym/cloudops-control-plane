@@ -46,7 +46,14 @@ The platform is built as a monorepo with the following core technologies and des
 - A `dev.sh` script starts both API (port 5056) and Frontend (port 5000).
 - Swagger UI is available for API documentation.
 
-## Recent Changes (October 16, 2025)
+## Recent Changes (November 19, 2025)
+- **Fixed Microsoft login**: Resolved X-Frame-Options error
+  - Changed from client-side signIn() to server-side form POST
+  - Login now does full page redirect to Microsoft instead of iframe
+  - Fixes "Refused to display in a frame" error
+  - Both hero and CTA buttons now properly redirect to Azure AD
+
+## Previous Changes (October 16, 2025)
 - **Updated theme to modern dark design**: Complete color palette refresh
   - Much darker background (`hsl(220, 15%, 9%)`) for better contrast
   - Deeper card backgrounds (`hsl(220, 15%, 6%)`) 
