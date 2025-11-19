@@ -13,21 +13,22 @@ This project is an Enterprise CloudOps Control Plane, serving as Optym's first d
 The platform is built as a monorepo with the following core technologies and design patterns:
 
 **Frontend:**
-- **Technology**: Next.js 15 (App Router, TypeScript, Tailwind CSS).
+- **Technology**: ASP.NET Core 9.0 Razor Pages with custom CSS (olympus.css).
 - **UI/UX**: Adheres to Optym's "Olympus" brand guidelines, featuring a clean, minimal dark theme.
     - **Color System**: Uses CSS custom properties for a modern dark palette with deep backgrounds and teal accents. All components use CSS variables.
       - Background: `hsl(220, 15%, 9%)` - Deep dark background
       - Card: `hsl(220, 15%, 6%)` - Even darker card backgrounds
-      - Border: `hsl(220, 15%, 15%)` - Subtle borders
+      - Border: `hsl(220, 15%, 18%)` - Subtle borders
       - Primary: `hsl(175, 70%, 50%)` - Teal accent color
       - Translucent variants for badges with 15% opacity
     - **Landing Page**: Features Optym logo, "Sign in with Microsoft" CTA, and feature cards highlighting one-click deploy, database management, real-time analytics, and secure access.
     - **Dashboard**: Layout includes an Azure subscription selector, sidebar navigation, stat cards, recent activity feed, quick action buttons, system status, and project/environment grids.
-    - **Authentication UI**: Integrates Azure AD authentication via NextAuth.js v5, displaying user info and handling sign-out.
+    - **Pages**: Landing page, Dashboard (main), Deployments, Databases, Tasks, Projects, Environments, and Settings.
+    - **Authentication**: Integrates Azure AD authentication via Microsoft.Identity.Web and Microsoft.Identity.Web.UI packages, providing native ASP.NET Core authentication with automatic token management.
 
 **Backend:**
 - **Technology**: ASP.NET Core 9.0 with Minimal APIs.
-- **Monorepo Structure**: `services/api` (API with integrated Worker), `services/shared` (shared libraries/models), `web` (Next.js frontend).
+- **Monorepo Structure**: `services/api` (API with integrated Worker), `services/shared` (shared libraries/models), `services/web` (ASP.NET Razor Pages frontend).
 - **Message Bus & Task Processing**:
     - Uses `InMemoryMessageBus` (for demo) with `Azure Service Bus` planned for production.
     - Features session-based FIFO task processing.
@@ -47,17 +48,19 @@ The platform is built as a monorepo with the following core technologies and des
 - Swagger UI is available for API documentation.
 
 ## Recent Changes (November 19, 2025)
-- **Microsoft login now working**: Fixed NextAuth v5 Azure AD integration
-  - Added `trustHost: true` to handle dynamic Replit URLs
-  - Created server action (`web/app/actions/auth.ts`) for proper NextAuth v5 signin flow
-  - Landing page calls server action which triggers Azure AD redirect
-  - Removed custom signin page configuration to use NextAuth defaults
-  - Both "Sign in With Microsoft" buttons now work correctly
-  - **Important**: Azure AD App Registration must have redirect URI configured:
-    - Redirect URI format: `https://<your-replit-domain>/api/auth/callback/azure-ad`
-    - Example: `https://a46607d1-b410-4ba8-bd9c-95a49e37d57e-00-1clwqs1t2ts23.worf.replit.dev/api/auth/callback/azure-ad`
-    - Add this in Azure Portal → App Registrations → Authentication → Redirect URIs
+- **Migrated frontend from Next.js to ASP.NET Razor Pages**:
+  - Replaced Next.js 15 with ASP.NET Core 9.0 Razor Pages
+  - Implemented native Azure AD authentication using Microsoft.Identity.Web middleware
+  - Created all 7 pages: Landing (Index), Dashboard, Deployments, Databases, Tasks, Projects, Environments, and Settings
+  - Maintained complete Olympus dark theme design with custom CSS (olympus.css)
+  - Updated dev.sh script to run ASP.NET web app on port 5000
+  - Removed Next.js project directory and dependencies
+  - **Authentication Configuration**: Azure AD App Registration must have redirect URI configured:
+    - Redirect URI format: `https://<your-replit-domain>/signin-oidc`
+    - Example: `https://a46607d1-b410-4ba8-bd9c-95a49e37d57e-00-1clwqs1t2ts23.worf.replit.dev/signin-oidc`
+    - Add this in Azure Portal → App Registrations → Authentication → Redirect URIs (Web platform)
     - After adding the redirect URI, login will redirect to Microsoft, then back to dashboard
+  - Environment variables used: `AZURE_AD_TENANT_ID`, `AZURE_AD_CLIENT_ID`, `AZURE_AD_CLIENT_SECRET`
 
 ## Previous Changes (October 16, 2025)
 - **Updated theme to modern dark design**: Complete color palette refresh
