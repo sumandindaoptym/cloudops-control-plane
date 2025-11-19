@@ -15,7 +15,12 @@ The platform is built as a monorepo with the following core technologies and des
 **Frontend:**
 - **Technology**: Next.js 15 (App Router, TypeScript, Tailwind CSS).
 - **UI/UX**: Adheres to Optym's "Olympus" brand guidelines, featuring a clean, minimal dark theme.
-    - **Color System**: Uses CSS custom properties for a defined palette (e.g., `hsl(215, 20%, 14%)` for background, `hsl(204, 100%, 59%)` for primary cyan accents) and translucent variants for badges. All components use CSS variables.
+    - **Color System**: Uses CSS custom properties for a modern dark palette with deep backgrounds and teal accents. All components use CSS variables.
+      - Background: `hsl(220, 15%, 9%)` - Deep dark background
+      - Card: `hsl(220, 15%, 6%)` - Even darker card backgrounds
+      - Border: `hsl(220, 15%, 15%)` - Subtle borders
+      - Primary: `hsl(175, 70%, 50%)` - Teal accent color
+      - Translucent variants for badges with 15% opacity
     - **Landing Page**: Features Optym logo, "Sign in with Microsoft" CTA, and feature cards highlighting one-click deploy, database management, real-time analytics, and secure access.
     - **Dashboard**: Layout includes an Azure subscription selector, sidebar navigation, stat cards, recent activity feed, quick action buttons, system status, and project/environment grids.
     - **Authentication UI**: Integrates Azure AD authentication via NextAuth.js v5, displaying user info and handling sign-out.
@@ -42,11 +47,17 @@ The platform is built as a monorepo with the following core technologies and des
 - Swagger UI is available for API documentation.
 
 ## Recent Changes (October 16, 2025)
+- **Updated theme to modern dark design**: Complete color palette refresh
+  - Much darker background (`hsl(220, 15%, 9%)`) for better contrast
+  - Deeper card backgrounds (`hsl(220, 15%, 6%)`) 
+  - Changed primary accent from cyan to teal (`hsl(175, 70%, 50%)`)
+  - Reduced translucent badge opacity to 15% for subtlety
+  - More refined border colors for cleaner separation
 - **Enhanced UX interactions**:
   - Added cursor pointer styles for all interactive elements (buttons, links, selects)
   - Disabled elements show "not-allowed" cursor for better feedback
   - Updated sidebar to use usePathname for accurate active state tracking
-- **Added loading indicator**: Cyan progress bar appears at top during page navigation (nextjs-toploader)
+- **Added loading indicator**: Teal progress bar appears at top during page navigation (nextjs-toploader)
 - **Created dashboard navigation pages**: Added 6 new pages accessible via sidebar
   - Deployments (/dashboard/deployments) - View deployment history, stats, create new deployments
   - Databases (/dashboard/databases) - Manage database instances, backups, restores (needs backend integration)
