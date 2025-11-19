@@ -4,9 +4,21 @@ import { signIn } from 'next-auth/react';
 
 export default function LandingPage() {
   return (
-    <div className="min-h-screen" style={{ backgroundColor: 'var(--background)' }}>
+    <div className="min-h-screen relative" style={{ backgroundColor: 'var(--background)' }}>
+      {/* Top gradient overlay */}
+      <div 
+        className="absolute top-0 left-0 right-0 h-96 pointer-events-none"
+        style={{
+          background: 'linear-gradient(180deg, hsl(175, 70%, 50%, 0.12) 0%, transparent 60%)',
+          zIndex: 0
+        }}
+      />
+      
       {/* Navigation */}
-      <nav style={{ borderBottom: '1px solid var(--border)' }}>
+      <nav className="relative z-10" style={{ 
+        background: 'linear-gradient(180deg, hsl(220, 15%, 12%) 0%, hsl(220, 15%, 6%) 100%)',
+        borderBottom: '1px solid var(--border)' 
+      }}>
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-8">
             <div className="flex items-center gap-3">
@@ -18,7 +30,7 @@ export default function LandingPage() {
       </nav>
 
       {/* Hero Section */}
-      <div className="max-w-5xl mx-auto px-6 pt-24 pb-16 text-center">
+      <div className="max-w-5xl mx-auto px-6 pt-24 pb-16 text-center relative z-10">
         <h1 className="text-6xl font-bold mb-6" style={{ color: 'var(--foreground)' }}>
           CloudOps
         </h1>

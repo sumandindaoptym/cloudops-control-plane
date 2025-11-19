@@ -10,11 +10,20 @@ interface DashboardNavProps {
 
 export default function DashboardNav({ user }: DashboardNavProps) {
   return (
-    <nav style={{ 
-      backgroundColor: 'var(--card)',
+    <nav className="relative" style={{ 
+      background: 'linear-gradient(180deg, hsl(220, 15%, 12%) 0%, hsl(220, 15%, 6%) 100%)',
       borderBottom: '1px solid var(--border)' 
     }}>
-      <div className="max-w-7xl mx-auto px-6 py-4">
+      {/* Top gradient overlay */}
+      <div 
+        className="absolute top-0 left-0 right-0 h-32 pointer-events-none"
+        style={{
+          background: 'linear-gradient(180deg, hsl(175, 70%, 50%, 0.08) 0%, transparent 100%)',
+          zIndex: 0
+        }}
+      />
+      
+      <div className="max-w-7xl mx-auto px-6 py-4 relative z-10">
         <div className="flex items-center justify-end gap-4">
           <SubscriptionSelector />
           

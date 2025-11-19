@@ -53,6 +53,10 @@ The platform is built as a monorepo with the following core technologies and des
   - Changed primary accent from cyan to teal (`hsl(175, 70%, 50%)`)
   - Reduced translucent badge opacity to 15% for subtlety
   - More refined border colors for cleaner separation
+  - **Added gradient effects**: Subtle teal gradient overlay at top of pages for depth
+    - Navigation header has vertical gradient for sophistication
+    - Top gradient overlay fades from teal to transparent
+    - Creates modern, polished Olympus design aesthetic
 - **Enhanced UX interactions**:
   - Added cursor pointer styles for all interactive elements (buttons, links, selects)
   - Disabled elements show "not-allowed" cursor for better feedback
