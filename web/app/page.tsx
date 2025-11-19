@@ -3,10 +3,6 @@
 import { handleSignIn } from './actions/auth';
 
 export default function LandingPage() {
-  const onSignIn = async () => {
-    await handleSignIn();
-  };
-
   return (
     <div className="min-h-screen relative" style={{ backgroundColor: 'var(--background)' }}>
       {/* Top gradient overlay */}
@@ -42,19 +38,21 @@ export default function LandingPage() {
           Comprehensive organizational management platform for teams and projects. Track
           allocations, manage resources, and drive operational excellence.
         </p>
-        <button
-          onClick={onSignIn}
-          className="px-8 py-3 font-medium rounded-lg transition-colors text-lg flex items-center gap-3 mx-auto"
-          style={{ 
-            backgroundColor: 'var(--primary)', 
-            color: 'var(--primary-foreground)' 
-          }}
-        >
-          <svg className="w-6 h-6" viewBox="0 0 23 23" fill="currentColor">
-            <path d="M0 0h10.93v10.93H0V0zm12.07 0H23v10.93H12.07V0zM0 12.07h10.93V23H0V12.07zm12.07 0H23V23H12.07V12.07z"/>
-          </svg>
-          Sign in With Microsoft
-        </button>
+        <form action={handleSignIn}>
+          <button
+            type="submit"
+            className="px-8 py-3 font-medium rounded-lg transition-colors text-lg flex items-center gap-3 mx-auto"
+            style={{ 
+              backgroundColor: 'var(--primary)', 
+              color: 'var(--primary-foreground)' 
+            }}
+          >
+            <svg className="w-6 h-6" viewBox="0 0 23 23" fill="currentColor">
+              <path d="M0 0h10.93v10.93H0V0zm12.07 0H23v10.93H12.07V0zM0 12.07h10.93V23H0V12.07zm12.07 0H23V23H12.07V12.07z"/>
+            </svg>
+            Sign in With Microsoft
+          </button>
+        </form>
       </div>
 
       {/* Features Grid */}
@@ -131,16 +129,18 @@ export default function LandingPage() {
           <p className="mb-8 text-2xl font-semibold" style={{ color: 'var(--card-foreground)' }}>
             Ease your daily devops tasks with CloudOps platform tool.
           </p>
-          <button
-            onClick={onSignIn}
-            className="px-8 py-3 font-medium rounded-lg transition-colors text-lg"
-            style={{ 
-              backgroundColor: 'var(--primary)', 
-              color: 'var(--primary-foreground)' 
-            }}
-          >
-            Start Managing Resources
-          </button>
+          <form action={handleSignIn} className="flex justify-center">
+            <button
+              type="submit"
+              className="px-8 py-3 font-medium rounded-lg transition-colors text-lg"
+              style={{ 
+                backgroundColor: 'var(--primary)', 
+                color: 'var(--primary-foreground)' 
+              }}
+            >
+              Start Managing Resources
+            </button>
+          </form>
         </div>
       </div>
     </div>
