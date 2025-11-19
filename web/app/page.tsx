@@ -1,9 +1,10 @@
 'use client';
 
+import { handleSignIn } from './actions/auth';
+
 export default function LandingPage() {
-  const handleSignIn = () => {
-    // Force full page redirect directly to Azure AD to avoid iframe issues with Microsoft login
-    window.location.href = '/api/auth/signin/azure-ad?callbackUrl=' + encodeURIComponent('/dashboard');
+  const onSignIn = async () => {
+    await handleSignIn();
   };
 
   return (
@@ -42,7 +43,7 @@ export default function LandingPage() {
           allocations, manage resources, and drive operational excellence.
         </p>
         <button
-          onClick={handleSignIn}
+          onClick={onSignIn}
           className="px-8 py-3 font-medium rounded-lg transition-colors text-lg flex items-center gap-3 mx-auto"
           style={{ 
             backgroundColor: 'var(--primary)', 
@@ -131,7 +132,7 @@ export default function LandingPage() {
             Ease your daily devops tasks with CloudOps platform tool.
           </p>
           <button
-            onClick={handleSignIn}
+            onClick={onSignIn}
             className="px-8 py-3 font-medium rounded-lg transition-colors text-lg"
             style={{ 
               backgroundColor: 'var(--primary)', 

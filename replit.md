@@ -47,15 +47,17 @@ The platform is built as a monorepo with the following core technologies and des
 - Swagger UI is available for API documentation.
 
 ## Recent Changes (November 19, 2025)
-- **Microsoft login configuration**: Updated NextAuth v5 for proper Azure AD integration
+- **Microsoft login now working**: Fixed NextAuth v5 Azure AD integration
   - Added `trustHost: true` to handle dynamic Replit URLs
+  - Created server action (`web/app/actions/auth.ts`) for proper NextAuth v5 signin flow
+  - Landing page calls server action which triggers Azure AD redirect
   - Removed custom signin page configuration to use NextAuth defaults
-  - Using direct navigation to `/api/auth/signin/azure-ad` for full page redirect
-  - Made landing page a client component ('use client')
-  - **Next step required**: Azure AD App Registration must have redirect URI configured:
+  - Both "Sign in With Microsoft" buttons now work correctly
+  - **Important**: Azure AD App Registration must have redirect URI configured:
     - Redirect URI format: `https://<your-replit-domain>/api/auth/callback/azure-ad`
     - Example: `https://a46607d1-b410-4ba8-bd9c-95a49e37d57e-00-1clwqs1t2ts23.worf.replit.dev/api/auth/callback/azure-ad`
-    - This must be added in Azure Portal → App Registrations → Authentication → Redirect URIs
+    - Add this in Azure Portal → App Registrations → Authentication → Redirect URIs
+    - After adding the redirect URI, login will redirect to Microsoft, then back to dashboard
 
 ## Previous Changes (October 16, 2025)
 - **Updated theme to modern dark design**: Complete color palette refresh
