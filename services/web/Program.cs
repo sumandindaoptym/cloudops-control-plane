@@ -26,6 +26,14 @@ builder.Services.AddAuthentication(OpenIdConnectDefaults.AuthenticationScheme)
                     context.ProtocolMessage.RedirectUri = context.ProtocolMessage.RedirectUri?.Replace("http://", "https://");
                 }
                 return Task.CompletedTask;
+            },
+            OnTicketReceived = context =>
+            {
+                if (string.IsNullOrEmpty(context.Properties.RedirectUri) || context.Properties.RedirectUri == "/")
+                {
+                    context.Properties.RedirectUri = "/Dashboard";
+                }
+                return Task.CompletedTask;
             }
         };
     });

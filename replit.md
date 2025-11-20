@@ -64,6 +64,10 @@ The platform is built as a monorepo with the following core technologies and des
     - Added `AddControllersWithViews()` to services configuration
     - Added `MapControllers()` to enable MVC controller routing
     - Microsoft Identity sign-in/sign-out endpoints now properly accessible at `/MicrosoftIdentity/Account/*`
+  - **Fixed post-login redirect**: Configured authentication to redirect to dashboard after successful sign-in
+    - Added `OnTicketReceived` event handler to set redirect URI to `/Dashboard`
+    - Modified landing page to automatically redirect authenticated users to dashboard
+    - Users now land on the dashboard after signing in with Microsoft
   - **Authentication Configuration**: Azure AD App Registration must have redirect URI configured:
     - Redirect URI format: `https://<your-replit-domain>/signin-oidc`
     - Example: `https://a46607d1-b410-4ba8-bd9c-95a49e37d57e-00-1clwqs1t2ts23.worf.replit.dev/signin-oidc`
