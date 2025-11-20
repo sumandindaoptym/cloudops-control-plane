@@ -6,19 +6,19 @@ The CloudOps platform integrates with Azure to fetch and display subscriptions t
 ## Current Implementation
 
 ### Backend
-- **API Endpoint**: `GET /api/azure/subscriptions`
-- **SDK**: Azure.Identity + Azure.ResourceManager (latest .NET SDK)
-- **Authentication**: User's Azure AD access token (delegated permissions)
-- **Custom Credential**: `AccessTokenCredential` class to wrap user's token
+- **API Endpoint**: `GET /api/subscriptions` (Minimal API)
+- **Service**: `AzureSubscriptionService` using HttpClient
+- **Authentication**: User's Azure AD access token (delegated permissions via Microsoft.Identity.Web)
+- **Token Acquisition**: `ITokenAcquisition` for obtaining user access tokens
 
 ### Frontend
-- **Component**: `SubscriptionSelector.tsx`
+- **Implementation**: Vanilla JavaScript in `_DashboardLayout.cshtml`
 - **Features**:
-  - Fetches subscriptions from API
+  - Fetches subscriptions from API on page load
   - Displays in dropdown selector
   - Persists selection in localStorage
   - Shows loading state while fetching
-  - Cloud icon for visual clarity
+  - Automatic error handling with helpful messages
 
 ## Azure AD Permissions Required
 
@@ -45,79 +45,95 @@ Each user needs appropriate Azure RBAC roles on subscriptions:
 - No additional configuration needed - uses user's existing Azure permissions
 - Works with any Azure RBAC role (Reader, Contributor, Owner, etc.)
 
-### 3. **NextAuth Configuration**
-The auth configuration requests the Azure Resource Manager scope with refresh token support:
+### 3. **ASP.NET Core Authentication Configuration**
+The authentication is configured in `Program.cs` with the required scopes:
 
-```typescript
-scope: 'openid profile email User.Read https://management.azure.com/user_impersonation offline_access'
-prompt: 'consent'
+```csharp
+options.Scope.Add("openid");
+options.Scope.Add("profile");
+options.Scope.Add("email");
+options.Scope.Add("offline_access");
+options.Scope.Add("https://management.azure.com/user_impersonation");
 ```
 
 **Scopes Explained:**
 - `openid profile email`: Basic user info
-- `User.Read`: Microsoft Graph API access
 - `https://management.azure.com/user_impersonation`: Azure Resource Manager delegated access
 - `offline_access`: Enables refresh tokens for automatic token renewal
 
-### 4. **Token Refresh**
-The implementation includes automatic token refresh:
-- Access tokens are automatically refreshed before expiration
+### 4. **Token Acquisition**
+The implementation uses Microsoft.Identity.Web for token management:
+- `EnableTokenAcquisitionToCallDownstreamApi()` enables token acquisition
+- `AddInMemoryTokenCaches()` caches tokens in memory
+- Tokens are automatically refreshed before expiration
 - No user interruption when tokens expire
-- Graceful fallback: redirects to sign-in if refresh fails
-- Refresh tokens stored securely in JWT session
+- Graceful error handling with helpful messages
+
+**Important:** Users must sign out and sign back in after the Azure Resource Manager scope is added to consent to the new permission.
 
 ## How It Works
 
 ### Authentication Flow
-1. User signs in with Microsoft (Azure AD)
-2. NextAuth requests access token with Azure Resource Manager scope
-3. Access token is stored in user's session
-4. Frontend fetches session and passes access token to backend API
-5. Backend uses user's token to call Azure Resource Manager API
-6. API returns subscriptions the user has access to based on their RBAC permissions
+1. User signs in with Microsoft (Azure AD) via Microsoft.Identity.Web
+2. Azure AD authenticates user and requests consent for scopes (including Azure Resource Manager)
+3. Access token with Azure Resource Manager scope is stored in token cache
+4. Frontend JavaScript calls `/api/subscriptions` endpoint
+5. Backend uses `ITokenAcquisition` to get user's access token for Azure Management API
+6. Backend calls Azure Resource Manager API with user's token
+7. API returns subscriptions the user has access to based on their RBAC permissions
 
 ### Token Flow Diagram
 ```
-User Browser → NextAuth (Azure AD) → Access Token (with ARM scope)
-                                              ↓
-Frontend (session.accessToken) → Backend API (Authorization: Bearer <token>)
-                                              ↓
-                            Azure Resource Manager API
-                                              ↓
+User Browser → Microsoft.Identity.Web (Azure AD) → Access Token (with ARM scope)
+                                                            ↓
+Frontend (JavaScript fetch) → Backend API (/api/subscriptions)
+                                                            ↓
+                            ITokenAcquisition (gets user token from cache)
+                                                            ↓
+                            Azure Management API (https://management.azure.com)
+                                                            ↓
                             Subscriptions (filtered by user's RBAC)
 ```
 
 ## Testing
 
 ### Test API Endpoint
-```bash
-curl http://localhost:5056/api/azure/subscriptions
+You must be authenticated to test the API. Navigate to the dashboard after signing in, and the subscription dropdown will automatically fetch and display subscriptions.
+
+Alternatively, use browser DevTools:
+```javascript
+// In browser console (while authenticated)
+fetch('/api/subscriptions')
+  .then(r => r.json())
+  .then(data => console.log(data));
 ```
 
 ### Expected Response (with permissions)
 ```json
 [
   {
-    "id": "/subscriptions/xxx",
-    "name": "Your Subscription Name",
     "subscriptionId": "xxx-xxx-xxx",
-    "tenantId": "xxx-xxx-xxx",
-    "state": "Enabled"
+    "displayName": "Your Subscription Name",
+    "state": "Enabled",
+    "tenantId": "xxx-xxx-xxx"
   }
 ]
 ```
 
 ### Check Logs
-The API logs subscription access:
-```
-[INF] Retrieved 3 Azure subscriptions
-```
+The service logs subscription access. Check the workflow logs for:
+- Successful fetch: Subscription dropdown populates with real data
+- Permission errors: "Unable to load subscriptions (try signing out and in again)"
+- Token acquisition errors in server logs
 
-Or if permissions are missing:
-```
-[WRN] No Azure subscriptions found. The service principal may not have access to any subscriptions. Using mock data for development.
-[INF] Retrieved 3 Azure subscriptions
-```
+### Troubleshooting
+
+**If subscriptions don't appear:**
+1. Verify the Azure AD app has "Azure Service Management" API permission with `user_impersonation` scope
+2. Ensure admin consent was granted for the permission
+3. Sign out and sign back in to obtain new tokens with the Azure Resource Manager scope
+4. Check that your Azure AD user has at least Reader role on Azure subscriptions
+5. Check browser console and server logs for errors
 
 ## Future Enhancements
 

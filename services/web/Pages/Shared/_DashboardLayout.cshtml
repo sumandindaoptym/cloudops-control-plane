@@ -87,10 +87,8 @@
         <div class="main-content">
             <header class="header">
                 <div>
-                    <select class="select">
-                        <option>Azure Subscription: Production</option>
-                        <option>Azure Subscription: Development</option>
-                        <option>Azure Subscription: Staging</option>
+                    <select id="subscriptionSelector" class="select">
+                        <option value="">Loading subscriptions...</option>
                     </select>
                 </div>
                 <div class="user-menu">
@@ -103,6 +101,59 @@
             </div>
         </div>
     </div>
+    
+    <script>
+        (async function() {
+            const selector = document.getElementById('subscriptionSelector');
+            const savedSubscriptionId = localStorage.getItem('selectedSubscriptionId');
+            
+            try {
+                const response = await fetch('/api/subscriptions');
+                
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({}));
+                    const errorMessage = errorData.error || 'Failed to fetch subscriptions';
+                    console.error('Error loading subscriptions:', errorMessage);
+                    selector.innerHTML = `<option value="">${errorMessage}</option>`;
+                    return;
+                }
+                
+                const subscriptions = await response.json();
+                
+                selector.innerHTML = '';
+                
+                if (subscriptions.length === 0) {
+                    selector.innerHTML = '<option value="">No Azure subscriptions found</option>';
+                    return;
+                }
+                
+                subscriptions.forEach(sub => {
+                    const option = document.createElement('option');
+                    option.value = sub.subscriptionId;
+                    option.textContent = `${sub.displayName} (${sub.state})`;
+                    
+                    if (savedSubscriptionId === sub.subscriptionId) {
+                        option.selected = true;
+                    }
+                    
+                    selector.appendChild(option);
+                });
+                
+                if (!savedSubscriptionId && subscriptions.length > 0) {
+                    selector.value = subscriptions[0].subscriptionId;
+                    localStorage.setItem('selectedSubscriptionId', subscriptions[0].subscriptionId);
+                }
+                
+                selector.addEventListener('change', function() {
+                    localStorage.setItem('selectedSubscriptionId', this.value);
+                });
+                
+            } catch (error) {
+                console.error('Error loading subscriptions:', error);
+                selector.innerHTML = '<option value="">Unable to load subscriptions</option>';
+            }
+        })();
+    </script>
     
     @await RenderSectionAsync("Scripts", required: false)
 </body>

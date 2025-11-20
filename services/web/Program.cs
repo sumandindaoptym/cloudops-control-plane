@@ -1,3 +1,4 @@
+using CloudOps.Web.Services;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.Identity.Web;
@@ -17,6 +18,13 @@ builder.Services.AddAuthentication(OpenIdConnectDefaults.AuthenticationScheme)
     .AddMicrosoftIdentityWebApp(options =>
     {
         builder.Configuration.Bind("AzureAd", options);
+        options.Scope.Clear();
+        options.Scope.Add("openid");
+        options.Scope.Add("profile");
+        options.Scope.Add("email");
+        options.Scope.Add("offline_access");
+        options.Scope.Add("https://management.azure.com/user_impersonation");
+        options.ResponseType = "code";
         options.Events = new OpenIdConnectEvents
         {
             OnRedirectToIdentityProvider = context =>
@@ -36,7 +44,9 @@ builder.Services.AddAuthentication(OpenIdConnectDefaults.AuthenticationScheme)
                 return Task.CompletedTask;
             }
         };
-    });
+    })
+    .EnableTokenAcquisitionToCallDownstreamApi()
+    .AddInMemoryTokenCaches();
 
 builder.Services.AddAuthorization(options =>
 {
@@ -47,6 +57,8 @@ builder.Services.AddControllersWithViews();
 
 builder.Services.AddRazorPages()
     .AddMicrosoftIdentityUI();
+
+builder.Services.AddHttpClient<IAzureSubscriptionService, AzureSubscriptionService>();
 
 builder.Services.Configure<ForwardedHeadersOptions>(options =>
 {
@@ -76,6 +88,49 @@ app.UseRouting();
 
 app.UseAuthentication();
 app.UseAuthorization();
+
+app.MapGet("/api/subscriptions", async (
+    HttpContext httpContext, 
+    IAzureSubscriptionService subscriptionService, 
+    Microsoft.Identity.Web.ITokenAcquisition tokenAcquisition,
+    ILogger<Program> logger) =>
+{
+    if (!httpContext.User.Identity?.IsAuthenticated ?? true)
+    {
+        return Results.Unauthorized();
+    }
+
+    try
+    {
+        var accessToken = await tokenAcquisition.GetAccessTokenForUserAsync(new[] { "https://management.azure.com/user_impersonation" });
+        var subscriptions = await subscriptionService.GetSubscriptionsAsync(accessToken);
+        return Results.Ok(subscriptions);
+    }
+    catch (Microsoft.Identity.Web.MicrosoftIdentityWebChallengeUserException)
+    {
+        logger.LogWarning("User needs to consent to Azure Management API scope");
+        return Results.Json(
+            new { error = "Please sign out and sign back in to grant Azure subscription access" },
+            statusCode: 403
+        );
+    }
+    catch (HttpRequestException ex)
+    {
+        logger.LogError(ex, "Azure API request failed");
+        return Results.Json(
+            new { error = $"Failed to fetch subscriptions from Azure: {ex.Message}" },
+            statusCode: 502
+        );
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "Unexpected error fetching subscriptions");
+        return Results.Json(
+            new { error = "An unexpected error occurred while fetching subscriptions" },
+            statusCode: 500
+        );
+    }
+}).RequireAuthorization();
 
 app.MapControllers();
 app.MapRazorPages();
