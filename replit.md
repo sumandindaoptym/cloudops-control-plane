@@ -74,13 +74,36 @@ The platform is built as a monorepo with the following core technologies and des
     - Add this in Azure Portal → App Registrations → Authentication → Redirect URIs (Web platform)
     - After adding the redirect URI, login will redirect to Microsoft, then back to dashboard
   - Environment variables used: `AZURE_AD_TENANT_ID`, `AZURE_AD_CLIENT_ID`, `AZURE_AD_CLIENT_SECRET`
-  - **Added Service Bus dashboard page**: Created new Service Bus page with queue metrics, topic statistics, and message activity
-    - Displays queue metrics (active, dead-letter, scheduled message counts)
-    - Shows topic statistics and subscription details
-    - Lists recent Service Bus activity with message types and timestamps
-    - Secured with [Authorize] attribute for authentication protection
-    - Added to sidebar navigation between Tasks and Projects
-    - Follows Olympus dark theme styling and established dashboard patterns
+  - **Implemented Service Bus DLQ Cleaner**: Full-featured dead-letter queue management tool
+    - **Backend Services**:
+      - `ServiceBusResourceService`: Discovers namespaces, queues, topics, subscriptions using Azure.ResourceManager.ServiceBus
+      - `ServiceBusRuntimeService`: Retrieves DLQ message counts using Azure.Messaging.ServiceBus.Administration
+      - Both services use user's delegated Azure AD tokens for secure, RBAC-based access
+    - **API Endpoints** (in web project with Microsoft.Identity.Web authentication):
+      - GET `/api/azure/servicebus/namespaces` - Lists Service Bus namespaces in subscription
+      - GET `/api/azure/servicebus/queues` - Lists queues in namespace
+      - GET `/api/azure/servicebus/topics` - Lists topics in namespace
+      - GET `/api/azure/servicebus/topics/{topicName}/subscriptions` - Lists topic subscriptions
+      - POST `/api/azure/servicebus/dlq/count` - Gets DLQ and active message counts
+    - **Authentication**:
+      - Uses two scopes: `https://management.azure.com/user_impersonation` for resource discovery, `https://servicebus.azure.net/user_impersonation` for DLQ operations
+      - All endpoints require user authentication and proper Azure RBAC permissions
+      - Comprehensive consent error handling guides users through permission granting
+    - **Service Bus Page UI**:
+      - Cascading dropdowns: Azure subscription → Service Bus namespace → Entity type (Queue/Topic) → Queue or Topic+Subscription
+      - DLQ Status Card displays: dead-letter count, active count, entity type with gradient card backgrounds
+      - Empty state with helpful guidance when no entity selected
+      - Refresh button to update DLQ counts on demand
+      - Full Olympus dark theme integration with proper colors and styling
+    - **JavaScript Integration**:
+      - Fetches data from same-origin endpoints (no CORS issues)
+      - Implements cascaded selection logic (namespace triggers queue/topic fetch, etc.)
+      - Silently handles unauthenticated state on page load
+      - localStorage integration for subscription persistence
+    - **Known Limitations**:
+      - Purge functionality not yet implemented (button shows placeholder alert)
+      - Live progress tracking, SignalR integration, and task worker purge handler pending
+    - Follows enterprise-grade patterns with proper error handling, logging, and security
   - **Implemented Azure subscription fetching**: Integrated real Azure subscription data for logged-in users
     - Created `AzureSubscriptionService` to call Azure Management API with user's delegated permissions
     - Added `/api/subscriptions` endpoint with proper authentication and error handling
