@@ -1,148 +1,426 @@
 @page
 @model CloudOps.Web.Pages.Dashboard.ServiceBusModel
 @{
-    ViewData["Title"] = "Service Bus";
+    ViewData["Title"] = "Service Bus DLQ Cleaner";
     Layout = "Shared/_DashboardLayout";
 }
 
-<h1 class="page-title">Azure Service Bus</h1>
-<p class="page-description">Manage message queues, topics, and subscriptions</p>
+<h1 class="page-title">Service Bus DLQ Cleaner</h1>
+<p class="page-description">Manage dead-letter queues across your Azure Service Bus namespaces</p>
 
-<div class="grid grid-4" style="margin-bottom: 2rem;">
-    <div class="stat-card">
-        <div class="stat-label">Total Queues</div>
-        <div class="stat-value">12</div>
-    </div>
-    <div class="stat-card">
-        <div class="stat-label">Active Messages</div>
-        <div class="stat-value">247</div>
-    </div>
-    <div class="stat-card">
-        <div class="stat-label">Dead Letter</div>
-        <div class="stat-value">3</div>
-    </div>
-    <div class="stat-card">
-        <div class="stat-label">Topics</div>
-        <div class="stat-value">8</div>
-    </div>
-</div>
-
-<div class="grid grid-2" style="gap: 1.5rem;">
-    <div class="card">
-        <h2 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 1.5rem; color: var(--foreground);">Message Queues</h2>
-        
-        <table class="table">
-            <thead>
-                <tr>
-                    <th>Queue Name</th>
-                    <th>Messages</th>
-                    <th>Dead Letter</th>
-                    <th>Status</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td>deployment-queue</td>
-                    <td>42</td>
-                    <td>0</td>
-                    <td><span class="badge badge-success">Active</span></td>
-                </tr>
-                <tr>
-                    <td>notification-queue</td>
-                    <td>128</td>
-                    <td>2</td>
-                    <td><span class="badge badge-success">Active</span></td>
-                </tr>
-                <tr>
-                    <td>backup-queue</td>
-                    <td>15</td>
-                    <td>0</td>
-                    <td><span class="badge badge-success">Active</span></td>
-                </tr>
-                <tr>
-                    <td>analytics-queue</td>
-                    <td>62</td>
-                    <td>1</td>
-                    <td><span class="badge badge-success">Active</span></td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
-
-    <div class="card">
-        <h2 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 1.5rem; color: var(--foreground);">Topics & Subscriptions</h2>
-        
-        <table class="table">
-            <thead>
-                <tr>
-                    <th>Topic Name</th>
-                    <th>Subscriptions</th>
-                    <th>Messages</th>
-                    <th>Status</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td>task-events</td>
-                    <td>5</td>
-                    <td>89</td>
-                    <td><span class="badge badge-success">Active</span></td>
-                </tr>
-                <tr>
-                    <td>deployment-events</td>
-                    <td>3</td>
-                    <td>34</td>
-                    <td><span class="badge badge-success">Active</span></td>
-                </tr>
-                <tr>
-                    <td>system-events</td>
-                    <td>7</td>
-                    <td>156</td>
-                    <td><span class="badge badge-success">Active</span></td>
-                </tr>
-                <tr>
-                    <td>alert-events</td>
-                    <td>2</td>
-                    <td>21</td>
-                    <td><span class="badge badge-success">Active</span></td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
-</div>
-
-<div class="card" style="margin-top: 1.5rem;">
-    <h2 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 1.5rem; color: var(--foreground);">Recent Activity</h2>
-    
-    <div style="display: flex; flex-direction: column; gap: 0.75rem;">
-        <div style="padding: 1rem; background-color: var(--card); border: 1px solid var(--border); border-radius: 0.5rem;">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-                <div>
-                    <div style="font-weight: 500; color: var(--foreground);">Message processed: deployment-queue</div>
-                    <div style="font-size: 0.875rem; color: var(--muted-foreground); margin-top: 0.25rem;">Session ID: sess-12345 • Message processed successfully</div>
-                </div>
-                <div style="font-size: 0.875rem; color: var(--muted-foreground);">2 minutes ago</div>
-            </div>
+<div class="card" style="margin-bottom: 1.5rem;">
+    <div class="grid grid-2" style="gap: 1rem; margin-bottom: 1rem;">
+        <div>
+            <label style="display: block; font-weight: 500; margin-bottom: 0.5rem; color: var(--foreground);">Service Bus Namespace</label>
+            <select id="namespaceSelector" class="select" style="width: 100%;">
+                <option value="">Select a namespace...</option>
+            </select>
         </div>
-        
-        <div style="padding: 1rem; background-color: var(--card); border: 1px solid var(--border); border-radius: 0.5rem;">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-                <div>
-                    <div style="font-weight: 500; color: var(--foreground);">Dead letter message: notification-queue</div>
-                    <div style="font-size: 0.875rem; color: var(--muted-foreground); margin-top: 0.25rem;">Message exceeded retry limit and moved to dead letter queue</div>
-                </div>
-                <div style="font-size: 0.875rem; color: var(--muted-foreground);">15 minutes ago</div>
-            </div>
-        </div>
-        
-        <div style="padding: 1rem; background-color: var(--card); border: 1px solid var(--border); border-radius: 0.5rem;">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-                <div>
-                    <div style="font-weight: 500; color: var(--foreground);">Topic subscription created: task-events</div>
-                    <div style="font-size: 0.875rem; color: var(--muted-foreground); margin-top: 0.25rem;">New subscription 'analytics-processor' added</div>
-                </div>
-                <div style="font-size: 0.875rem; color: var(--muted-foreground);">1 hour ago</div>
+        <div>
+            <label style="display: block; font-weight: 500; margin-bottom: 0.5rem; color: var(--foreground);">Entity Type</label>
+            <div style="display: flex; gap: 1rem; padding: 0.5rem 0;">
+                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                    <input type="radio" name="entityType" value="queue" id="entityTypeQueue" checked />
+                    <span>Queue</span>
+                </label>
+                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                    <input type="radio" name="entityType" value="topic" id="entityTypeTopic" />
+                    <span>Topic</span>
+                </label>
             </div>
         </div>
     </div>
+
+    <div id="queueSection" class="grid grid-2" style="gap: 1rem;">
+        <div>
+            <label style="display: block; font-weight: 500; margin-bottom: 0.5rem; color: var(--foreground);">Queue</label>
+            <select id="queueSelector" class="select" style="width: 100%;" disabled>
+                <option value="">Select a queue...</option>
+            </select>
+        </div>
+    </div>
+
+    <div id="topicSection" class="grid grid-2" style="gap: 1rem; display: none;">
+        <div>
+            <label style="display: block; font-weight: 500; margin-bottom: 0.5rem; color: var(--foreground);">Topic</label>
+            <select id="topicSelector" class="select" style="width: 100%;" disabled>
+                <option value="">Select a topic...</option>
+            </select>
+        </div>
+        <div>
+            <label style="display: block; font-weight: 500; margin-bottom: 0.5rem; color: var(--foreground);">Subscription</label>
+            <select id="subscriptionSelector" class="select" style="width: 100%;" disabled>
+                <option value="">Select a subscription...</option>
+            </select>
+        </div>
+    </div>
 </div>
+
+<div id="dlqStatusCard" class="card" style="display: none; margin-bottom: 1.5rem;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+        <h2 style="font-size: 1.25rem; font-weight: 600; color: var(--foreground); margin: 0;">Dead-Letter Queue</h2>
+        <button id="refreshButton" class="btn-secondary" style="display: flex; align-items: center; gap: 0.5rem;">
+            <svg style="width: 1rem; height: 1rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+            </svg>
+            Refresh
+        </button>
+    </div>
+
+    <div class="grid grid-3" style="gap: 1.5rem; margin-bottom: 1.5rem;">
+        <div style="padding: 1.5rem; background: linear-gradient(135deg, var(--card) 0%, hsl(220, 15%, 8%) 100%); border: 1px solid var(--border); border-radius: 0.5rem;">
+            <div style="font-size: 0.875rem; color: var(--muted-foreground); margin-bottom: 0.5rem;">Dead-Letter Messages</div>
+            <div id="dlqCount" style="font-size: 2rem; font-weight: 700; color: var(--primary);">-</div>
+        </div>
+        <div style="padding: 1.5rem; background: linear-gradient(135deg, var(--card) 0%, hsl(220, 15%, 8%) 100%); border: 1px solid var(--border); border-radius: 0.5rem;">
+            <div style="font-size: 0.875rem; color: var(--muted-foreground); margin-bottom: 0.5rem;">Active Messages</div>
+            <div id="activeCount" style="font-size: 2rem; font-weight: 700; color: var(--foreground);">-</div>
+        </div>
+        <div style="padding: 1.5rem; background: linear-gradient(135deg, var(--card) 0%, hsl(220, 15%, 8%) 100%); border: 1px solid var(--border); border-radius: 0.5rem;">
+            <div style="font-size: 0.875rem; color: var(--muted-foreground); margin-bottom: 0.5rem;">Entity Type</div>
+            <div id="entityTypeDisplay" style="font-size: 1.25rem; font-weight: 600; color: var(--foreground); text-transform: capitalize;">-</div>
+        </div>
+    </div>
+
+    <div style="display: flex; gap: 1rem;">
+        <button id="purgeButton" class="btn-primary" disabled style="flex: 0 0 auto;">
+            <svg style="width: 1.25rem; height: 1.25rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+            </svg>
+            Purge DLQ
+        </button>
+        <div id="purgeStatus" style="display: none; flex: 1; padding: 0.75rem 1rem; background-color: hsl(175, 70%, 50%, 0.15); border: 1px solid var(--primary); border-radius: 0.375rem; color: var(--primary); font-size: 0.875rem;">
+            Purge operation in progress...
+        </div>
+    </div>
+</div>
+
+<div id="emptyState" class="card" style="text-align: center; padding: 3rem 1.5rem;">
+    <svg style="width: 4rem; height: 4rem; margin: 0 auto 1rem; color: var(--muted-foreground);" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+    </svg>
+    <h3 style="font-size: 1.25rem; font-weight: 600; color: var(--foreground); margin-bottom: 0.5rem;">Select a Service Bus Entity</h3>
+    <p style="color: var(--muted-foreground); max-width: 28rem; margin: 0 auto;">Choose a namespace and entity (queue or topic subscription) to view dead-letter queue statistics and management options.</p>
+</div>
+
+<div id="logsPanel" class="card" style="display: none; margin-top: 1.5rem; position: sticky; bottom: 1rem; max-height: 24rem; display: flex; flex-direction: column;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; padding-bottom: 0.75rem; border-bottom: 1px solid var(--border);">
+        <h3 style="font-size: 1rem; font-weight: 600; color: var(--foreground); margin: 0;">Live Logs</h3>
+        <div style="display: flex; gap: 0.5rem;">
+            <button id="downloadLogsButton" class="btn-secondary" style="padding: 0.5rem 0.75rem; font-size: 0.875rem;">
+                <svg style="width: 1rem; height: 1rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                </svg>
+                Download
+            </button>
+            <button id="closeLogsButton" class="btn-secondary" style="padding: 0.5rem 0.75rem; font-size: 0.875rem;">Close</button>
+        </div>
+    </div>
+    <div id="progressBar" style="height: 0.5rem; background-color: var(--card); border-radius: 0.25rem; overflow: hidden; margin-bottom: 1rem;">
+        <div id="progressFill" style="height: 100%; width: 0%; background-color: var(--primary); transition: width 0.3s ease;"></div>
+    </div>
+    <div id="logsContent" style="flex: 1; overflow-y: auto; font-family: 'Courier New', monospace; font-size: 0.875rem; line-height: 1.5; background-color: hsl(220, 15%, 6%); padding: 1rem; border-radius: 0.375rem; color: var(--foreground);">
+        <div style="color: var(--muted-foreground);">Waiting for logs...</div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/@@microsoft/signalr@latest/dist/browser/signalr.min.js"></script>
+    <script>
+        const API_BASE = '/api/azure/servicebus';
+        
+        let currentSubscriptionId = '';
+        let currentNamespace = null;
+        let currentResourceGroup = '';
+
+        const state = {
+            namespaces: [],
+            queues: [],
+            topics: [],
+            subscriptions: [],
+            dlqCount: null
+        };
+
+        const elements = {
+            namespaceSelector: document.getElementById('namespaceSelector'),
+            entityTypeQueue: document.getElementById('entityTypeQueue'),
+            entityTypeTopic: document.getElementById('entityTypeTopic'),
+            queueSection: document.getElementById('queueSection'),
+            topicSection: document.getElementById('topicSection'),
+            queueSelector: document.getElementById('queueSelector'),
+            topicSelector: document.getElementById('topicSelector'),
+            subscriptionSelector: document.getElementById('subscriptionSelector'),
+            dlqStatusCard: document.getElementById('dlqStatusCard'),
+            emptyState: document.getElementById('emptyState'),
+            dlqCount: document.getElementById('dlqCount'),
+            activeCount: document.getElementById('activeCount'),
+            entityTypeDisplay: document.getElementById('entityTypeDisplay'),
+            refreshButton: document.getElementById('refreshButton'),
+            purgeButton: document.getElementById('purgeButton')
+        };
+
+        function getSubscriptionId() {
+            return localStorage.getItem('selectedSubscriptionId') || '';
+        }
+
+        async function fetchNamespaces() {
+            const subscriptionId = getSubscriptionId();
+            if (!subscriptionId) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/namespaces?subscriptionId=${subscriptionId}`);
+                if (!response.ok) throw new Error('Failed to fetch namespaces');
+                
+                state.namespaces = await response.json();
+                populateNamespaces();
+            } catch (error) {
+                console.error('Error fetching namespaces:', error);
+                alert('Failed to fetch Service Bus namespaces. Please ensure you are signed in and have the required permissions.');
+            }
+        }
+
+        function populateNamespaces() {
+            elements.namespaceSelector.innerHTML = '<option value="">Select a namespace...</option>';
+            state.namespaces.forEach(ns => {
+                const option = document.createElement('option');
+                option.value = ns.name;
+                option.dataset.resourceGroup = ns.resourceGroup;
+                option.textContent = `${ns.name} (${ns.location})`;
+                elements.namespaceSelector.appendChild(option);
+            });
+        }
+
+        async function fetchQueues() {
+            if (!currentNamespace || !currentSubscriptionId) return;
+
+            try {
+                const response = await fetch(
+                    `${API_BASE}/queues?subscriptionId=${currentSubscriptionId}&resourceGroup=${currentResourceGroup}&namespaceName=${currentNamespace}`
+                );
+                if (!response.ok) throw new Error('Failed to fetch queues');
+                
+                state.queues = await response.json();
+                populateQueues();
+            } catch (error) {
+                console.error('Error fetching queues:', error);
+            }
+        }
+
+        function populateQueues() {
+            elements.queueSelector.innerHTML = '<option value="">Select a queue...</option>';
+            state.queues.forEach(queue => {
+                const option = document.createElement('option');
+                option.value = queue.name;
+                option.textContent = queue.name;
+                elements.queueSelector.appendChild(option);
+            });
+            elements.queueSelector.disabled = false;
+        }
+
+        async function fetchTopics() {
+            if (!currentNamespace || !currentSubscriptionId) return;
+
+            try {
+                const response = await fetch(
+                    `${API_BASE}/topics?subscriptionId=${currentSubscriptionId}&resourceGroup=${currentResourceGroup}&namespaceName=${currentNamespace}`
+                );
+                if (!response.ok) throw new Error('Failed to fetch topics');
+                
+                state.topics = await response.json();
+                populateTopics();
+            } catch (error) {
+                console.error('Error fetching topics:', error);
+            }
+        }
+
+        function populateTopics() {
+            elements.topicSelector.innerHTML = '<option value="">Select a topic...</option>';
+            state.topics.forEach(topic => {
+                const option = document.createElement('option');
+                option.value = topic.name;
+                option.textContent = topic.name;
+                elements.topicSelector.appendChild(option);
+            });
+            elements.topicSelector.disabled = false;
+        }
+
+        async function fetchSubscriptions(topicName) {
+            if (!currentNamespace || !currentSubscriptionId || !topicName) return;
+
+            try {
+                const response = await fetch(
+                    `${API_BASE}/topics/${topicName}/subscriptions?subscriptionId=${currentSubscriptionId}&resourceGroup=${currentResourceGroup}&namespaceName=${currentNamespace}`
+                );
+                if (!response.ok) throw new Error('Failed to fetch subscriptions');
+                
+                state.subscriptions = await response.json();
+                populateSubscriptions();
+            } catch (error) {
+                console.error('Error fetching subscriptions:', error);
+            }
+        }
+
+        function populateSubscriptions() {
+            elements.subscriptionSelector.innerHTML = '<option value="">Select a subscription...</option>';
+            state.subscriptions.forEach(sub => {
+                const option = document.createElement('option');
+                option.value = sub.name;
+                option.textContent = sub.name;
+                elements.subscriptionSelector.appendChild(option);
+            });
+            elements.subscriptionSelector.disabled = false;
+        }
+
+        async function fetchDlqCount() {
+            const entityType = elements.entityTypeQueue.checked ? 'queue' : 'topic';
+            let entityName = '';
+            let topicSubscriptionName = null;
+
+            if (entityType === 'queue') {
+                entityName = elements.queueSelector.value;
+            } else {
+                entityName = elements.topicSelector.value;
+                topicSubscriptionName = elements.subscriptionSelector.value;
+            }
+
+            if (!entityName || (entityType === 'topic' && !topicSubscriptionName)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/dlq/count`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        subscriptionId: currentSubscriptionId,
+                        resourceGroup: currentResourceGroup,
+                        namespace: currentNamespace,
+                        entityType: entityType,
+                        entityName: entityName,
+                        topicSubscriptionName: topicSubscriptionName
+                    })
+                });
+
+                if (!response.ok) throw new Error('Failed to fetch DLQ count');
+                
+                const data = await response.json();
+                state.dlqCount = data;
+                displayDlqCount(data);
+            } catch (error) {
+                console.error('Error fetching DLQ count:', error);
+                alert('Failed to fetch DLQ count. Please try again.');
+            }
+        }
+
+        function displayDlqCount(data) {
+            elements.dlqCount.textContent = data.deadLetterCount.toLocaleString();
+            elements.activeCount.textContent = data.activeCount.toLocaleString();
+            elements.entityTypeDisplay.textContent = data.entityType;
+            
+            elements.purgeButton.disabled = data.deadLetterCount === 0;
+            
+            elements.emptyState.style.display = 'none';
+            elements.dlqStatusCard.style.display = 'block';
+        }
+
+        elements.namespaceSelector.addEventListener('change', function() {
+            const selectedOption = this.options[this.selectedIndex];
+            currentNamespace = this.value;
+            currentResourceGroup = selectedOption.dataset.resourceGroup || '';
+            currentSubscriptionId = getSubscriptionId();
+
+            elements.queueSelector.innerHTML = '<option value="">Loading...</option>';
+            elements.topicSelector.innerHTML = '<option value="">Loading...</option>';
+            elements.queueSelector.disabled = true;
+            elements.topicSelector.disabled = true;
+            elements.subscriptionSelector.disabled = true;
+            
+            elements.dlqStatusCard.style.display = 'none';
+            elements.emptyState.style.display = 'block';
+
+            if (currentNamespace) {
+                if (elements.entityTypeQueue.checked) {
+                    fetchQueues();
+                } else {
+                    fetchTopics();
+                }
+            }
+        });
+
+        elements.entityTypeQueue.addEventListener('change', function() {
+            if (this.checked) {
+                elements.queueSection.style.display = 'grid';
+                elements.topicSection.style.display = 'none';
+                elements.dlqStatusCard.style.display = 'none';
+                elements.emptyState.style.display = 'block';
+                
+                if (currentNamespace) {
+                    fetchQueues();
+                }
+            }
+        });
+
+        elements.entityTypeTopic.addEventListener('change', function() {
+            if (this.checked) {
+                elements.queueSection.style.display = 'none';
+                elements.topicSection.style.display = 'grid';
+                elements.dlqStatusCard.style.display = 'none';
+                elements.emptyState.style.display = 'block';
+                
+                if (currentNamespace) {
+                    fetchTopics();
+                }
+            }
+        });
+
+        elements.queueSelector.addEventListener('change', function() {
+            if (this.value) {
+                fetchDlqCount();
+            } else {
+                elements.dlqStatusCard.style.display = 'none';
+                elements.emptyState.style.display = 'block';
+            }
+        });
+
+        elements.topicSelector.addEventListener('change', function() {
+            const topicName = this.value;
+            elements.subscriptionSelector.innerHTML = '<option value="">Loading...</option>';
+            elements.subscriptionSelector.disabled = true;
+            elements.dlqStatusCard.style.display = 'none';
+            elements.emptyState.style.display = 'block';
+            
+            if (topicName) {
+                fetchSubscriptions(topicName);
+            }
+        });
+
+        elements.subscriptionSelector.addEventListener('change', function() {
+            if (this.value) {
+                fetchDlqCount();
+            } else {
+                elements.dlqStatusCard.style.display = 'none';
+                elements.emptyState.style.display = 'block';
+            }
+        });
+
+        elements.refreshButton.addEventListener('click', function() {
+            fetchDlqCount();
+        });
+
+        elements.purgeButton.addEventListener('click', function() {
+            if (confirm('This will permanently delete all messages in the dead-letter queue. This action cannot be undone. Continue?')) {
+                alert('Purge functionality will be implemented in the next phase.');
+            }
+        });
+
+        window.addEventListener('storage', function(e) {
+            if (e.key === 'selectedSubscriptionId') {
+                fetchNamespaces();
+            }
+        });
+
+        fetchNamespaces();
+    </script>
+}
