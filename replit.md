@@ -81,6 +81,17 @@ The platform is built as a monorepo with the following core technologies and des
     - Secured with [Authorize] attribute for authentication protection
     - Added to sidebar navigation between Tasks and Projects
     - Follows Olympus dark theme styling and established dashboard patterns
+  - **Implemented Azure subscription fetching**: Integrated real Azure subscription data for logged-in users
+    - Created `AzureSubscriptionService` to call Azure Management API with user's delegated permissions
+    - Added `/api/subscriptions` endpoint with proper authentication and error handling
+    - Dashboard dropdown now fetches and displays user's actual Azure subscriptions based on RBAC permissions
+    - Thread-safe implementation using per-request HttpRequestMessage to prevent token leakage
+    - Comprehensive error handling with specific exception catches (consent required, API failures)
+    - Frontend displays helpful error messages to guide users (e.g., "sign out and sign in again")
+    - Subscription selection persisted in localStorage for user convenience
+    - Requires Azure AD app registration API permission: "Azure Service Management" with `user_impersonation` scope
+    - Updated authentication configuration to request `https://management.azure.com/user_impersonation` scope during sign-in
+    - Documentation updated in `docs/azure-subscription-setup.md` with setup instructions and troubleshooting
 
 ## Previous Changes (October 16, 2025)
 - **Updated theme to modern dark design**: Complete color palette refresh
