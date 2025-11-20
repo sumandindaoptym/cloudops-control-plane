@@ -30,6 +30,8 @@ builder.Services.AddDbContext<CloudOpsDbContext>(options =>
 builder.Services.AddSingleton<IMessageBus, InMemoryMessageBus>();
 builder.Services.AddHostedService<CloudOps.Api.TaskWorker>();
 builder.Services.AddSignalR();
+builder.Services.AddScoped<CloudOps.Api.Services.IServiceBusResourceService, CloudOps.Api.Services.ServiceBusResourceService>();
+builder.Services.AddScoped<CloudOps.Api.Services.IServiceBusRuntimeService, CloudOps.Api.Services.ServiceBusRuntimeService>();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddCors(options =>
