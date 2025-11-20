@@ -47,7 +47,7 @@ The platform is built as a monorepo with the following core technologies and des
 - A `dev.sh` script starts both API (port 5056) and Frontend (port 5000).
 - Swagger UI is available for API documentation.
 
-## Recent Changes (November 19, 2025)
+## Recent Changes (November 20, 2025)
 - **Migrated frontend from Next.js to ASP.NET Razor Pages**:
   - Replaced Next.js 15 with ASP.NET Core 9.0 Razor Pages
   - Implemented native Azure AD authentication using Microsoft.Identity.Web middleware
@@ -55,6 +55,10 @@ The platform is built as a monorepo with the following core technologies and des
   - Maintained complete Olympus dark theme design with custom CSS (olympus.css)
   - Updated dev.sh script to run ASP.NET web app on port 5000
   - Removed Next.js project directory and dependencies
+  - **Fixed HTTPS redirect issue**: Added ForwardedHeaders middleware to properly handle proxy headers
+    - Configured to trust X-Forwarded-Proto and X-Forwarded-Host headers from Replit's proxy
+    - OAuth redirects now correctly use HTTPS instead of HTTP
+    - Resolves "Unsafe attempt to initiate navigation" console error during sign-in
   - **Authentication Configuration**: Azure AD App Registration must have redirect URI configured:
     - Redirect URI format: `https://<your-replit-domain>/signin-oidc`
     - Example: `https://a46607d1-b410-4ba8-bd9c-95a49e37d57e-00-1clwqs1t2ts23.worf.replit.dev/signin-oidc`
