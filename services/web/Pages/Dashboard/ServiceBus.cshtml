@@ -1,0 +1,148 @@
+@page
+@model CloudOps.Web.Pages.Dashboard.ServiceBusModel
+@{
+    ViewData["Title"] = "Service Bus";
+    Layout = "Shared/_DashboardLayout";
+}
+
+<h1 class="page-title">Azure Service Bus</h1>
+<p class="page-description">Manage message queues, topics, and subscriptions</p>
+
+<div class="grid grid-4" style="margin-bottom: 2rem;">
+    <div class="stat-card">
+        <div class="stat-label">Total Queues</div>
+        <div class="stat-value">12</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Active Messages</div>
+        <div class="stat-value">247</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Dead Letter</div>
+        <div class="stat-value">3</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Topics</div>
+        <div class="stat-value">8</div>
+    </div>
+</div>
+
+<div class="grid grid-2" style="gap: 1.5rem;">
+    <div class="card">
+        <h2 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 1.5rem; color: var(--foreground);">Message Queues</h2>
+        
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Queue Name</th>
+                    <th>Messages</th>
+                    <th>Dead Letter</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>deployment-queue</td>
+                    <td>42</td>
+                    <td>0</td>
+                    <td><span class="badge badge-success">Active</span></td>
+                </tr>
+                <tr>
+                    <td>notification-queue</td>
+                    <td>128</td>
+                    <td>2</td>
+                    <td><span class="badge badge-success">Active</span></td>
+                </tr>
+                <tr>
+                    <td>backup-queue</td>
+                    <td>15</td>
+                    <td>0</td>
+                    <td><span class="badge badge-success">Active</span></td>
+                </tr>
+                <tr>
+                    <td>analytics-queue</td>
+                    <td>62</td>
+                    <td>1</td>
+                    <td><span class="badge badge-success">Active</span></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="card">
+        <h2 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 1.5rem; color: var(--foreground);">Topics & Subscriptions</h2>
+        
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Topic Name</th>
+                    <th>Subscriptions</th>
+                    <th>Messages</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>task-events</td>
+                    <td>5</td>
+                    <td>89</td>
+                    <td><span class="badge badge-success">Active</span></td>
+                </tr>
+                <tr>
+                    <td>deployment-events</td>
+                    <td>3</td>
+                    <td>34</td>
+                    <td><span class="badge badge-success">Active</span></td>
+                </tr>
+                <tr>
+                    <td>system-events</td>
+                    <td>7</td>
+                    <td>156</td>
+                    <td><span class="badge badge-success">Active</span></td>
+                </tr>
+                <tr>
+                    <td>alert-events</td>
+                    <td>2</td>
+                    <td>21</td>
+                    <td><span class="badge badge-success">Active</span></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="card" style="margin-top: 1.5rem;">
+    <h2 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 1.5rem; color: var(--foreground);">Recent Activity</h2>
+    
+    <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+        <div style="padding: 1rem; background-color: var(--card); border: 1px solid var(--border); border-radius: 0.5rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <div style="font-weight: 500; color: var(--foreground);">Message processed: deployment-queue</div>
+                    <div style="font-size: 0.875rem; color: var(--muted-foreground); margin-top: 0.25rem;">Session ID: sess-12345 • Message processed successfully</div>
+                </div>
+                <div style="font-size: 0.875rem; color: var(--muted-foreground);">2 minutes ago</div>
+            </div>
+        </div>
+        
+        <div style="padding: 1rem; background-color: var(--card); border: 1px solid var(--border); border-radius: 0.5rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <div style="font-weight: 500; color: var(--foreground);">Dead letter message: notification-queue</div>
+                    <div style="font-size: 0.875rem; color: var(--muted-foreground); margin-top: 0.25rem;">Message exceeded retry limit and moved to dead letter queue</div>
+                </div>
+                <div style="font-size: 0.875rem; color: var(--muted-foreground);">15 minutes ago</div>
+            </div>
+        </div>
+        
+        <div style="padding: 1rem; background-color: var(--card); border: 1px solid var(--border); border-radius: 0.5rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <div style="font-weight: 500; color: var(--foreground);">Topic subscription created: task-events</div>
+                    <div style="font-size: 0.875rem; color: var(--muted-foreground); margin-top: 0.25rem;">New subscription 'analytics-processor' added</div>
+                </div>
+                <div style="font-size: 0.875rem; color: var(--muted-foreground);">1 hour ago</div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -23,7 +23,7 @@ The platform is built as a monorepo with the following core technologies and des
       - Translucent variants for badges with 15% opacity
     - **Landing Page**: Features Optym logo, "Sign in with Microsoft" CTA, and feature cards highlighting one-click deploy, database management, real-time analytics, and secure access.
     - **Dashboard**: Layout includes an Azure subscription selector, sidebar navigation, stat cards, recent activity feed, quick action buttons, system status, and project/environment grids.
-    - **Pages**: Landing page, Dashboard (main), Deployments, Databases, Tasks, Projects, Environments, and Settings.
+    - **Pages**: Landing page, Dashboard (main), Deployments, Databases, Tasks, Service Bus, Projects, Environments, and Settings.
     - **Authentication**: Integrates Azure AD authentication via Microsoft.Identity.Web and Microsoft.Identity.Web.UI packages, providing native ASP.NET Core authentication with automatic token management.
 
 **Backend:**
