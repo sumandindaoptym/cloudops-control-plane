@@ -35,6 +35,8 @@ builder.Services.AddAuthorization(options =>
     options.FallbackPolicy = options.DefaultPolicy;
 });
 
+builder.Services.AddControllersWithViews();
+
 builder.Services.AddRazorPages()
     .AddMicrosoftIdentityUI();
 
@@ -67,6 +69,7 @@ app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 
+app.MapControllers();
 app.MapRazorPages();
 
 app.Run();

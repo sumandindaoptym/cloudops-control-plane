@@ -60,6 +60,10 @@ The platform is built as a monorepo with the following core technologies and des
     - Added OnRedirectToIdentityProvider event to explicitly replace http:// with https:// in OAuth redirect URIs
     - OAuth redirects now correctly use HTTPS instead of HTTP
     - Resolves "Unsafe attempt to initiate navigation" and blank page issues during sign-in
+  - **Fixed Microsoft Identity endpoints**: Added controller support for Microsoft.Identity.Web.UI
+    - Added `AddControllersWithViews()` to services configuration
+    - Added `MapControllers()` to enable MVC controller routing
+    - Microsoft Identity sign-in/sign-out endpoints now properly accessible at `/MicrosoftIdentity/Account/*`
   - **Authentication Configuration**: Azure AD App Registration must have redirect URI configured:
     - Redirect URI format: `https://<your-replit-domain>/signin-oidc`
     - Example: `https://a46607d1-b410-4ba8-bd9c-95a49e37d57e-00-1clwqs1t2ts23.worf.replit.dev/signin-oidc`
