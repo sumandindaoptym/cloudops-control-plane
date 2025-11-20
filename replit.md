@@ -51,7 +51,7 @@ The platform is built as a monorepo with the following core technologies and des
 - **Migrated frontend from Next.js to ASP.NET Razor Pages**:
   - Replaced Next.js 15 with ASP.NET Core 9.0 Razor Pages
   - Implemented native Azure AD authentication using Microsoft.Identity.Web middleware
-  - Created all 7 pages: Landing (Index), Dashboard, Deployments, Databases, Tasks, Projects, Environments, and Settings
+  - Created all 8 pages: Landing (Index), Dashboard, Deployments, Databases, Tasks, Service Bus, Projects, Environments, and Settings
   - Maintained complete Olympus dark theme design with custom CSS (olympus.css)
   - Updated dev.sh script to run ASP.NET web app on port 5000
   - Removed Next.js project directory and dependencies
@@ -74,6 +74,13 @@ The platform is built as a monorepo with the following core technologies and des
     - Add this in Azure Portal → App Registrations → Authentication → Redirect URIs (Web platform)
     - After adding the redirect URI, login will redirect to Microsoft, then back to dashboard
   - Environment variables used: `AZURE_AD_TENANT_ID`, `AZURE_AD_CLIENT_ID`, `AZURE_AD_CLIENT_SECRET`
+  - **Added Service Bus dashboard page**: Created new Service Bus page with queue metrics, topic statistics, and message activity
+    - Displays queue metrics (active, dead-letter, scheduled message counts)
+    - Shows topic statistics and subscription details
+    - Lists recent Service Bus activity with message types and timestamps
+    - Secured with [Authorize] attribute for authentication protection
+    - Added to sidebar navigation between Tasks and Projects
+    - Follows Olympus dark theme styling and established dashboard patterns
 
 ## Previous Changes (October 16, 2025)
 - **Updated theme to modern dark design**: Complete color palette refresh
