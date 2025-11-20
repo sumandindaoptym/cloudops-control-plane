@@ -1,0 +1,63 @@
+UX & Flow
+	1.	Header: “Service Bus DLQ Cleaner”
+	2.	Selector Row (three/four controls, responsive):
+	•	Subscription (dropdown; pulled via ARM)
+	•	Service Bus Namespace (dropdown; filtered by subscription)
+	•	Entity Type: radio/segmented control → Queue or Topic
+	•	When Queue:
+	•	Queue dropdown (all queues under namespace)
+	•	When Topic:
+	•	Topic dropdown
+	•	Subscription dropdown (under that topic)
+	3.	DLQ Status Card:
+	•	Title: “Dead-letter Queue”
+	•	Message Count (big number)
+	•	Refresh icon button
+	4.	Actions:
+	•	Purge DLQ (primary, destructive confirm)
+	•	Disabled if count = 0
+	5.	Logs & Progress Panel (sticky to page bottom on desktop; full width on mobile):
+	•	Live streaming logs (SSE or WebSocket)
+	•	Progress bar (%), estimated remaining
+	•	Download logs (.txt)
+
+Empty/Skeleton States
+	•	While loading lists → show skeletons.
+	•	If no queues/topics → show an empty card with guidance.
+
+Theme
+	•	Use the app’s existing color palette/tokens.
+	•	Glassy cards, subtle shadows, rounded corners, spacing consistent with app.
+	•	ADA-compliant contrasts.
+
+⸻
+
+Permissions & Security
+	•	Use server-side Azure credentials (DefaultAzureCredential) only. No secrets in the browser.
+	•	The API validates that the current user is authorized to view/operate on the chosen subscription/namespace.
+	•	Rate-limit purge requests and require confirmation modal (“This will permanently remove all DLQ messages…”).
+
+⸻
+
+Azure Implementation Notes
+
+Enumerate resources
+	•	Subscriptions: @azure/arm-subscriptions
+	•	Namespaces / Queues / Topics / Subscriptions: @azure/arm-servicebus (Management Plane)
+
+DLQ Counts
+	•	Use ServiceBusAdministrationClient:
+	•	Queue DLQ count: getQueueRuntimeProperties(queueName).deadLetterMessageCount
+	•	Topic Subscription DLQ count: getSubscriptionRuntimeProperties(topicName, subscriptionName).deadLetterMessageCount
+
+Purge DLQ
+	•	There is no direct purge API. Implement purge as:
+	•	For Queue DLQ: create a receiver with subQueue: "deadLetter" and loop receiveMessages(N) then completeMessage (or settle) until 0 remain.
+	•	For Topic Subscription DLQ: receiver is created for the subscription with subQueue: "deadLetter".
+	•	Use batch receive (e.g., 50–200 per call), with backoff and cancellation support.
+	•	Track metrics: total received, total completed, elapsed time, errors.
+
+Resilience
+	•	Add max runtime cap (e.g., 30 minutes) with server-side cancellation.
+	•	If errors occur, surface them in the log stream and final status.
+	•	Ensure idempotency: multiple purge clicks should queue or be rejected while one is active for the same entity.
