@@ -48,8 +48,8 @@
             </select>
         </div>
         <div>
-            <label style="display: block; font-weight: 500; margin-bottom: 0.5rem; color: var(--foreground);">Subscription</label>
-            <select id="subscriptionSelector" class="select" style="width: 100%;" disabled>
+            <label style="display: block; font-weight: 500; margin-bottom: 0.5rem; color: var(--foreground);">Topic Subscriptions</label>
+            <select id="topicSubscriptionSelector" class="select" style="width: 100%;" disabled>
                 <option value="">Select a subscription...</option>
             </select>
         </div>
@@ -83,8 +83,8 @@
     </div>
 
     <div style="display: flex; gap: 1rem;">
-        <button id="purgeButton" class="btn-primary" disabled style="flex: 0 0 auto;">
-            <svg style="width: 1.25rem; height: 1.25rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <button id="purgeButton" class="btn-primary" disabled style="flex: 0 0 auto; padding: 0.875rem 2rem; font-size: 1.125rem; font-weight: 600; display: flex; align-items: center; gap: 0.75rem;">
+            <svg style="width: 1.5rem; height: 1.5rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
             </svg>
             Purge DLQ
@@ -149,7 +149,7 @@
             topicSection: document.getElementById('topicSection'),
             queueSelector: document.getElementById('queueSelector'),
             topicSelector: document.getElementById('topicSelector'),
-            subscriptionSelector: document.getElementById('subscriptionSelector'),
+            topicSubscriptionSelector: document.getElementById('topicSubscriptionSelector'),
             dlqStatusCard: document.getElementById('dlqStatusCard'),
             emptyState: document.getElementById('emptyState'),
             dlqCount: document.getElementById('dlqCount'),
@@ -166,8 +166,12 @@
         async function fetchNamespaces() {
             const subscriptionId = getSubscriptionId();
             if (!subscriptionId) {
+                elements.namespaceSelector.innerHTML = '<option value="">Select an Azure subscription first...</option>';
                 return;
             }
+
+            elements.namespaceSelector.innerHTML = '<option value="">Loading namespaces...</option>';
+            elements.namespaceSelector.disabled = true;
 
             try {
                 const response = await fetch(`${API_BASE}/namespaces?subscriptionId=${subscriptionId}`);
@@ -175,8 +179,11 @@
                 
                 state.namespaces = await response.json();
                 populateNamespaces();
+                elements.namespaceSelector.disabled = false;
             } catch (error) {
                 console.error('Error fetching namespaces:', error);
+                elements.namespaceSelector.innerHTML = '<option value="">Failed to load namespaces</option>';
+                elements.namespaceSelector.disabled = false;
                 alert('Failed to fetch Service Bus namespaces. Please ensure you are signed in and have the required permissions.');
             }
         }
@@ -263,14 +270,14 @@
         }
 
         function populateSubscriptions() {
-            elements.subscriptionSelector.innerHTML = '<option value="">Select a subscription...</option>';
+            elements.topicSubscriptionSelector.innerHTML = '<option value="">Select a subscription...</option>';
             state.subscriptions.forEach(sub => {
                 const option = document.createElement('option');
                 option.value = sub.name;
                 option.textContent = sub.name;
-                elements.subscriptionSelector.appendChild(option);
+                elements.topicSubscriptionSelector.appendChild(option);
             });
-            elements.subscriptionSelector.disabled = false;
+            elements.topicSubscriptionSelector.disabled = false;
         }
 
         async function fetchDlqCount() {
@@ -282,7 +289,7 @@
                 entityName = elements.queueSelector.value;
             } else {
                 entityName = elements.topicSelector.value;
-                topicSubscriptionName = elements.subscriptionSelector.value;
+                topicSubscriptionName = elements.topicSubscriptionSelector.value;
             }
 
             if (!entityName || (entityType === 'topic' && !topicSubscriptionName)) {
@@ -335,7 +342,7 @@
             elements.topicSelector.innerHTML = '<option value="">Loading...</option>';
             elements.queueSelector.disabled = true;
             elements.topicSelector.disabled = true;
-            elements.subscriptionSelector.disabled = true;
+            elements.topicSubscriptionSelector.disabled = true;
             
             elements.dlqStatusCard.style.display = 'none';
             elements.emptyState.style.display = 'block';
@@ -386,8 +393,8 @@
 
         elements.topicSelector.addEventListener('change', function() {
             const topicName = this.value;
-            elements.subscriptionSelector.innerHTML = '<option value="">Loading...</option>';
-            elements.subscriptionSelector.disabled = true;
+            elements.topicSubscriptionSelector.innerHTML = '<option value="">Loading...</option>';
+            elements.topicSubscriptionSelector.disabled = true;
             elements.dlqStatusCard.style.display = 'none';
             elements.emptyState.style.display = 'block';
             
@@ -396,7 +403,7 @@
             }
         });
 
-        elements.subscriptionSelector.addEventListener('change', function() {
+        elements.topicSubscriptionSelector.addEventListener('change', function() {
             if (this.value) {
                 fetchDlqCount();
             } else {

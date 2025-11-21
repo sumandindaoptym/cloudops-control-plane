@@ -130,7 +130,11 @@
                 subscriptions.forEach(sub => {
                     const option = document.createElement('option');
                     option.value = sub.subscriptionId;
-                    option.textContent = `${sub.displayName} (${sub.state})`;
+                    option.textContent = sub.displayName;
+                    
+                    if (sub.state !== 'Enabled') {
+                        option.disabled = true;
+                    }
                     
                     if (savedSubscriptionId === sub.subscriptionId) {
                         option.selected = true;
