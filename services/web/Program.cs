@@ -24,7 +24,6 @@ builder.Services.AddAuthentication(OpenIdConnectDefaults.AuthenticationScheme)
         options.Scope.Add("email");
         options.Scope.Add("offline_access");
         options.Scope.Add("https://management.azure.com/user_impersonation");
-        options.Scope.Add("https://servicebus.azure.net/user_impersonation");
         options.ResponseType = "code";
         options.Events = new OpenIdConnectEvents
         {

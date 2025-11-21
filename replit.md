@@ -47,7 +47,15 @@ The platform is built as a monorepo with the following core technologies and des
 - A `dev.sh` script starts both API (port 5056) and Frontend (port 5000).
 - Swagger UI is available for API documentation.
 
-## Recent Changes (November 20, 2025)
+## Recent Changes (November 21, 2025)
+- **Fixed authentication scope issue (AADSTS28000)**:
+  - Removed Service Bus scope from initial sign-in configuration to comply with Azure AD single-resource restriction
+  - Implemented incremental consent pattern: Azure Management scope during sign-in, Service Bus scope on-demand
+  - Users will be prompted to consent to Service Bus scope only when first accessing DLQ count functionality
+  - Resolves "Provided value for the input parameter scope is not valid because it contains more than one resource" error
+  - Authentication now works correctly with dual-scope architecture
+
+## Previous Changes (November 20, 2025)
 - **Migrated frontend from Next.js to ASP.NET Razor Pages**:
   - Replaced Next.js 15 with ASP.NET Core 9.0 Razor Pages
   - Implemented native Azure AD authentication using Microsoft.Identity.Web middleware
