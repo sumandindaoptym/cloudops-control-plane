@@ -42,6 +42,12 @@ builder.Services.AddAuthentication(OpenIdConnectDefaults.AuthenticationScheme)
                     context.Properties.RedirectUri = "/Dashboard";
                 }
                 return Task.CompletedTask;
+            },
+            OnSignedOutCallbackRedirect = context =>
+            {
+                context.Response.Redirect("/SignedOut");
+                context.HandleResponse();
+                return Task.CompletedTask;
             }
         };
     })

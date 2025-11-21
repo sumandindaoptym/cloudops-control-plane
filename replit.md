@@ -48,6 +48,21 @@ The platform is built as a monorepo with the following core technologies and des
 - Swagger UI is available for API documentation.
 
 ## Recent Changes (November 21, 2025)
+- **Enhanced Service Bus DLQ Cleaner UX**:
+  - **Fixed namespace auto-refresh**: Namespace dropdown now automatically updates when Azure subscription changes in header
+    - Implemented custom event dispatch (`subscriptionChanged`) from subscription selector
+    - Service Bus page listens for both same-page changes (custom event) and cross-tab changes (storage event)
+    - No longer requires clicking sidebar to refresh namespaces after subscription change
+  - **Upgraded refresh button**: Replaced text button with Font Awesome refresh icon (`fa-sync-alt`)
+    - Added Font Awesome 6.5.1 CDN to dashboard layout
+    - Created embossed button style with box shadow for classier look
+    - Icon-only design saves space and looks more modern
+  - **Created funny sign-out page**: Custom `/SignedOut` page with cartoons and auto-redirect
+    - Displays waving hand emoji (👋) with bouncing animation
+    - Includes humorous messages about cloud resources and Azure bills
+    - 5-second countdown timer before auto-redirecting to landing page
+    - Multiple CSS animations: fadeInDown, fadeInUp, wave, pulse, and bounceIn
+    - Configured `OnSignedOutCallbackRedirect` event to route to custom page
 - **Fixed authentication scope issue (AADSTS28000)**:
   - Removed Service Bus scope from initial sign-in configuration to comply with Azure AD single-resource restriction
   - Implemented incremental consent pattern: Azure Management scope during sign-in, Service Bus scope on-demand
