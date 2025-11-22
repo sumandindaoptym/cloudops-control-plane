@@ -37,14 +37,13 @@ The platform is built as a monorepo leveraging ASP.NET Core 9.0, following core 
 
 ## Recent Changes (November 22, 2025)
 - **Added animated button hover effects**:
-  - Implemented smooth hover animations inspired by uiverse.io design patterns
-  - On hover, icon container expands with gradient background while text slides away and disappears
+  - Implemented exact animation from https://uiverse.io/vinodjangid07/heavy-badger-29
+  - On hover, icon container expands while text slides and collapses (width: 70px/100px → 0, font-size → 0)
   - On click, button scales down for tactile feedback (0.95 scale)
-  - Applied to both Refresh button (120px) and Purge DLQ button (160px)
+  - Applied to both Refresh button (120px, icon 35px → 90px) and Purge DLQ button (160px, icon 40px → 150px)
   - Uses Olympus teal gradient (`hsl(175, 70%, 55%)` to `hsl(175, 70%, 45%)`) for icon containers
   - Disabled buttons maintain opacity reduction without animations
-  - Smooth 0.3s transitions using GPU-accelerated properties (opacity, transform) for lag-free animation
-  - Fixed text animation stuttering by removing layout-reflow properties (width, padding, font-size)
+  - Smooth 0.3s transitions matching original uiverse.io design pattern
 - **Converted namespace dropdown to searchable filter**:
   - Replaced standard dropdown with search input field and custom dropdown list
   - Users can now type to search/filter Service Bus namespaces by name or location
