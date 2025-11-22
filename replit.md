@@ -35,6 +35,31 @@ The platform is built as a monorepo leveraging ASP.NET Core 9.0, following core 
 **Development Environment:**
 - A `dev.sh` script facilitates local development by starting both API (port 5056) and Frontend (port 5000). Swagger UI is available for API documentation.
 
+## Recent Changes (November 22, 2025)
+- **Added animated button hover effects**:
+  - Implemented smooth hover animations inspired by uiverse.io design patterns
+  - On hover, icon container expands with gradient background while text slides away and disappears
+  - On click, button scales down for tactile feedback (0.95 scale)
+  - Applied to both Refresh button (120px) and Purge DLQ button (160px)
+  - Uses Olympus teal gradient (`hsl(175, 70%, 55%)` to `hsl(175, 70%, 45%)`) for icon containers
+  - Disabled buttons maintain opacity reduction without animations
+  - Smooth 0.3s transitions for all state changes
+- **Converted namespace dropdown to searchable filter**:
+  - Replaced standard dropdown with search input field and custom dropdown list
+  - Users can now type to search/filter Service Bus namespaces by name or location
+  - Dropdown shows filtered results with namespace name and location
+  - Supports click-to-select and automatic dropdown closure when clicking outside
+  - Includes Font Awesome search icon for better UX
+  - Maintains all existing auto-refresh functionality when subscription changes
+
+## Previous Changes (November 21, 2025)
+- **Enhanced Service Bus DLQ Cleaner UX**:
+  - **Fixed namespace auto-refresh**: Namespace dropdown now automatically updates when Azure subscription changes in header
+  - **Upgraded refresh button**: Replaced text button with Font Awesome refresh icon (`fa-sync-alt`)
+  - **Created funny sign-out page**: Custom `/SignedOut` page with cartoons and auto-redirect
+- **Fixed authentication scope issue (AADSTS28000)**:
+  - Implemented incremental consent pattern: Azure Management scope during sign-in, Service Bus scope on-demand
+
 ## External Dependencies
 - **Authentication**: Azure Active Directory (Azure AD).
 - **Database**: SQLite, PostgreSQL.
