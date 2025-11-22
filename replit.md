@@ -43,7 +43,8 @@ The platform is built as a monorepo leveraging ASP.NET Core 9.0, following core 
   - Applied to both Refresh button (120px) and Purge DLQ button (160px)
   - Uses Olympus teal gradient (`hsl(175, 70%, 55%)` to `hsl(175, 70%, 45%)`) for icon containers
   - Disabled buttons maintain opacity reduction without animations
-  - Smooth 0.3s transitions for all state changes
+  - Smooth 0.3s transitions using GPU-accelerated properties (opacity, transform) for lag-free animation
+  - Fixed text animation stuttering by removing layout-reflow properties (width, padding, font-size)
 - **Converted namespace dropdown to searchable filter**:
   - Replaced standard dropdown with search input field and custom dropdown list
   - Users can now type to search/filter Service Bus namespaces by name or location
