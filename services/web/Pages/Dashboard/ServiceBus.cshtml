@@ -12,9 +12,40 @@
     <div class="grid grid-2" style="gap: 1rem; margin-bottom: 1rem;">
         <div>
             <label style="display: block; font-weight: 500; margin-bottom: 0.5rem; color: var(--foreground);">Service Bus Namespace</label>
-            <select id="namespaceSelector" class="select" style="width: 100%;">
-                <option value="">Select a namespace...</option>
-            </select>
+            <div style="position: relative;">
+                <div style="position: relative;">
+                    <input 
+                        type="text" 
+                        id="namespaceSearchInput" 
+                        class="select" 
+                        placeholder="Search namespaces..." 
+                        autocomplete="off"
+                        style="width: 100%; padding-right: 2.5rem;"
+                    />
+                    <i class="fas fa-search" style="position: absolute; right: 0.875rem; top: 50%; transform: translateY(-50%); color: var(--muted-foreground); pointer-events: none;"></i>
+                </div>
+                <div 
+                    id="namespaceDropdown" 
+                    style="
+                        display: none;
+                        position: absolute;
+                        top: 100%;
+                        left: 0;
+                        right: 0;
+                        background: var(--card);
+                        border: 1px solid var(--border);
+                        border-radius: 0.375rem;
+                        margin-top: 0.25rem;
+                        max-height: 300px;
+                        overflow-y: auto;
+                        z-index: 1000;
+                        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
+                    "
+                >
+                    <div id="namespaceList"></div>
+                </div>
+            </div>
+            <input type="hidden" id="namespaceSelector" value="" />
         </div>
         <div>
             <label style="display: block; font-weight: 500; margin-bottom: 0.5rem; color: var(--foreground);">Entity Type</label>
@@ -140,6 +171,9 @@
 
         const elements = {
             namespaceSelector: document.getElementById('namespaceSelector'),
+            namespaceSearchInput: document.getElementById('namespaceSearchInput'),
+            namespaceDropdown: document.getElementById('namespaceDropdown'),
+            namespaceList: document.getElementById('namespaceList'),
             entityTypeQueue: document.getElementById('entityTypeQueue'),
             entityTypeTopic: document.getElementById('entityTypeTopic'),
             queueSection: document.getElementById('queueSection'),
@@ -163,37 +197,105 @@
         async function fetchNamespaces() {
             const subscriptionId = getSubscriptionId();
             if (!subscriptionId) {
-                elements.namespaceSelector.innerHTML = '<option value="">Select an Azure subscription first...</option>';
+                elements.namespaceSearchInput.placeholder = 'Select an Azure subscription first...';
+                elements.namespaceSearchInput.disabled = true;
                 return;
             }
 
-            elements.namespaceSelector.innerHTML = '<option value="">Loading namespaces...</option>';
-            elements.namespaceSelector.disabled = true;
+            elements.namespaceSearchInput.placeholder = 'Loading namespaces...';
+            elements.namespaceSearchInput.disabled = true;
+            elements.namespaceSearchInput.value = '';
+            elements.namespaceSelector.value = '';
+            currentNamespace = null;
 
             try {
                 const response = await fetch(`${API_BASE}/namespaces?subscriptionId=${subscriptionId}`);
                 if (!response.ok) throw new Error('Failed to fetch namespaces');
                 
                 state.namespaces = await response.json();
-                populateNamespaces();
-                elements.namespaceSelector.disabled = false;
+                elements.namespaceSearchInput.placeholder = 'Search namespaces...';
+                elements.namespaceSearchInput.disabled = false;
             } catch (error) {
                 console.error('Error fetching namespaces:', error);
-                elements.namespaceSelector.innerHTML = '<option value="">Failed to load namespaces</option>';
-                elements.namespaceSelector.disabled = false;
+                elements.namespaceSearchInput.placeholder = 'Failed to load namespaces';
+                elements.namespaceSearchInput.disabled = false;
                 alert('Failed to fetch Service Bus namespaces. Please ensure you are signed in and have the required permissions.');
             }
         }
 
-        function populateNamespaces() {
-            elements.namespaceSelector.innerHTML = '<option value="">Select a namespace...</option>';
-            state.namespaces.forEach(ns => {
-                const option = document.createElement('option');
-                option.value = ns.name;
-                option.dataset.resourceGroup = ns.resourceGroup;
-                option.textContent = `${ns.name} (${ns.location})`;
-                elements.namespaceSelector.appendChild(option);
-            });
+        function filterAndShowNamespaces(searchTerm = '') {
+            const filtered = state.namespaces.filter(ns => 
+                ns.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                ns.location.toLowerCase().includes(searchTerm.toLowerCase())
+            );
+
+            elements.namespaceList.innerHTML = '';
+            
+            if (filtered.length === 0) {
+                elements.namespaceList.innerHTML = `
+                    <div style="padding: 0.75rem 1rem; color: var(--muted-foreground); text-align: center;">
+                        No namespaces found
+                    </div>
+                `;
+            } else {
+                filtered.forEach(ns => {
+                    const item = document.createElement('div');
+                    item.style.cssText = `
+                        padding: 0.75rem 1rem;
+                        cursor: pointer;
+                        transition: background-color 0.2s;
+                        border-bottom: 1px solid var(--border);
+                    `;
+                    item.innerHTML = `
+                        <div style="font-weight: 500; color: var(--foreground);">${ns.name}</div>
+                        <div style="font-size: 0.875rem; color: var(--muted-foreground);">${ns.location}</div>
+                    `;
+                    
+                    item.addEventListener('mouseenter', () => {
+                        item.style.backgroundColor = 'hsl(220, 15%, 12%)';
+                    });
+                    
+                    item.addEventListener('mouseleave', () => {
+                        item.style.backgroundColor = '';
+                    });
+                    
+                    item.addEventListener('click', () => {
+                        selectNamespace(ns);
+                    });
+                    
+                    elements.namespaceList.appendChild(item);
+                });
+            }
+            
+            elements.namespaceDropdown.style.display = 'block';
+        }
+
+        function selectNamespace(ns) {
+            elements.namespaceSearchInput.value = `${ns.name} (${ns.location})`;
+            elements.namespaceSelector.value = ns.name;
+            currentNamespace = ns.name;
+            currentResourceGroup = ns.resourceGroup;
+            currentSubscriptionId = getSubscriptionId();
+            
+            elements.namespaceDropdown.style.display = 'none';
+            
+            // Clear downstream selections
+            elements.queueSelector.innerHTML = '<option value="">Loading...</option>';
+            elements.topicSelector.innerHTML = '<option value="">Loading...</option>';
+            elements.queueSelector.disabled = true;
+            elements.topicSelector.disabled = true;
+            elements.topicSubscriptionSelector.disabled = true;
+            
+            elements.dlqStatusCard.style.display = 'none';
+            elements.emptyState.style.display = 'block';
+
+            if (currentNamespace) {
+                if (elements.entityTypeQueue.checked) {
+                    fetchQueues();
+                } else {
+                    fetchTopics();
+                }
+            }
         }
 
         async function fetchQueues() {
@@ -329,27 +431,25 @@
             elements.dlqStatusCard.style.display = 'block';
         }
 
-        elements.namespaceSelector.addEventListener('change', function() {
-            const selectedOption = this.options[this.selectedIndex];
-            currentNamespace = this.value;
-            currentResourceGroup = selectedOption.dataset.resourceGroup || '';
-            currentSubscriptionId = getSubscriptionId();
+        // Search input event listeners
+        elements.namespaceSearchInput.addEventListener('input', function() {
+            const searchTerm = this.value;
+            if (state.namespaces.length > 0) {
+                filterAndShowNamespaces(searchTerm);
+            }
+        });
 
-            elements.queueSelector.innerHTML = '<option value="">Loading...</option>';
-            elements.topicSelector.innerHTML = '<option value="">Loading...</option>';
-            elements.queueSelector.disabled = true;
-            elements.topicSelector.disabled = true;
-            elements.topicSubscriptionSelector.disabled = true;
-            
-            elements.dlqStatusCard.style.display = 'none';
-            elements.emptyState.style.display = 'block';
+        elements.namespaceSearchInput.addEventListener('focus', function() {
+            if (state.namespaces.length > 0) {
+                filterAndShowNamespaces(this.value);
+            }
+        });
 
-            if (currentNamespace) {
-                if (elements.entityTypeQueue.checked) {
-                    fetchQueues();
-                } else {
-                    fetchTopics();
-                }
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!elements.namespaceSearchInput.contains(e.target) && 
+                !elements.namespaceDropdown.contains(e.target)) {
+                elements.namespaceDropdown.style.display = 'none';
             }
         });
 

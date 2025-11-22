@@ -1,7 +1,7 @@
 # CloudOps Control Plane
 
 ## Overview
-This project is an Enterprise CloudOps Control Plane, serving as Optym's first developer platform monorepo. Its primary purpose is to streamline cloud operations through features like queue-based task orchestration, real-time updates via SignalR, one-click deployments, database management (backup/restore), pod restarts, and automated notifications (Teams/email). The platform aims to ease daily DevOps tasks and provide a unified control plane for managing cloud resources.
+This project is an Enterprise CloudOps Control Plane, designed as Optym's first developer platform monorepo. Its primary purpose is to streamline cloud operations by providing a unified control plane for managing cloud resources. Key capabilities include queue-based task orchestration, real-time updates, one-click deployments, database management (backup/restore), pod restarts, and automated notifications (Teams/email). The platform aims to simplify daily DevOps tasks and enhance operational efficiency.
 
 ## User Preferences
 - Focus on enterprise-grade architecture
@@ -10,167 +10,36 @@ This project is an Enterprise CloudOps Control Plane, serving as Optym's first d
 - Comprehensive error handling and logging
 
 ## System Architecture
-The platform is built as a monorepo with the following core technologies and design patterns:
+The platform is built as a monorepo leveraging ASP.NET Core 9.0, following core architectural patterns and design decisions:
 
 **Frontend:**
-- **Technology**: ASP.NET Core 9.0 Razor Pages with custom CSS (olympus.css).
-- **UI/UX**: Adheres to Optym's "Olympus" brand guidelines, featuring a clean, minimal dark theme.
-    - **Color System**: Uses CSS custom properties for a modern dark palette with deep backgrounds and teal accents. All components use CSS variables.
-      - Background: `hsl(220, 15%, 9%)` - Deep dark background
-      - Card: `hsl(220, 15%, 6%)` - Even darker card backgrounds
-      - Border: `hsl(220, 15%, 18%)` - Subtle borders
-      - Primary: `hsl(175, 70%, 50%)` - Teal accent color
-      - Translucent variants for badges with 15% opacity
-    - **Landing Page**: Features Optym logo, "Sign in with Microsoft" CTA, and feature cards highlighting one-click deploy, database management, real-time analytics, and secure access.
-    - **Dashboard**: Layout includes an Azure subscription selector, sidebar navigation, stat cards, recent activity feed, quick action buttons, system status, and project/environment grids.
-    - **Pages**: Landing page, Dashboard (main), Deployments, Databases, Tasks, Service Bus, Projects, Environments, and Settings.
-    - **Authentication**: Integrates Azure AD authentication via Microsoft.Identity.Web and Microsoft.Identity.Web.UI packages, providing native ASP.NET Core authentication with automatic token management.
+- **Technology**: ASP.NET Core 9.0 Razor Pages.
+- **UI/UX**: Adheres to Optym's "Olympus" brand guidelines with a clean, minimal dark theme using custom CSS (olympus.css).
+    - **Color System**: Utilizes CSS custom properties for a modern dark palette with deep backgrounds (`hsl(220, 15%, 9%)`), darker card backgrounds (`hsl(220, 15%, 6%)`), subtle borders (`hsl(220, 15%, 18%)`), and teal accents (`hsl(175, 70%, 50%)`).
+    - **Pages**: Includes Landing, Dashboard, Deployments, Databases, Tasks, Service Bus, Projects, Environments, and Settings.
+    - **Authentication**: Integrates Azure AD authentication via `Microsoft.Identity.Web` and `Microsoft.Identity.Web.UI` for native ASP.NET Core authentication and token management, supporting incremental consent for API permissions.
 
 **Backend:**
 - **Technology**: ASP.NET Core 9.0 with Minimal APIs.
-- **Monorepo Structure**: `services/api` (API with integrated Worker), `services/shared` (shared libraries/models), `services/web` (ASP.NET Razor Pages frontend).
-- **Message Bus & Task Processing**:
-    - Uses `InMemoryMessageBus` (for demo) with `Azure Service Bus` planned for production.
-    - Features session-based FIFO task processing.
-    - `TaskWorker` runs as an `IHostedService` within the API process, ensuring single-process message delivery and shared singleton access.
-    - Implemented a critical fix for semaphore handling to guarantee sequential processing per entityId and prevent deadlocks.
-- **API Endpoints**: Provides endpoints for deployments, database operations (backup/restore), pod restarts, sandbox creation, and task/project retrieval.
-- **Orchestration Handlers**: Dedicated handlers for various operations (e.g., DeploymentHandler, DbBackupHandler, RestartPodsHandler), which write artifacts to a designated directory.
+- **Monorepo Structure**: Organized into `services/api` (API with integrated Worker), `services/shared` (shared libraries/models), and `services/web` (ASP.NET Razor Pages frontend).
+- **Message Bus & Task Processing**: Uses `InMemoryMessageBus` (with `Azure Service Bus` planned for production) for session-based FIFO task processing. A `TaskWorker` runs as an `IHostedService` within the API for single-process message delivery and shared singleton access, incorporating semaphore handling for sequential processing.
+- **API Endpoints**: Provides endpoints for deployments, database operations, pod restarts, sandbox creation, and task/project retrieval.
+- **Orchestration Handlers**: Dedicated handlers (e.g., `DeploymentHandler`, `DbBackupHandler`, `RestartPodsHandler`) manage specific operations and write artifacts.
 - **Real-time Updates**: `SignalR` is integrated via `TaskHub` at `/hubs/tasks` for real-time task status, progress, and log updates.
 
 **Database Layer:**
 - **Technology**: EF Core with SQLite (for demo) and PostgreSQL (for production).
 - **Models**: `TaskEntity`, `Project`, `Environment` with JSON converters for complex types.
-- **Migration**: Database migrations are in place.
+- **Migration**: Database migrations are implemented.
 
 **Development Environment:**
-- A `dev.sh` script starts both API (port 5056) and Frontend (port 5000).
-- Swagger UI is available for API documentation.
-
-## Recent Changes (November 21, 2025)
-- **Enhanced Service Bus DLQ Cleaner UX**:
-  - **Fixed namespace auto-refresh**: Namespace dropdown now automatically updates when Azure subscription changes in header
-    - Implemented custom event dispatch (`subscriptionChanged`) from subscription selector
-    - Service Bus page listens for both same-page changes (custom event) and cross-tab changes (storage event)
-    - No longer requires clicking sidebar to refresh namespaces after subscription change
-  - **Upgraded refresh button**: Replaced text button with Font Awesome refresh icon (`fa-sync-alt`)
-    - Added Font Awesome 6.5.1 CDN to dashboard layout
-    - Created embossed button style with box shadow for classier look
-    - Icon-only design saves space and looks more modern
-  - **Created funny sign-out page**: Custom `/SignedOut` page with cartoons and auto-redirect
-    - Displays waving hand emoji (👋) with bouncing animation
-    - Includes humorous messages about cloud resources and Azure bills
-    - 5-second countdown timer before auto-redirecting to landing page
-    - Multiple CSS animations: fadeInDown, fadeInUp, wave, pulse, and bounceIn
-    - Configured `OnSignedOutCallbackRedirect` event to route to custom page
-- **Fixed authentication scope issue (AADSTS28000)**:
-  - Removed Service Bus scope from initial sign-in configuration to comply with Azure AD single-resource restriction
-  - Implemented incremental consent pattern: Azure Management scope during sign-in, Service Bus scope on-demand
-  - Users will be prompted to consent to Service Bus scope only when first accessing DLQ count functionality
-  - Resolves "Provided value for the input parameter scope is not valid because it contains more than one resource" error
-  - Authentication now works correctly with dual-scope architecture
-
-## Previous Changes (November 20, 2025)
-- **Migrated frontend from Next.js to ASP.NET Razor Pages**:
-  - Replaced Next.js 15 with ASP.NET Core 9.0 Razor Pages
-  - Implemented native Azure AD authentication using Microsoft.Identity.Web middleware
-  - Created all 8 pages: Landing (Index), Dashboard, Deployments, Databases, Tasks, Service Bus, Projects, Environments, and Settings
-  - Maintained complete Olympus dark theme design with custom CSS (olympus.css)
-  - Updated dev.sh script to run ASP.NET web app on port 5000
-  - Removed Next.js project directory and dependencies
-  - **Fixed HTTPS redirect issue**: Added ForwardedHeaders middleware and OpenIdConnect event handler
-    - Configured ForwardedHeaders to trust X-Forwarded-Proto and X-Forwarded-Host headers from Replit's proxy
-    - Added OnRedirectToIdentityProvider event to explicitly replace http:// with https:// in OAuth redirect URIs
-    - OAuth redirects now correctly use HTTPS instead of HTTP
-    - Resolves "Unsafe attempt to initiate navigation" and blank page issues during sign-in
-  - **Fixed Microsoft Identity endpoints**: Added controller support for Microsoft.Identity.Web.UI
-    - Added `AddControllersWithViews()` to services configuration
-    - Added `MapControllers()` to enable MVC controller routing
-    - Microsoft Identity sign-in/sign-out endpoints now properly accessible at `/MicrosoftIdentity/Account/*`
-  - **Fixed post-login redirect**: Configured authentication to redirect to dashboard after successful sign-in
-    - Added `OnTicketReceived` event handler to set redirect URI to `/Dashboard`
-    - Modified landing page to automatically redirect authenticated users to dashboard
-    - Users now land on the dashboard after signing in with Microsoft
-  - **Authentication Configuration**: Azure AD App Registration must have redirect URI configured:
-    - Redirect URI format: `https://<your-replit-domain>/signin-oidc`
-    - Example: `https://a46607d1-b410-4ba8-bd9c-95a49e37d57e-00-1clwqs1t2ts23.worf.replit.dev/signin-oidc`
-    - Add this in Azure Portal → App Registrations → Authentication → Redirect URIs (Web platform)
-    - After adding the redirect URI, login will redirect to Microsoft, then back to dashboard
-  - Environment variables used: `AZURE_AD_TENANT_ID`, `AZURE_AD_CLIENT_ID`, `AZURE_AD_CLIENT_SECRET`
-  - **Implemented Service Bus DLQ Cleaner**: Full-featured dead-letter queue management tool
-    - **Backend Services**:
-      - `ServiceBusResourceService`: Discovers namespaces, queues, topics, subscriptions using Azure.ResourceManager.ServiceBus
-      - `ServiceBusRuntimeService`: Retrieves DLQ message counts using Azure.Messaging.ServiceBus.Administration
-      - Both services use user's delegated Azure AD tokens for secure, RBAC-based access
-    - **API Endpoints** (in web project with Microsoft.Identity.Web authentication):
-      - GET `/api/azure/servicebus/namespaces` - Lists Service Bus namespaces in subscription
-      - GET `/api/azure/servicebus/queues` - Lists queues in namespace
-      - GET `/api/azure/servicebus/topics` - Lists topics in namespace
-      - GET `/api/azure/servicebus/topics/{topicName}/subscriptions` - Lists topic subscriptions
-      - POST `/api/azure/servicebus/dlq/count` - Gets DLQ and active message counts
-    - **Authentication**:
-      - Uses two scopes: `https://management.azure.com/user_impersonation` for resource discovery, `https://servicebus.azure.net/user_impersonation` for DLQ operations
-      - All endpoints require user authentication and proper Azure RBAC permissions
-      - Comprehensive consent error handling guides users through permission granting
-    - **Service Bus Page UI**:
-      - Cascading dropdowns: Azure subscription → Service Bus namespace → Entity type (Queue/Topic) → Queue or Topic+Subscription
-      - DLQ Status Card displays: dead-letter count, active count, entity type with gradient card backgrounds
-      - Empty state with helpful guidance when no entity selected
-      - Refresh button to update DLQ counts on demand
-      - Full Olympus dark theme integration with proper colors and styling
-    - **JavaScript Integration**:
-      - Fetches data from same-origin endpoints (no CORS issues)
-      - Implements cascaded selection logic (namespace triggers queue/topic fetch, etc.)
-      - Silently handles unauthenticated state on page load
-      - localStorage integration for subscription persistence
-    - **Known Limitations**:
-      - Purge functionality not yet implemented (button shows placeholder alert)
-      - Live progress tracking, SignalR integration, and task worker purge handler pending
-    - Follows enterprise-grade patterns with proper error handling, logging, and security
-  - **Implemented Azure subscription fetching**: Integrated real Azure subscription data for logged-in users
-    - Created `AzureSubscriptionService` to call Azure Management API with user's delegated permissions
-    - Added `/api/subscriptions` endpoint with proper authentication and error handling
-    - Dashboard dropdown now fetches and displays user's actual Azure subscriptions based on RBAC permissions
-    - Thread-safe implementation using per-request HttpRequestMessage to prevent token leakage
-    - Comprehensive error handling with specific exception catches (consent required, API failures)
-    - Frontend displays helpful error messages to guide users (e.g., "sign out and sign in again")
-    - Subscription selection persisted in localStorage for user convenience
-    - Requires Azure AD app registration API permission: "Azure Service Management" with `user_impersonation` scope
-    - Updated authentication configuration to request `https://management.azure.com/user_impersonation` scope during sign-in
-    - Documentation updated in `docs/azure-subscription-setup.md` with setup instructions and troubleshooting
-
-## Previous Changes (October 16, 2025)
-- **Updated theme to modern dark design**: Complete color palette refresh
-  - Much darker background (`hsl(220, 15%, 9%)`) for better contrast
-  - Deeper card backgrounds (`hsl(220, 15%, 6%)`) 
-  - Changed primary accent from cyan to teal (`hsl(175, 70%, 50%)`)
-  - Reduced translucent badge opacity to 15% for subtlety
-  - More refined border colors for cleaner separation
-  - **Added gradient effects**: Subtle teal gradient overlay at top of pages for depth
-    - Navigation header has vertical gradient for sophistication
-    - Top gradient overlay fades from teal to transparent
-    - Creates modern, polished Olympus design aesthetic
-- **Enhanced UX interactions**:
-  - Added cursor pointer styles for all interactive elements (buttons, links, selects)
-  - Disabled elements show "not-allowed" cursor for better feedback
-  - Updated sidebar to use usePathname for accurate active state tracking
-- **Added loading indicator**: Teal progress bar appears at top during page navigation (nextjs-toploader)
-- **Created dashboard navigation pages**: Added 6 new pages accessible via sidebar
-  - Deployments (/dashboard/deployments) - View deployment history, stats, create new deployments
-  - Databases (/dashboard/databases) - Manage database instances, backups, restores (needs backend integration)
-  - Tasks (/dashboard/tasks) - Monitor background tasks with filtering
-  - Projects (/dashboard/projects) - List and manage cloud projects
-  - Environments (/dashboard/environments) - Manage deployment environments
-  - Settings (/dashboard/settings) - Platform configuration (needs backend persistence)
-- **Updated dashboard layout**: Sidebar now appears on all dashboard pages
-- **Updated navigation header**: Shows Azure subscription selector and Sign Out button with user info
-- **Known limitations**: Pages need improved error handling; some need full backend integration
+- A `dev.sh` script facilitates local development by starting both API (port 5056) and Frontend (port 5000). Swagger UI is available for API documentation.
 
 ## External Dependencies
-- **Authentication**: Azure Active Directory (Azure AD) via NextAuth.js.
-- **Database**: SQLite (local demo), PostgreSQL (production).
-- **Message Queue**: InMemoryMessageBus (local demo), Azure Service Bus (production).
+- **Authentication**: Azure Active Directory (Azure AD).
+- **Database**: SQLite, PostgreSQL.
+- **Message Queue**: InMemoryMessageBus, Azure Service Bus.
 - **Real-time Communication**: SignalR.
 - **Cloud Providers**: Azure (for subscription management and resource interaction).
-- **Notifications**: Teams, Email (planned integrations).
+- **Notifications**: Teams, Email (planned).
 - **Asset Hosting**: `web/public/optym-logo.png` for Optym logo.
