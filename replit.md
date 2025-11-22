@@ -36,11 +36,15 @@ The platform is built as a monorepo leveraging ASP.NET Core 9.0, following core 
 - A `dev.sh` script facilitates local development by starting both API (port 5056) and Frontend (port 5000). Swagger UI is available for API documentation.
 
 ## Recent Changes (November 22, 2025)
+- **Fixed sign-out redirect loop**:
+  - Added `[AllowAnonymous]` attribute to SignedOut page model (SignedOut.cshtml.cs)
+  - Users now properly redirect to the funny sign-out page immediately after signing out
+  - Previously, authorization fallback policy was forcing re-authentication before showing sign-out page
 - **Added animated button hover effects**:
   - Implemented exact animation from https://uiverse.io/vinodjangid07/heavy-badger-29
   - On hover, icon container expands while text slides and collapses (width: 70px/100px → 0, font-size → 0)
   - On click, button scales down for tactile feedback (0.95 scale)
-  - Applied to both Refresh button (120px, icon 35px → 90px) and Purge DLQ button (160px, icon 40px → 150px)
+  - Applied to both Refresh button (120px, icon 35px → 90px) and Purge-DLQ button (160px, icon 40px → 150px)
   - Uses Olympus teal gradient (`hsl(175, 70%, 55%)` to `hsl(175, 70%, 45%)`) for icon containers
   - Disabled buttons maintain opacity reduction without animations
   - Smooth 0.3s transitions matching original uiverse.io design pattern
