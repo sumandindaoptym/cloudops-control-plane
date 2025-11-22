@@ -25,6 +25,7 @@ builder.Services.AddAuthentication(OpenIdConnectDefaults.AuthenticationScheme)
         options.Scope.Add("offline_access");
         options.Scope.Add("https://management.azure.com/user_impersonation");
         options.ResponseType = "code";
+        options.SignedOutRedirectUri = "/SignedOut";
         options.Events = new OpenIdConnectEvents
         {
             OnRedirectToIdentityProvider = context =>
@@ -43,10 +44,12 @@ builder.Services.AddAuthentication(OpenIdConnectDefaults.AuthenticationScheme)
                 }
                 return Task.CompletedTask;
             },
-            OnSignedOutCallbackRedirect = context =>
+            OnRedirectToIdentityProviderForSignOut = context =>
             {
-                context.Response.Redirect("/SignedOut");
-                context.HandleResponse();
+                if (context.HttpContext.Request.Headers.ContainsKey("X-Forwarded-Proto"))
+                {
+                    context.ProtocolMessage.PostLogoutRedirectUri = context.ProtocolMessage.PostLogoutRedirectUri?.Replace("http://", "https://");
+                }
                 return Task.CompletedTask;
             }
         };
