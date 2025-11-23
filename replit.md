@@ -42,6 +42,11 @@ The platform is built as a monorepo leveraging ASP.NET Core 9.0, following core 
   - Page auto-redirects to landing page after 5 seconds
   - Includes animations: fadeInDown, fadeInUp, bounceIn, wave, and pulse effects
   - Sign-out flow: Sign Out → Azure AD logout → /MicrosoftIdentity/Account/SignedOut → immediate redirect to /GoodBye → 5-second countdown → Landing page
+- **Fixed authentication issue on GoodBye page**:
+  - Removed global `FallbackPolicy` that was requiring authentication for all pages
+  - Pages now respect `[AllowAnonymous]` and `[Authorize]` attributes correctly
+  - `/GoodBye` route is now publicly accessible without login requirement
+  - Dashboard pages remain protected with `[Authorize]` attribute
 
 ## Recent Changes (November 22, 2025)
 - **Fixed sign-out redirect loop**:
