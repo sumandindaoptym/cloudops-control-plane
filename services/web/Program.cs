@@ -65,6 +65,7 @@ builder.Services.AddControllersWithViews();
 
 builder.Services.AddRazorPages(options =>
 {
+    options.Conventions.AllowAnonymousToPage("/Index");
     options.Conventions.AllowAnonymousToPage("/MicrosoftIdentity/Account/SignedOut");
 })
     .AddMicrosoftIdentityUI();
