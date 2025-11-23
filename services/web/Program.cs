@@ -63,7 +63,10 @@ builder.Services.AddAuthorization(options =>
 
 builder.Services.AddControllersWithViews();
 
-builder.Services.AddRazorPages()
+builder.Services.AddRazorPages(options =>
+{
+    options.Conventions.AllowAnonymousToPage("/MicrosoftIdentity/Account/SignedOut");
+})
     .AddMicrosoftIdentityUI();
 
 builder.Services.AddHttpClient<IAzureSubscriptionService, AzureSubscriptionService>();

@@ -35,11 +35,12 @@ The platform is built as a monorepo leveraging ASP.NET Core 9.0, following core 
 **Development Environment:**
 - A `dev.sh` script facilitates local development by starting both API (port 5056) and Frontend (port 5000). Swagger UI is available for API documentation.
 
-## Recent Changes (November 22, 2025)
+## Recent Changes (November 22, 2025 & 23)
 - **Fixed sign-out redirect loop**:
   - Overrode default Microsoft Identity UI SignedOut page (`Areas/MicrosoftIdentity/Pages/Account/SignedOut.cshtml`) with custom animated design
   - Added `OnRedirectToIdentityProviderForSignOut` event handler to handle HTTPS redirect during sign-out
   - Added `[AllowAnonymous]` attribute to SignedOut page model
+  - Configured RazorPages conventions to explicitly allow anonymous access: `options.Conventions.AllowAnonymousToPage("/MicrosoftIdentity/Account/SignedOut")`
   - Users now see funny animated sign-out page with waving emoji (👋), humorous messages, and 5-second countdown
   - Sign-out flow: Sign Out → Azure AD logout → /MicrosoftIdentity/Account/SignedOut (animated page with auto-redirect) → Landing page (unauthenticated)
 - **Added animated button hover effects**:
