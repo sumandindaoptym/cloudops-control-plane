@@ -39,9 +39,10 @@ The platform is built as a monorepo leveraging ASP.NET Core 9.0, following core 
 - **Fixed sign-out redirect loop**:
   - Set `SignedOutRedirectUri = "/SignedOut"` in OpenIdConnect options to properly configure post-logout redirect
   - Added `OnRedirectToIdentityProviderForSignOut` event handler to handle HTTPS redirect during sign-out
-  - Added `[AllowAnonymous]` attribute to SignedOut page model (SignedOut.cshtml.cs)
+  - Overrode default Microsoft Identity UI SignedOut page (`Areas/MicrosoftIdentity/Pages/Account/SignedOut.cshtml`) to redirect to custom page
+  - Added `[AllowAnonymous]` attribute to both SignedOut page models
   - Users now properly redirect to the funny sign-out page immediately after signing out without re-authentication
-  - Sign-out flow: Sign Out → Azure AD logout → /SignedOut page (anonymous) → Landing page (unauthenticated)
+  - Sign-out flow: Sign Out → Azure AD logout → /MicrosoftIdentity/Account/SignedOut → /SignedOut page (animated, with 5s countdown) → Landing page (unauthenticated)
 - **Added animated button hover effects**:
   - Implemented exact animation from https://uiverse.io/vinodjangid07/heavy-badger-29
   - On hover, icon container expands while text slides and collapses (width: 70px/100px → 0, font-size → 0)
