@@ -25,6 +25,7 @@ builder.Services.AddAuthentication(OpenIdConnectDefaults.AuthenticationScheme)
         options.Scope.Add("offline_access");
         options.Scope.Add("https://management.azure.com/user_impersonation");
         options.ResponseType = "code";
+        options.SignedOutRedirectUri = "/SignedOut";
         options.Events = new OpenIdConnectEvents
         {
             OnRedirectToIdentityProvider = context =>
@@ -63,11 +64,7 @@ builder.Services.AddAuthorization(options =>
 
 builder.Services.AddControllersWithViews();
 
-builder.Services.AddRazorPages(options =>
-{
-    options.Conventions.AllowAnonymousToPage("/Index");
-    options.Conventions.AllowAnonymousToPage("/MicrosoftIdentity/Account/SignedOut");
-})
+builder.Services.AddRazorPages()
     .AddMicrosoftIdentityUI();
 
 builder.Services.AddHttpClient<IAzureSubscriptionService, AzureSubscriptionService>();

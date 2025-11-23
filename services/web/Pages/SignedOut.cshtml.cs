@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
-namespace CloudOps.Web.Areas.MicrosoftIdentity.Pages.Account;
+namespace CloudOps.Web.Pages;
 
 [AllowAnonymous]
 public class SignedOutModel : PageModel
