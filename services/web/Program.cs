@@ -25,7 +25,6 @@ builder.Services.AddAuthentication(OpenIdConnectDefaults.AuthenticationScheme)
         options.Scope.Add("offline_access");
         options.Scope.Add("https://management.azure.com/user_impersonation");
         options.ResponseType = "code";
-        options.SignedOutRedirectUri = "/SignedOut";
         options.Events = new OpenIdConnectEvents
         {
             OnRedirectToIdentityProvider = context =>
