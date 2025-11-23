@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 namespace CloudOps.Web.Pages;
 
 [AllowAnonymous]
-public class SignedOutModel : PageModel
+public class GoodByeModel : PageModel
 {
     public void OnGet()
     {

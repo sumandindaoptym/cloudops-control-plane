@@ -38,10 +38,10 @@ The platform is built as a monorepo leveraging ASP.NET Core 9.0, following core 
 ## Recent Changes (November 23, 2025)
 - **Enhanced sign-out page with auto-redirect**:
   - Created custom override for Microsoft Identity sign-out page at `Pages/MicrosoftIdentity/Account/SignedOut.cshtml`
-  - Added funny sign-out page with waving emoji (👋), humorous messages, and 5-second countdown
+  - Funny sign-out page now accessible at `/GoodBye` route with waving emoji (👋), humorous messages, and 5-second countdown
   - Page auto-redirects to landing page after 5 seconds
   - Includes animations: fadeInDown, fadeInUp, bounceIn, wave, and pulse effects
-  - Sign-out flow: Sign Out → Azure AD logout → /MicrosoftIdentity/Account/SignedOut (with auto-redirect) → Landing page
+  - Sign-out flow: Sign Out → Azure AD logout → /MicrosoftIdentity/Account/SignedOut → immediate redirect to /GoodBye → 5-second countdown → Landing page
 
 ## Recent Changes (November 22, 2025)
 - **Fixed sign-out redirect loop**:

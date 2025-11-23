@@ -172,18 +172,8 @@
     </div>
 
     <script>
-        let countdown = 5;
-        const countdownElement = document.getElementById('countdownNumber');
-        
-        const timer = setInterval(function() {
-            countdown--;
-            countdownElement.textContent = countdown;
-            
-            if (countdown <= 0) {
-                clearInterval(timer);
-                window.location.href = '/';
-            }
-        }, 1000);
+        // Immediately redirect to the GoodBye page
+        window.location.href = '/GoodBye';
     </script>
 </body>
 </html>
