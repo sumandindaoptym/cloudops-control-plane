@@ -84,6 +84,17 @@ var app = builder.Build();
 
 app.UseForwardedHeaders();
 
+app.Use(async (context, next) =>
+{
+    if (context.Request.Path.StartsWithSegments("/MicrosoftIdentity/Account/SignedOut") ||
+        context.Request.Path.StartsWithSegments("/Account/SignedOut"))
+    {
+        context.Response.Redirect("/GoodBye");
+        return;
+    }
+    await next();
+});
+
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Error");

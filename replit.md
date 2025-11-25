@@ -48,9 +48,10 @@ The platform is built as a monorepo leveraging ASP.NET Core 9.0, following core 
   - `/GoodBye` route is now publicly accessible without login requirement
   - Dashboard pages remain protected with `[Authorize]` attribute
 - **Fixed sign-out redirect to /GoodBye**:
-  - Created server-side redirect in `MicrosoftIdentity/Account/SignedOut.cshtml.cs`
-  - When Azure AD completes sign-out, the app immediately redirects to `/GoodBye` (302 redirect)
-  - No visible delay - instant redirect from `/MicrosoftIdentity/Account/SignedOut` to `/GoodBye`
+  - Added middleware in Program.cs to intercept SignedOut requests
+  - Middleware catches both `/MicrosoftIdentity/Account/SignedOut` and `/Account/SignedOut` routes
+  - Immediately redirects to `/GoodBye` before Microsoft Identity library handles the request
+  - No visible delay - instant redirect to the goodbye page
 
 ## Recent Changes (November 22, 2025)
 - **Fixed sign-out redirect loop**:
