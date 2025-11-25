@@ -314,6 +314,48 @@ app.MapPost("/api/azure/servicebus/dlq/count", async (
     }
 }).RequireAuthorization();
 
+app.MapPost("/api/azure/servicebus/dlq/purge", async (
+    HttpContext httpContext,
+    CloudOps.Web.Models.PurgeRequest request,
+    CloudOps.Web.Services.IServiceBusRuntimeService runtimeService,
+    Microsoft.Identity.Web.ITokenAcquisition tokenAcquisition,
+    ILogger<Program> logger) =>
+{
+    if (!httpContext.User.Identity?.IsAuthenticated ?? true)
+    {
+        return Results.Unauthorized();
+    }
+
+    try
+    {
+        var accessToken = await tokenAcquisition.GetAccessTokenForUserAsync(new[] { "https://servicebus.azure.net/user_impersonation" });
+        
+        var result = await runtimeService.PurgeDlqAsync(request, accessToken, progress =>
+        {
+            logger.LogInformation("Purge progress: {Status} - {Completed} messages purged", 
+                progress.Status, progress.TotalCompleted);
+        });
+
+        return Results.Ok(result);
+    }
+    catch (Microsoft.Identity.Web.MicrosoftIdentityWebChallengeUserException)
+    {
+        logger.LogWarning("User needs to consent to Service Bus scope");
+        return Results.Json(
+            new { error = "Please sign out and sign back in to grant Service Bus access" },
+            statusCode: 403
+        );
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "Error purging DLQ");
+        return Results.Json(
+            new { error = $"Failed to purge DLQ: {ex.Message}" },
+            statusCode: 500
+        );
+    }
+}).RequireAuthorization();
+
 app.MapControllers();
 app.MapRazorPages();
 

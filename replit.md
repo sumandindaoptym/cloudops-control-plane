@@ -35,6 +35,16 @@ The platform is built as a monorepo leveraging ASP.NET Core 9.0, following core 
 **Development Environment:**
 - A `dev.sh` script facilitates local development by starting both API (port 5056) and Frontend (port 5000). Swagger UI is available for API documentation.
 
+## Recent Changes (November 25, 2025)
+- **Implemented Purge DLQ feature**:
+  - Added `PurgeDlqAsync` method to `IServiceBusRuntimeService` interface
+  - Implemented purge logic in `ServiceBusRuntimeService` using Azure.Messaging.ServiceBus
+  - Receives DLQ messages in batches of 100 and completes them to remove from queue
+  - Added `/api/azure/servicebus/dlq/purge` POST endpoint
+  - Frontend shows live progress with logs panel, progress bar, and status updates
+  - Download logs feature for audit trail
+  - Automatic refresh of DLQ count after purge completes
+
 ## Recent Changes (November 23, 2025)
 - **Enhanced sign-out page with auto-redirect**:
   - Created custom override for Microsoft Identity sign-out page at `Pages/MicrosoftIdentity/Account/SignedOut.cshtml`

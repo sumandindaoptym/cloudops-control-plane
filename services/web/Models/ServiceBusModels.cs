@@ -66,3 +66,12 @@ public class PurgeProgress
     public string? Error { get; set; }
     public List<string> Logs { get; set; } = new();
 }
+
+public class PurgeResult
+{
+    public bool Success { get; set; }
+    public int TotalPurged { get; set; }
+    public int ElapsedSeconds { get; set; }
+    public string? Error { get; set; }
+    public List<string> Logs { get; set; } = new();
+}
