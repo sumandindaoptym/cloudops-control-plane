@@ -1,21 +1,2 @@
 @page
-@using Microsoft.AspNetCore.Authorization
-@attribute [AllowAnonymous]
-@{
-    Layout = null;
-}
-
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="utf-8" />
-    <title>Redirecting...</title>
-    <meta http-equiv="refresh" content="0;url=/GoodBye">
-</head>
-<body>
-    <script>
-        window.location.replace('/GoodBye');
-    </script>
-    <p>Redirecting...</p>
-</body>
-</html>
+@model CloudOps.Web.Pages.MicrosoftIdentity.Account.SignedOutModel
