@@ -10,6 +10,7 @@
     <PackageReference Include="Azure.Messaging.ServiceBus" Version="7.20.1" />
     <PackageReference Include="Azure.ResourceManager.ServiceBus" Version="1.1.0" />
     <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="10.0.0" />
+    <PackageReference Include="Microsoft.Azure.SignalR" Version="1.32.0" />
     <PackageReference Include="Microsoft.Identity.Web" Version="4.0.1" />
     <PackageReference Include="Microsoft.Identity.Web.UI" Version="4.0.1" />
   </ItemGroup>

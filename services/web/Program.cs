@@ -2,6 +2,7 @@ using CloudOps.Web.Hubs;
 using CloudOps.Web.Services;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.Azure.SignalR;
 using Microsoft.Identity.Web;
 using Microsoft.Identity.Web.UI;
 
@@ -71,7 +72,19 @@ builder.Services.AddScoped<CloudOps.Web.Services.IServiceBusRuntimeService, Clou
 
 builder.Services.AddSingleton<IPurgeQueue, PurgeQueue>();
 builder.Services.AddHostedService<PurgeBackgroundService>();
-builder.Services.AddSignalR();
+
+var azureSignalRConnectionString = Environment.GetEnvironmentVariable("AZURE_SIGNALR_CONNECTION_STRING");
+if (!string.IsNullOrEmpty(azureSignalRConnectionString))
+{
+    builder.Services.AddSignalR().AddAzureSignalR(options =>
+    {
+        options.ConnectionString = azureSignalRConnectionString;
+    });
+}
+else
+{
+    builder.Services.AddSignalR();
+}
 
 builder.Services.Configure<ForwardedHeadersOptions>(options =>
 {
