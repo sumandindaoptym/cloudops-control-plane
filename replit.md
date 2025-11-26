@@ -35,6 +35,16 @@ The platform is built as a monorepo leveraging ASP.NET Core 9.0, following core 
 **Development Environment:**
 - A `dev.sh` script facilitates local development by starting both API (port 5056) and Frontend (port 5000). Swagger UI is available for API documentation.
 
+## Recent Changes (November 26, 2025)
+- **Enhanced Purge DLQ with real-time SignalR streaming**:
+  - Created `PurgeHub` SignalR hub at `/hubs/purge` for real-time progress updates
+  - Implemented `PurgeBackgroundService` with Channel queue for async job processing
+  - Added `PurgeDlqWithProgressAsync` method that streams progress via callbacks
+  - API endpoint now returns immediately with purgeId, background service handles purge
+  - Frontend connects to SignalR hub and receives live batch-by-batch progress updates
+  - Each message batch triggers real-time log entry and progress bar update
+  - Clients join purge-specific SignalR groups for targeted updates
+
 ## Recent Changes (November 25, 2025)
 - **Implemented Purge DLQ feature**:
   - Added `PurgeDlqAsync` method to `IServiceBusRuntimeService` interface
