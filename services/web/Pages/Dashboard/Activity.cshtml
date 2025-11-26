@@ -1,0 +1,219 @@
+@page
+@model CloudOps.Web.Pages.Dashboard.ActivityModel
+@{
+    ViewData["Title"] = "Activity";
+    Layout = "Shared/_DashboardLayout";
+}
+
+<h1 class="page-title">Activity Log</h1>
+<p class="page-description">Track your operations and actions across Azure resources</p>
+
+<div class="grid grid-4" style="margin-bottom: 2rem;">
+    <div class="stat-card">
+        <div class="stat-label">Total Activities</div>
+        <div class="stat-value" id="totalActivities">-</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Running</div>
+        <div class="stat-value" id="runningActivities">-</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Completed</div>
+        <div class="stat-value" id="completedActivities">-</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Failed</div>
+        <div class="stat-value" id="failedActivities">-</div>
+    </div>
+</div>
+
+<div class="card">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+        <h2 style="font-size: 1.25rem; font-weight: 600; color: var(--foreground); margin: 0;">Recent Activity</h2>
+        <button id="refreshBtn" class="btn btn-secondary" style="display: flex; align-items: center; gap: 0.5rem;">
+            <i class="fas fa-sync-alt"></i>
+            <span>Refresh</span>
+        </button>
+    </div>
+    
+    <div id="loadingState" style="text-align: center; padding: 2rem; color: var(--muted-foreground);">
+        <i class="fas fa-spinner fa-spin" style="font-size: 2rem; margin-bottom: 1rem;"></i>
+        <p>Loading activities...</p>
+    </div>
+    
+    <div id="emptyState" style="text-align: center; padding: 3rem; color: var(--muted-foreground); display: none;">
+        <i class="fas fa-clipboard-list" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.5;"></i>
+        <p style="font-size: 1.1rem;">No activities yet</p>
+        <p style="font-size: 0.9rem;">Your operations will appear here when you perform actions like purging DLQ messages.</p>
+    </div>
+    
+    <div id="tableContainer" style="display: none; overflow-x: auto;">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Task</th>
+                    <th>Type</th>
+                    <th>Subscription</th>
+                    <th>Resource</th>
+                    <th>Sub-Resource</th>
+                    <th>Status</th>
+                    <th>Items</th>
+                    <th>Start Time</th>
+                    <th>End Time</th>
+                    <th>Duration</th>
+                </tr>
+            </thead>
+            <tbody id="activityTableBody">
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    let activities = [];
+    
+    async function loadActivities() {
+        const loadingState = document.getElementById('loadingState');
+        const emptyState = document.getElementById('emptyState');
+        const tableContainer = document.getElementById('tableContainer');
+        const tableBody = document.getElementById('activityTableBody');
+        
+        loadingState.style.display = 'block';
+        emptyState.style.display = 'none';
+        tableContainer.style.display = 'none';
+        
+        try {
+            const response = await fetch('/api/activities');
+            
+            if (!response.ok) {
+                throw new Error('Failed to fetch activities');
+            }
+            
+            activities = await response.json();
+            
+            loadingState.style.display = 'none';
+            
+            if (activities.length === 0) {
+                emptyState.style.display = 'block';
+                updateStats([]);
+                return;
+            }
+            
+            tableContainer.style.display = 'block';
+            renderActivities(activities);
+            updateStats(activities);
+            
+        } catch (error) {
+            console.error('Error loading activities:', error);
+            loadingState.innerHTML = '<i class="fas fa-exclamation-triangle" style="font-size: 2rem; margin-bottom: 1rem; color: var(--destructive);"></i><p>Failed to load activities</p><p style="font-size: 0.9rem; color: var(--muted-foreground);">' + error.message + '</p>';
+        }
+    }
+    
+    function updateStats(activities) {
+        const total = activities.length;
+        const running = activities.filter(a => a.status === 'Running').length;
+        const completed = activities.filter(a => a.status === 'Completed').length;
+        const failed = activities.filter(a => a.status === 'Failed').length;
+        
+        document.getElementById('totalActivities').textContent = total;
+        document.getElementById('runningActivities').textContent = running;
+        document.getElementById('completedActivities').textContent = completed;
+        document.getElementById('failedActivities').textContent = failed;
+    }
+    
+    function renderActivities(activities) {
+        const tableBody = document.getElementById('activityTableBody');
+        tableBody.innerHTML = '';
+        
+        activities.forEach(activity => {
+            const row = document.createElement('tr');
+            
+            const statusClass = getStatusClass(activity.status);
+            const duration = calculateDuration(activity.startTime, activity.endTime);
+            
+            row.innerHTML = '<td>' + escapeHtml(activity.taskName) + '</td>' +
+                '<td>' + escapeHtml(activity.taskType) + '</td>' +
+                '<td title="' + escapeHtml(activity.subscriptionId) + '">' + escapeHtml(activity.subscriptionName) + '</td>' +
+                '<td>' + escapeHtml(activity.resourceName) + '</td>' +
+                '<td>' + escapeHtml(activity.subResourceName || '-') + '</td>' +
+                '<td><span class="badge ' + statusClass + '">' + escapeHtml(activity.status) + '</span></td>' +
+                '<td>' + (activity.itemsProcessed !== null ? activity.itemsProcessed : '-') + '</td>' +
+                '<td>' + formatDateTime(activity.startTime) + '</td>' +
+                '<td>' + (activity.endTime ? formatDateTime(activity.endTime) : '-') + '</td>' +
+                '<td>' + duration + '</td>';
+            
+            if (activity.errorMessage) {
+                row.title = activity.errorMessage;
+                row.style.cursor = 'help';
+            }
+            
+            tableBody.appendChild(row);
+        });
+    }
+    
+    function getStatusClass(status) {
+        switch (status) {
+            case 'Running': return 'badge-warning';
+            case 'Completed': return 'badge-success';
+            case 'Failed': return 'badge-danger';
+            default: return 'badge-secondary';
+        }
+    }
+    
+    function calculateDuration(startTime, endTime) {
+        if (!startTime) return '-';
+        
+        const start = new Date(startTime);
+        const end = endTime ? new Date(endTime) : new Date();
+        const diffMs = end - start;
+        
+        if (diffMs < 1000) return '< 1s';
+        
+        const seconds = Math.floor(diffMs / 1000);
+        if (seconds < 60) return seconds + 's';
+        
+        const minutes = Math.floor(seconds / 60);
+        const remainingSeconds = seconds % 60;
+        
+        if (minutes < 60) {
+            return remainingSeconds > 0 ? minutes + 'm ' + remainingSeconds + 's' : minutes + 'm';
+        }
+        
+        const hours = Math.floor(minutes / 60);
+        const remainingMinutes = minutes % 60;
+        return hours + 'h ' + remainingMinutes + 'm';
+    }
+    
+    function formatDateTime(dateString) {
+        if (!dateString) return '-';
+        const date = new Date(dateString);
+        return date.toLocaleString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit'
+        });
+    }
+    
+    function escapeHtml(text) {
+        if (!text) return '';
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+    
+    document.getElementById('refreshBtn').addEventListener('click', function() {
+        const icon = this.querySelector('i');
+        icon.classList.add('fa-spin');
+        loadActivities().finally(function() {
+            icon.classList.remove('fa-spin');
+        });
+    });
+    
+    loadActivities();
+    
+    setInterval(loadActivities, 30000);
+</script>
+}

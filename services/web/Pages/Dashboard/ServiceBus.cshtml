@@ -713,13 +713,18 @@
             try {
                 const connection = await initPurgeHub();
                 
+                const subscriptionSelector = document.getElementById('subscriptionSelector');
+                const subscriptionName = subscriptionSelector.options[subscriptionSelector.selectedIndex]?.text || 'Unknown';
+                
                 const response = await fetch(`${API_BASE}/dlq/purge`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         subscriptionId: currentSubscriptionId,
+                        subscriptionName: subscriptionName,
                         resourceGroup: currentResourceGroup,
                         namespace: currentNamespace,
+                        namespaceName: currentNamespace,
                         entityType: entityType,
                         entityName: entityName,
                         topicSubscriptionName: topicSubscriptionName
