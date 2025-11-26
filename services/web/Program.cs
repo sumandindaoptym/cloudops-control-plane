@@ -75,8 +75,43 @@ builder.Services.AddScoped<CloudOps.Web.Services.IServiceBusRuntimeService, Clou
 var databaseUrl = Environment.GetEnvironmentVariable("DATABASE_URL");
 if (!string.IsNullOrEmpty(databaseUrl))
 {
+    var connectionString = ConvertDatabaseUrlToConnectionString(databaseUrl);
     builder.Services.AddDbContext<ActivityDbContext>(options =>
-        options.UseNpgsql(databaseUrl));
+        options.UseNpgsql(connectionString));
+}
+
+static string ConvertDatabaseUrlToConnectionString(string databaseUrl)
+{
+    if (databaseUrl.StartsWith("postgresql://") || databaseUrl.StartsWith("postgres://"))
+    {
+        var uri = new Uri(databaseUrl);
+        var userInfo = uri.UserInfo.Split(':');
+        var host = uri.Host;
+        var port = uri.Port > 0 ? uri.Port : 5432;
+        var database = uri.AbsolutePath.TrimStart('/');
+        var user = userInfo.Length > 0 ? Uri.UnescapeDataString(userInfo[0]) : "";
+        var password = userInfo.Length > 1 ? Uri.UnescapeDataString(userInfo[1]) : "";
+        
+        var query = System.Web.HttpUtility.ParseQueryString(uri.Query);
+        var sslMode = query["sslmode"] ?? "require";
+        
+        return $"Host={host};Port={port};Database={database};Username={user};Password={password};SSL Mode={MapSslMode(sslMode)}";
+    }
+    return databaseUrl;
+}
+
+static string MapSslMode(string sslMode)
+{
+    return sslMode.ToLowerInvariant() switch
+    {
+        "disable" => "Disable",
+        "allow" => "Allow",
+        "prefer" => "Prefer",
+        "require" => "Require",
+        "verify-ca" => "VerifyCA",
+        "verify-full" => "VerifyFull",
+        _ => "Require"
+    };
 }
 builder.Services.AddScoped<IActivityService, ActivityService>();
 

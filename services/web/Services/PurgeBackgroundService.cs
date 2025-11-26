@@ -94,6 +94,11 @@ public class PurgeBackgroundService : BackgroundService
             var runtimeService = scope.ServiceProvider.GetRequiredService<IServiceBusRuntimeService>();
             var activityService = scope.ServiceProvider.GetRequiredService<IActivityService>();
 
+            var isTopic = job.Request.EntityType.Equals("topic", StringComparison.OrdinalIgnoreCase);
+            var subResourceName = isTopic && !string.IsNullOrEmpty(job.Request.TopicSubscriptionName)
+                ? $"{job.Request.EntityName}/{job.Request.TopicSubscriptionName}"
+                : job.Request.EntityName;
+
             var activity = await activityService.LogActivityAsync(new ActivityLog
             {
                 UserId = job.UserId,
@@ -102,10 +107,8 @@ public class PurgeBackgroundService : BackgroundService
                 TaskType = "Service Bus",
                 SubscriptionName = job.SubscriptionName,
                 SubscriptionId = job.Request.SubscriptionId,
-                ResourceName = job.Request.NamespaceName,
-                SubResourceName = job.Request.EntityType == "Topic" 
-                    ? $"{job.Request.EntityName}/{job.Request.SubscriptionName}" 
-                    : job.Request.EntityName,
+                ResourceName = job.Request.NamespaceName ?? job.Request.Namespace,
+                SubResourceName = subResourceName,
                 Status = "Running",
                 StartTime = startTime
             });
