@@ -1,8 +1,10 @@
+using CloudOps.Web.Data;
 using CloudOps.Web.Hubs;
 using CloudOps.Web.Services;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.Azure.SignalR;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Identity.Web;
 using Microsoft.Identity.Web.UI;
 
@@ -70,6 +72,14 @@ builder.Services.AddHttpClient<IAzureSubscriptionService, AzureSubscriptionServi
 builder.Services.AddScoped<CloudOps.Web.Services.IServiceBusResourceService, CloudOps.Web.Services.ServiceBusResourceService>();
 builder.Services.AddScoped<CloudOps.Web.Services.IServiceBusRuntimeService, CloudOps.Web.Services.ServiceBusRuntimeService>();
 
+var databaseUrl = Environment.GetEnvironmentVariable("DATABASE_URL");
+if (!string.IsNullOrEmpty(databaseUrl))
+{
+    builder.Services.AddDbContext<ActivityDbContext>(options =>
+        options.UseNpgsql(databaseUrl));
+}
+builder.Services.AddScoped<IActivityService, ActivityService>();
+
 builder.Services.AddSingleton<IPurgeQueue, PurgeQueue>();
 builder.Services.AddHostedService<PurgeBackgroundService>();
 
@@ -99,6 +109,15 @@ builder.WebHost.ConfigureKestrel(options =>
 });
 
 var app = builder.Build();
+
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetService<ActivityDbContext>();
+    if (dbContext != null)
+    {
+        await dbContext.Database.EnsureCreatedAsync();
+    }
+}
 
 app.UseForwardedHeaders();
 
@@ -350,11 +369,21 @@ app.MapPost("/api/azure/servicebus/dlq/purge", async (
         
         var purgeId = Guid.NewGuid().ToString("N")[..12];
         
+        var userId = httpContext.User.FindFirst("http://schemas.microsoft.com/identity/claims/objectidentifier")?.Value 
+            ?? httpContext.User.FindFirst("oid")?.Value 
+            ?? string.Empty;
+        var userEmail = httpContext.User.FindFirst("preferred_username")?.Value 
+            ?? httpContext.User.FindFirst("email")?.Value 
+            ?? string.Empty;
+        
         await purgeQueue.QueuePurgeAsync(new PurgeJob
         {
             PurgeId = purgeId,
             Request = request,
-            AccessToken = accessToken
+            AccessToken = accessToken,
+            UserId = userId,
+            UserEmail = userEmail,
+            SubscriptionName = request.SubscriptionName ?? "Unknown"
         });
 
         logger.LogInformation("Queued purge job {PurgeId} for {EntityType} {EntityName}", 
@@ -381,6 +410,35 @@ app.MapPost("/api/azure/servicebus/dlq/purge", async (
 }).RequireAuthorization();
 
 app.MapHub<PurgeHub>("/hubs/purge");
+
+app.MapGet("/api/activities", async (
+    HttpContext httpContext,
+    IActivityService activityService,
+    ILogger<Program> logger) =>
+{
+    if (!httpContext.User.Identity?.IsAuthenticated ?? true)
+    {
+        return Results.Unauthorized();
+    }
+
+    try
+    {
+        var userId = httpContext.User.FindFirst("http://schemas.microsoft.com/identity/claims/objectidentifier")?.Value 
+            ?? httpContext.User.FindFirst("oid")?.Value 
+            ?? string.Empty;
+        
+        var activities = await activityService.GetUserActivitiesAsync(userId);
+        return Results.Ok(activities);
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "Error fetching activities");
+        return Results.Json(
+            new { error = "Failed to fetch activities" },
+            statusCode: 500
+        );
+    }
+}).RequireAuthorization();
 
 app.MapControllers();
 app.MapRazorPages();

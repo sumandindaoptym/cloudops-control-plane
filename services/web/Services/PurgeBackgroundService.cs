@@ -2,6 +2,7 @@ using System.Threading.Channels;
 using Microsoft.AspNetCore.SignalR;
 using CloudOps.Web.Hubs;
 using CloudOps.Web.Models;
+using ActivityLog = CloudOps.Web.Models.ActivityLog;
 
 namespace CloudOps.Web.Services;
 
@@ -10,6 +11,9 @@ public class PurgeJob
     public string PurgeId { get; set; } = string.Empty;
     public PurgeRequest Request { get; set; } = null!;
     public string AccessToken { get; set; } = string.Empty;
+    public string UserId { get; set; } = string.Empty;
+    public string UserEmail { get; set; } = string.Empty;
+    public string SubscriptionName { get; set; } = string.Empty;
 }
 
 public interface IPurgeQueue
@@ -80,6 +84,7 @@ public class PurgeBackgroundService : BackgroundService
     {
         var startTime = DateTime.UtcNow;
         var purgeId = job.PurgeId;
+        Guid? activityId = null;
 
         try
         {
@@ -87,6 +92,24 @@ public class PurgeBackgroundService : BackgroundService
 
             using var scope = _scopeFactory.CreateScope();
             var runtimeService = scope.ServiceProvider.GetRequiredService<IServiceBusRuntimeService>();
+            var activityService = scope.ServiceProvider.GetRequiredService<IActivityService>();
+
+            var activity = await activityService.LogActivityAsync(new ActivityLog
+            {
+                UserId = job.UserId,
+                UserEmail = job.UserEmail,
+                TaskName = "Purge DLQ",
+                TaskType = "Service Bus",
+                SubscriptionName = job.SubscriptionName,
+                SubscriptionId = job.Request.SubscriptionId,
+                ResourceName = job.Request.NamespaceName,
+                SubResourceName = job.Request.EntityType == "Topic" 
+                    ? $"{job.Request.EntityName}/{job.Request.SubscriptionName}" 
+                    : job.Request.EntityName,
+                Status = "Running",
+                StartTime = startTime
+            });
+            activityId = activity.Id;
 
             var result = await runtimeService.PurgeDlqWithProgressAsync(
                 job.Request,
@@ -101,18 +124,28 @@ public class PurgeBackgroundService : BackgroundService
 
             if (result.Success)
             {
+                await activityService.UpdateActivityAsync(activityId.Value, "Completed", result.TotalPurged);
                 await SendUpdate(purgeId, "completed", 
                     $"Purge completed. Total messages purged: {result.TotalPurged}", 100,
                     result.TotalPurged, elapsed);
             }
             else
             {
+                await activityService.UpdateActivityAsync(activityId.Value, "Failed", null, result.Error);
                 await SendUpdate(purgeId, "failed", result.Error ?? "Unknown error", 100);
             }
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error in purge job {PurgeId}", purgeId);
+            
+            if (activityId.HasValue)
+            {
+                using var scope = _scopeFactory.CreateScope();
+                var activityService = scope.ServiceProvider.GetRequiredService<IActivityService>();
+                await activityService.UpdateActivityAsync(activityId.Value, "Failed", null, ex.Message);
+            }
+            
             await SendUpdate(purgeId, "failed", $"Error: {ex.Message}", 100);
         }
     }

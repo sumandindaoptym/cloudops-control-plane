@@ -49,8 +49,10 @@ public class DlqCountResponse
 public class PurgeRequest
 {
     public string SubscriptionId { get; set; } = string.Empty;
+    public string SubscriptionName { get; set; } = string.Empty;
     public string ResourceGroup { get; set; } = string.Empty;
     public string Namespace { get; set; } = string.Empty;
+    public string NamespaceName { get; set; } = string.Empty;
     public string EntityType { get; set; } = string.Empty;
     public string EntityName { get; set; } = string.Empty;
     public string? TopicSubscriptionName { get; set; }
