@@ -613,6 +613,65 @@
             fetchDlqCount();
         });
 
+        let purgeConnection = null;
+        let allLogs = [];
+
+        async function initPurgeHub() {
+            if (purgeConnection) return purgeConnection;
+            
+            purgeConnection = new signalR.HubConnectionBuilder()
+                .withUrl('/hubs/purge')
+                .withAutomaticReconnect()
+                .build();
+
+            purgeConnection.on('PurgeUpdate', function(update) {
+                handlePurgeUpdate(update);
+            });
+
+            try {
+                await purgeConnection.start();
+                console.log('Connected to purge hub');
+            } catch (err) {
+                console.error('Error connecting to purge hub:', err);
+            }
+
+            return purgeConnection;
+        }
+
+        function handlePurgeUpdate(update) {
+            const logsContent = document.getElementById('logsContent');
+            const purgeStatus = document.getElementById('purgeStatus');
+            const progressFill = document.getElementById('progressFill');
+
+            const timestamp = update.timestamp || new Date().toLocaleTimeString();
+            const isError = update.status === 'failed';
+            const color = isError ? '#ff6b6b' : 'var(--foreground)';
+            
+            logsContent.innerHTML += `<div style="color: ${color};">[${timestamp}] ${update.message}</div>`;
+            logsContent.scrollTop = logsContent.scrollHeight;
+            allLogs.push(`[${timestamp}] ${update.message}`);
+
+            progressFill.style.width = `${update.progress}%`;
+
+            if (update.status === 'completed') {
+                purgeStatus.textContent = `Purge completed! ${update.totalPurged} messages deleted in ${Math.round(update.elapsedSeconds)}s`;
+                purgeStatus.style.backgroundColor = 'hsl(120, 70%, 50%, 0.15)';
+                purgeStatus.style.borderColor = 'hsl(120, 70%, 50%)';
+                purgeStatus.style.color = 'hsl(120, 70%, 50%)';
+                elements.purgeButton.disabled = false;
+                fetchDlqCount();
+            } else if (update.status === 'failed') {
+                purgeStatus.textContent = `Purge failed: ${update.message}`;
+                purgeStatus.style.backgroundColor = 'hsl(0, 70%, 50%, 0.15)';
+                purgeStatus.style.borderColor = 'hsl(0, 70%, 50%)';
+                purgeStatus.style.color = 'hsl(0, 70%, 50%)';
+                progressFill.style.backgroundColor = 'hsl(0, 70%, 50%)';
+                elements.purgeButton.disabled = false;
+            } else if (update.status === 'progress') {
+                purgeStatus.textContent = 'Purging dead-letter messages...';
+            }
+        }
+
         elements.purgeButton.addEventListener('click', async function() {
             if (!confirm('This will permanently delete all messages in the dead-letter queue. This action cannot be undone. Continue?')) {
                 return;
@@ -638,31 +697,22 @@
             const logsContent = document.getElementById('logsContent');
             const purgeStatus = document.getElementById('purgeStatus');
             const progressFill = document.getElementById('progressFill');
-            const closeLogsButton = document.getElementById('closeLogsButton');
-            const downloadLogsButton = document.getElementById('downloadLogsButton');
 
             elements.purgeButton.disabled = true;
             purgeStatus.style.display = 'flex';
             purgeStatus.textContent = 'Connecting to Service Bus...';
+            purgeStatus.style.backgroundColor = 'hsl(175, 70%, 50%, 0.15)';
+            purgeStatus.style.borderColor = 'var(--primary)';
+            purgeStatus.style.color = 'var(--primary)';
             logsPanel.style.display = 'flex';
             logsContent.innerHTML = '<div style="color: var(--primary);">[' + new Date().toLocaleTimeString() + '] Starting purge operation...</div>';
-            progressFill.style.width = '10%';
-
-            let allLogs = [];
-
-            function addLogEntry(message, isError = false) {
-                const timestamp = new Date().toLocaleTimeString();
-                const color = isError ? '#ff6b6b' : 'var(--foreground)';
-                logsContent.innerHTML += `<div style="color: ${color};">[${timestamp}] ${message}</div>`;
-                logsContent.scrollTop = logsContent.scrollHeight;
-                allLogs.push(`[${timestamp}] ${message}`);
-            }
+            progressFill.style.width = '5%';
+            progressFill.style.backgroundColor = 'var(--primary)';
+            allLogs = [];
 
             try {
-                addLogEntry('Sending purge request...');
-                progressFill.style.width = '25%';
-                purgeStatus.textContent = 'Purging dead-letter messages...';
-
+                const connection = await initPurgeHub();
+                
                 const response = await fetch(`${API_BASE}/dlq/purge`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -676,70 +726,57 @@
                     })
                 });
 
-                progressFill.style.width = '75%';
-
                 if (!response.ok) {
                     const errorData = await response.json();
-                    throw new Error(errorData.error || 'Failed to purge DLQ');
+                    throw new Error(errorData.error || 'Failed to start purge');
                 }
 
                 const result = await response.json();
-                progressFill.style.width = '100%';
-
-                if (result.logs && result.logs.length > 0) {
-                    result.logs.forEach(log => addLogEntry(log));
+                
+                if (result.purgeId) {
+                    await connection.invoke('JoinPurgeGroup', result.purgeId);
+                    logsContent.innerHTML += `<div style="color: var(--foreground);">[${new Date().toLocaleTimeString()}] Purge job queued (ID: ${result.purgeId})</div>`;
+                    allLogs.push(`[${new Date().toLocaleTimeString()}] Purge job queued (ID: ${result.purgeId})`);
                 }
-
-                if (result.success) {
-                    purgeStatus.textContent = `Purge completed! ${result.totalPurged} messages deleted in ${result.elapsedSeconds}s`;
-                    purgeStatus.style.backgroundColor = 'hsl(120, 70%, 50%, 0.15)';
-                    purgeStatus.style.borderColor = 'hsl(120, 70%, 50%)';
-                    purgeStatus.style.color = 'hsl(120, 70%, 50%)';
-                    addLogEntry(`SUCCESS: Purged ${result.totalPurged} messages in ${result.elapsedSeconds} seconds`);
-                } else {
-                    purgeStatus.textContent = `Purge failed: ${result.error}`;
-                    purgeStatus.style.backgroundColor = 'hsl(0, 70%, 50%, 0.15)';
-                    purgeStatus.style.borderColor = 'hsl(0, 70%, 50%)';
-                    purgeStatus.style.color = 'hsl(0, 70%, 50%)';
-                    addLogEntry(`ERROR: ${result.error}`, true);
-                }
-
-                await fetchDlqCount();
 
             } catch (error) {
-                console.error('Error purging DLQ:', error);
+                console.error('Error starting purge:', error);
                 progressFill.style.width = '100%';
                 progressFill.style.backgroundColor = 'hsl(0, 70%, 50%)';
                 purgeStatus.textContent = `Error: ${error.message}`;
                 purgeStatus.style.backgroundColor = 'hsl(0, 70%, 50%, 0.15)';
                 purgeStatus.style.borderColor = 'hsl(0, 70%, 50%)';
                 purgeStatus.style.color = 'hsl(0, 70%, 50%)';
-                addLogEntry(`ERROR: ${error.message}`, true);
-            } finally {
+                logsContent.innerHTML += `<div style="color: #ff6b6b;">[${new Date().toLocaleTimeString()}] ERROR: ${error.message}</div>`;
+                allLogs.push(`[${new Date().toLocaleTimeString()}] ERROR: ${error.message}`);
                 elements.purgeButton.disabled = false;
             }
+        });
 
-            closeLogsButton.addEventListener('click', function() {
-                logsPanel.style.display = 'none';
-                purgeStatus.style.display = 'none';
-                purgeStatus.style.backgroundColor = 'hsl(175, 70%, 50%, 0.15)';
-                purgeStatus.style.borderColor = 'var(--primary)';
-                purgeStatus.style.color = 'var(--primary)';
-                progressFill.style.width = '0%';
-                progressFill.style.backgroundColor = 'var(--primary)';
-            });
+        document.getElementById('closeLogsButton').addEventListener('click', function() {
+            const logsPanel = document.getElementById('logsPanel');
+            const purgeStatus = document.getElementById('purgeStatus');
+            const progressFill = document.getElementById('progressFill');
+            
+            logsPanel.style.display = 'none';
+            purgeStatus.style.display = 'none';
+            purgeStatus.style.backgroundColor = 'hsl(175, 70%, 50%, 0.15)';
+            purgeStatus.style.borderColor = 'var(--primary)';
+            purgeStatus.style.color = 'var(--primary)';
+            progressFill.style.width = '0%';
+            progressFill.style.backgroundColor = 'var(--primary)';
+        });
 
-            downloadLogsButton.addEventListener('click', function() {
-                const blob = new Blob([allLogs.join('\n')], { type: 'text/plain' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `dlq-purge-logs-${new Date().toISOString().replace(/[:.]/g, '-')}.txt`;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
-            });
+        document.getElementById('downloadLogsButton').addEventListener('click', function() {
+            const blob = new Blob([allLogs.join('\n')], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `dlq-purge-logs-${new Date().toISOString().replace(/[:.]/g, '-')}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
         });
 
         // Listen for subscription changes from the same page (custom event)
