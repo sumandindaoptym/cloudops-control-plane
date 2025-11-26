@@ -215,6 +215,126 @@ public class ServiceBusRuntimeService : IServiceBusRuntimeService
         }
     }
 
+    public async Task<PurgeResult> PurgeDlqWithProgressAsync(
+        PurgeRequest request, 
+        string accessToken, 
+        Func<string, int, Task> onProgress,
+        CancellationToken cancellationToken = default)
+    {
+        var stopwatch = Stopwatch.StartNew();
+        int totalPurged = 0;
+
+        try
+        {
+            var fullyQualifiedNamespace = $"{request.Namespace}.servicebus.windows.net";
+            var credential = new AccessTokenCredential(accessToken);
+
+            await onProgress($"Connecting to namespace: {request.Namespace}", 10);
+
+            await using var client = new ServiceBusClient(fullyQualifiedNamespace, credential);
+
+            var receiverOptions = new ServiceBusReceiverOptions
+            {
+                SubQueue = SubQueue.DeadLetter,
+                ReceiveMode = ServiceBusReceiveMode.PeekLock
+            };
+
+            ServiceBusReceiver receiver;
+            if (request.EntityType.Equals("queue", StringComparison.OrdinalIgnoreCase))
+            {
+                receiver = client.CreateReceiver(request.EntityName, receiverOptions);
+                await onProgress($"Opening DLQ receiver for queue: {request.EntityName}", 15);
+            }
+            else if (request.EntityType.Equals("topic", StringComparison.OrdinalIgnoreCase))
+            {
+                if (string.IsNullOrEmpty(request.TopicSubscriptionName))
+                {
+                    throw new ArgumentException("Topic subscription name is required");
+                }
+                receiver = client.CreateReceiver(request.EntityName, request.TopicSubscriptionName, receiverOptions);
+                await onProgress($"Opening DLQ receiver for topic: {request.EntityName}/{request.TopicSubscriptionName}", 15);
+            }
+            else
+            {
+                throw new ArgumentException($"Invalid entity type: {request.EntityType}");
+            }
+
+            await using (receiver)
+            {
+                await onProgress("Starting purge operation...", 20);
+
+                const int batchSize = 100;
+                int emptyBatchCount = 0;
+                const int maxEmptyBatches = 3;
+
+                while (emptyBatchCount < maxEmptyBatches && !cancellationToken.IsCancellationRequested)
+                {
+                    var messages = await receiver.ReceiveMessagesAsync(
+                        maxMessages: batchSize,
+                        maxWaitTime: TimeSpan.FromSeconds(5),
+                        cancellationToken: cancellationToken);
+
+                    if (messages == null || messages.Count == 0)
+                    {
+                        emptyBatchCount++;
+                        await onProgress($"No messages received (attempt {emptyBatchCount}/{maxEmptyBatches})", 
+                            Math.Min(90, 20 + (emptyBatchCount * 20)));
+                        continue;
+                    }
+
+                    emptyBatchCount = 0;
+
+                    foreach (var message in messages)
+                    {
+                        await receiver.CompleteMessageAsync(message, cancellationToken);
+                        totalPurged++;
+                    }
+
+                    var progress = Math.Min(85, 20 + (totalPurged / 10));
+                    await onProgress($"Purged batch of {messages.Count} messages (total: {totalPurged})", progress);
+                }
+            }
+
+            stopwatch.Stop();
+            _logger.LogInformation("Purge completed. Total: {TotalPurged} in {Elapsed}s", 
+                totalPurged, stopwatch.Elapsed.TotalSeconds);
+
+            return new PurgeResult
+            {
+                Success = true,
+                TotalPurged = totalPurged,
+                ElapsedSeconds = (int)stopwatch.Elapsed.TotalSeconds,
+                Logs = new List<string>()
+            };
+        }
+        catch (OperationCanceledException)
+        {
+            stopwatch.Stop();
+            return new PurgeResult
+            {
+                Success = false,
+                TotalPurged = totalPurged,
+                ElapsedSeconds = (int)stopwatch.Elapsed.TotalSeconds,
+                Error = "Operation was cancelled",
+                Logs = new List<string>()
+            };
+        }
+        catch (Exception ex)
+        {
+            stopwatch.Stop();
+            _logger.LogError(ex, "Error purging DLQ");
+
+            return new PurgeResult
+            {
+                Success = false,
+                TotalPurged = totalPurged,
+                ElapsedSeconds = (int)stopwatch.Elapsed.TotalSeconds,
+                Error = ex.Message,
+                Logs = new List<string>()
+            };
+        }
+    }
+
     private class AccessTokenCredential : TokenCredential
     {
         private readonly string _accessToken;
