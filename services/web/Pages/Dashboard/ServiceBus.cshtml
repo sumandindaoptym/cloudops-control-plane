@@ -103,7 +103,7 @@
 <h1 class="page-title">Service Bus DLQ Cleaner</h1>
 <p class="page-description">Manage dead-letter queues across your Azure Service Bus namespaces</p>
 
-<div class="card" style="margin-bottom: 1.5rem;">
+<div class="card" style="margin-bottom: 1.5rem; position: relative; z-index: 10;">
     <div class="grid grid-2" style="gap: 1rem; margin-bottom: 1rem;">
         <div>
             <label style="display: block; font-weight: 500; margin-bottom: 0.5rem; color: var(--foreground);">Service Bus Namespace</label>
@@ -182,7 +182,7 @@
     </div>
 </div>
 
-<div id="dlqStatusCard" class="card" style="display: none; margin-bottom: 1.5rem;">
+<div id="dlqStatusCard" class="card" style="display: none; margin-bottom: 1.5rem; position: relative; z-index: 10;">
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
         <h2 style="font-size: 1.25rem; font-weight: 600; color: var(--foreground); margin: 0;">Dead-Letter Queue</h2>
         <button id="refreshButton" class="animated-btn">
@@ -231,7 +231,7 @@
     <p style="color: var(--muted-foreground); max-width: 28rem; margin: 0 auto;">Choose a namespace and entity (queue or topic subscription) to view dead-letter queue statistics and management options.</p>
 </div>
 
-<div id="logsPanel" class="card" style="display: none; margin-top: 1.5rem; position: sticky; bottom: 1rem; max-height: 24rem; display: flex; flex-direction: column;">
+<div id="logsPanel" class="card" style="display: none; margin-top: 1.5rem; position: sticky; bottom: 1rem; max-height: 24rem; flex-direction: column; z-index: 5;">
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; padding-bottom: 0.75rem; border-bottom: 1px solid var(--border);">
         <h3 style="font-size: 1rem; font-weight: 600; color: var(--foreground); margin: 0;">Live Logs</h3>
         <div style="display: flex; gap: 0.5rem;">
