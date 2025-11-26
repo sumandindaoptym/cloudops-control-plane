@@ -36,6 +36,15 @@ The platform is built as a monorepo leveraging ASP.NET Core 9.0, following core 
 - A `dev.sh` script facilitates local development by starting both API (port 5056) and Frontend (port 5000). Swagger UI is available for API documentation.
 
 ## Recent Changes (November 26, 2025)
+- **Implemented Activity Logging feature**:
+  - Created `ActivityLog` model with fields: UserId, UserEmail, TaskName, TaskType, SubscriptionName, SubscriptionId, ResourceName, SubResourceName, Status, ItemsProcessed, ErrorMessage, StartTime, EndTime
+  - Added `ActivityDbContext` for PostgreSQL database with proper connection string parsing for Replit DATABASE_URL format
+  - Implemented `ActivityService` for creating and updating activity records
+  - Renamed Tasks page to Activity with real-time data table displaying operation history
+  - Added `/api/activities` endpoint that filters activities by current user's Azure AD object ID
+  - PurgeBackgroundService automatically logs activity when DLQ purge operations start and complete
+  - Activity page shows status badges (Running/Completed/Failed), item counts, and duration
+  - ServiceBus page now sends subscriptionName and namespaceName with purge requests for proper tracking
 - **Integrated Azure SignalR Service for cloud-managed real-time communication**:
   - Added `Microsoft.Azure.SignalR` NuGet package v1.32.0
   - Configured automatic Azure SignalR Service connection when `AZURE_SIGNALR_CONNECTION_STRING` environment variable is present
