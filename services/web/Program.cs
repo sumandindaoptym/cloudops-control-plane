@@ -1,3 +1,4 @@
+using CloudOps.Web.Hubs;
 using CloudOps.Web.Services;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.HttpOverrides;
@@ -67,6 +68,10 @@ builder.Services.AddRazorPages()
 builder.Services.AddHttpClient<IAzureSubscriptionService, AzureSubscriptionService>();
 builder.Services.AddScoped<CloudOps.Web.Services.IServiceBusResourceService, CloudOps.Web.Services.ServiceBusResourceService>();
 builder.Services.AddScoped<CloudOps.Web.Services.IServiceBusRuntimeService, CloudOps.Web.Services.ServiceBusRuntimeService>();
+
+builder.Services.AddSingleton<IPurgeQueue, PurgeQueue>();
+builder.Services.AddHostedService<PurgeBackgroundService>();
+builder.Services.AddSignalR();
 
 builder.Services.Configure<ForwardedHeadersOptions>(options =>
 {
@@ -317,7 +322,7 @@ app.MapPost("/api/azure/servicebus/dlq/count", async (
 app.MapPost("/api/azure/servicebus/dlq/purge", async (
     HttpContext httpContext,
     CloudOps.Web.Models.PurgeRequest request,
-    CloudOps.Web.Services.IServiceBusRuntimeService runtimeService,
+    IPurgeQueue purgeQueue,
     Microsoft.Identity.Web.ITokenAcquisition tokenAcquisition,
     ILogger<Program> logger) =>
 {
@@ -330,13 +335,19 @@ app.MapPost("/api/azure/servicebus/dlq/purge", async (
     {
         var accessToken = await tokenAcquisition.GetAccessTokenForUserAsync(new[] { "https://servicebus.azure.net/user_impersonation" });
         
-        var result = await runtimeService.PurgeDlqAsync(request, accessToken, progress =>
+        var purgeId = Guid.NewGuid().ToString("N")[..12];
+        
+        await purgeQueue.QueuePurgeAsync(new PurgeJob
         {
-            logger.LogInformation("Purge progress: {Status} - {Completed} messages purged", 
-                progress.Status, progress.TotalCompleted);
+            PurgeId = purgeId,
+            Request = request,
+            AccessToken = accessToken
         });
 
-        return Results.Ok(result);
+        logger.LogInformation("Queued purge job {PurgeId} for {EntityType} {EntityName}", 
+            purgeId, request.EntityType, request.EntityName);
+
+        return Results.Ok(new { purgeId, status = "queued" });
     }
     catch (Microsoft.Identity.Web.MicrosoftIdentityWebChallengeUserException)
     {
@@ -348,13 +359,15 @@ app.MapPost("/api/azure/servicebus/dlq/purge", async (
     }
     catch (Exception ex)
     {
-        logger.LogError(ex, "Error purging DLQ");
+        logger.LogError(ex, "Error queuing purge job");
         return Results.Json(
-            new { error = $"Failed to purge DLQ: {ex.Message}" },
+            new { error = $"Failed to queue purge: {ex.Message}" },
             statusCode: 500
         );
     }
 }).RequireAuthorization();
+
+app.MapHub<PurgeHub>("/hubs/purge");
 
 app.MapControllers();
 app.MapRazorPages();
