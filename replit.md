@@ -36,6 +36,12 @@ The platform is built as a monorepo leveraging ASP.NET Core 9.0, following core 
 - A `dev.sh` script facilitates local development by starting both API (port 5056) and Frontend (port 5000). Swagger UI is available for API documentation.
 
 ## Recent Changes (November 26, 2025)
+- **Integrated Azure SignalR Service for cloud-managed real-time communication**:
+  - Added `Microsoft.Azure.SignalR` NuGet package v1.32.0
+  - Configured automatic Azure SignalR Service connection when `AZURE_SIGNALR_CONNECTION_STRING` environment variable is present
+  - Falls back to self-hosted SignalR when connection string is not provided (local development)
+  - Azure SignalR offloads connection management to cloud for better scalability
+  - All existing SignalR hubs (PurgeHub) automatically use Azure SignalR when configured
 - **Enhanced Purge DLQ with real-time SignalR streaming**:
   - Created `PurgeHub` SignalR hub at `/hubs/purge` for real-time progress updates
   - Implemented `PurgeBackgroundService` with Channel queue for async job processing
@@ -107,7 +113,7 @@ The platform is built as a monorepo leveraging ASP.NET Core 9.0, following core 
 - **Authentication**: Azure Active Directory (Azure AD).
 - **Database**: SQLite, PostgreSQL.
 - **Message Queue**: InMemoryMessageBus, Azure Service Bus.
-- **Real-time Communication**: SignalR.
+- **Real-time Communication**: SignalR with Azure SignalR Service (cloud-managed, uses `AZURE_SIGNALR_CONNECTION_STRING`).
 - **Cloud Providers**: Azure (for subscription management and resource interaction).
 - **Notifications**: Teams, Email (planned).
 - **Asset Hosting**: `web/public/optym-logo.png` for Optym logo.
