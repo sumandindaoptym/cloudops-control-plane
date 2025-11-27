@@ -1,0 +1,161 @@
+@page
+@model CloudOps.Web.Pages.Dashboard.HostedAgentsModel
+@{
+    ViewData["Title"] = "Hosted Agents";
+    Layout = "Shared/_DashboardLayout";
+}
+
+<h1 class="page-title">Hosted Agents</h1>
+<p class="page-description">Manage and monitor your Azure DevOps hosted build agents</p>
+
+<div class="grid grid-4" style="margin-bottom: 2rem;">
+    <div class="stat-card">
+        <div class="stat-label">Total Agents</div>
+        <div class="stat-value" id="totalAgents">-</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Online</div>
+        <div class="stat-value" id="onlineAgents">-</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Busy</div>
+        <div class="stat-value" id="busyAgents">-</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Offline</div>
+        <div class="stat-value" id="offlineAgents">-</div>
+    </div>
+</div>
+
+<div class="card">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+        <h2 style="font-size: 1.25rem; font-weight: 600; color: var(--foreground); margin: 0;">Agent Pools</h2>
+        <button id="refreshBtn" class="btn btn-secondary" style="display: flex; align-items: center; gap: 0.5rem;">
+            <i class="fas fa-sync-alt"></i>
+            <span>Refresh</span>
+        </button>
+    </div>
+    
+    <div id="loadingState" style="text-align: center; padding: 2rem; color: var(--muted-foreground);">
+        <i class="fas fa-spinner fa-spin" style="font-size: 2rem; margin-bottom: 1rem;"></i>
+        <p>Loading agents...</p>
+    </div>
+    
+    <div id="emptyState" style="text-align: center; padding: 3rem; color: var(--muted-foreground); display: none;">
+        <i class="fas fa-server" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.5;"></i>
+        <p style="font-size: 1.1rem;">No hosted agents configured</p>
+        <p style="font-size: 0.9rem;">Connect your Azure DevOps organization to view and manage hosted agents.</p>
+    </div>
+    
+    <div id="tableContainer" style="display: none; overflow-x: auto;">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Agent Name</th>
+                    <th>Pool</th>
+                    <th>Status</th>
+                    <th>Version</th>
+                    <th>OS</th>
+                    <th>Last Activity</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="agentsTableBody">
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    let agents = [];
+    
+    async function loadAgents() {
+        const loadingState = document.getElementById('loadingState');
+        const emptyState = document.getElementById('emptyState');
+        const tableContainer = document.getElementById('tableContainer');
+        
+        loadingState.style.display = 'block';
+        emptyState.style.display = 'none';
+        tableContainer.style.display = 'none';
+        
+        try {
+            loadingState.style.display = 'none';
+            emptyState.style.display = 'block';
+            updateStats({ total: 0, online: 0, busy: 0, offline: 0 });
+            
+        } catch (error) {
+            console.error('Error loading agents:', error);
+            loadingState.innerHTML = '<i class="fas fa-exclamation-triangle" style="font-size: 2rem; margin-bottom: 1rem; color: var(--destructive);"></i><p>Failed to load agents</p><p style="font-size: 0.9rem; color: var(--muted-foreground);">' + error.message + '</p>';
+        }
+    }
+    
+    function updateStats(stats) {
+        document.getElementById('totalAgents').textContent = stats.total;
+        document.getElementById('onlineAgents').textContent = stats.online;
+        document.getElementById('busyAgents').textContent = stats.busy;
+        document.getElementById('offlineAgents').textContent = stats.offline;
+    }
+    
+    function renderAgents(agents) {
+        const tableBody = document.getElementById('agentsTableBody');
+        tableBody.innerHTML = '';
+        
+        agents.forEach(agent => {
+            const row = document.createElement('tr');
+            const statusClass = getStatusClass(agent.status);
+            
+            row.innerHTML = '<td>' + escapeHtml(agent.name) + '</td>' +
+                '<td>' + escapeHtml(agent.pool) + '</td>' +
+                '<td><span class="badge ' + statusClass + '">' + escapeHtml(agent.status) + '</span></td>' +
+                '<td>' + escapeHtml(agent.version || '-') + '</td>' +
+                '<td>' + escapeHtml(agent.os || '-') + '</td>' +
+                '<td>' + formatDateTime(agent.lastActivity) + '</td>' +
+                '<td><button class="btn btn-secondary btn-sm" onclick="viewAgent(\'' + agent.id + '\')">View</button></td>';
+            
+            tableBody.appendChild(row);
+        });
+    }
+    
+    function getStatusClass(status) {
+        switch (status) {
+            case 'Online': return 'badge-success';
+            case 'Busy': return 'badge-warning';
+            case 'Offline': return 'badge-danger';
+            default: return 'badge-secondary';
+        }
+    }
+    
+    function formatDateTime(dateString) {
+        if (!dateString) return '-';
+        const date = new Date(dateString);
+        return date.toLocaleString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    }
+    
+    function escapeHtml(text) {
+        if (!text) return '';
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+    
+    function viewAgent(agentId) {
+        alert('Agent details view coming soon!');
+    }
+    
+    document.getElementById('refreshBtn').addEventListener('click', function() {
+        const icon = this.querySelector('i');
+        icon.classList.add('fa-spin');
+        loadAgents().finally(function() {
+            icon.classList.remove('fa-spin');
+        });
+    });
+    
+    loadAgents();
+</script>
+}
