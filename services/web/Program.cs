@@ -1,5 +1,6 @@
 using CloudOps.Web.Data;
 using CloudOps.Web.Hubs;
+using CloudOps.Web.Models;
 using CloudOps.Web.Services;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.HttpOverrides;
@@ -114,9 +115,11 @@ static string MapSslMode(string sslMode)
     };
 }
 builder.Services.AddScoped<IActivityService, ActivityService>();
+builder.Services.AddScoped<IAgentService, AgentService>();
 
 builder.Services.AddSingleton<IPurgeQueue, PurgeQueue>();
 builder.Services.AddHostedService<PurgeBackgroundService>();
+builder.Services.AddHostedService<AgentStatusService>();
 
 var azureSignalRConnectionString = Environment.GetEnvironmentVariable("AZURE_SIGNALR_CONNECTION_STRING");
 if (!string.IsNullOrEmpty(azureSignalRConnectionString))
@@ -472,6 +475,405 @@ app.MapGet("/api/activities", async (
             new { error = "Failed to fetch activities" },
             statusCode: 500
         );
+    }
+}).RequireAuthorization();
+
+app.MapGet("/api/agents", async (
+    HttpContext httpContext,
+    IAgentService agentService,
+    ILogger<Program> logger) =>
+{
+    if (!httpContext.User.Identity?.IsAuthenticated ?? true)
+    {
+        return Results.Unauthorized();
+    }
+
+    try
+    {
+        var agents = await agentService.GetAllAgentsAsync();
+        var response = agents.Select(a => new AgentResponse
+        {
+            Id = a.Id,
+            Name = a.Name,
+            Description = a.Description,
+            Status = a.Status,
+            MaxParallelJobs = a.MaxParallelJobs,
+            CurrentRunningJobs = a.CurrentRunningJobs,
+            HostName = a.HostName,
+            IpAddress = a.IpAddress,
+            OperatingSystem = a.OperatingSystem,
+            AgentVersion = a.AgentVersion,
+            CreatedAt = a.CreatedAt,
+            LastHeartbeat = a.LastHeartbeat
+        });
+        return Results.Ok(response);
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "Error fetching agents");
+        return Results.Json(new { error = "Failed to fetch agents" }, statusCode: 500);
+    }
+}).RequireAuthorization();
+
+app.MapPost("/api/agents", async (
+    HttpContext httpContext,
+    AgentRegistrationRequest request,
+    IAgentService agentService,
+    ILogger<Program> logger) =>
+{
+    if (!httpContext.User.Identity?.IsAuthenticated ?? true)
+    {
+        return Results.Unauthorized();
+    }
+
+    try
+    {
+        var userId = httpContext.User.FindFirst("http://schemas.microsoft.com/identity/claims/objectidentifier")?.Value 
+            ?? httpContext.User.FindFirst("oid")?.Value 
+            ?? string.Empty;
+        var userEmail = httpContext.User.FindFirst("preferred_username")?.Value 
+            ?? httpContext.User.FindFirst("email")?.Value 
+            ?? httpContext.User.Identity?.Name 
+            ?? string.Empty;
+
+        var agent = await agentService.CreateAgentAsync(userId, userEmail, request);
+        return Results.Ok(new AgentResponse
+        {
+            Id = agent.Id,
+            Name = agent.Name,
+            Description = agent.Description,
+            Status = agent.Status,
+            MaxParallelJobs = agent.MaxParallelJobs,
+            CurrentRunningJobs = agent.CurrentRunningJobs,
+            HostName = agent.HostName,
+            IpAddress = agent.IpAddress,
+            OperatingSystem = agent.OperatingSystem,
+            AgentVersion = agent.AgentVersion,
+            CreatedAt = agent.CreatedAt,
+            LastHeartbeat = agent.LastHeartbeat,
+            ApiKey = agent.ApiKey
+        });
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "Error creating agent");
+        return Results.Json(new { error = "Failed to create agent" }, statusCode: 500);
+    }
+}).RequireAuthorization();
+
+app.MapDelete("/api/agents/{id:guid}", async (
+    Guid id,
+    HttpContext httpContext,
+    IAgentService agentService,
+    ILogger<Program> logger) =>
+{
+    if (!httpContext.User.Identity?.IsAuthenticated ?? true)
+    {
+        return Results.Unauthorized();
+    }
+
+    try
+    {
+        var success = await agentService.DeleteAgentAsync(id);
+        return success ? Results.Ok() : Results.NotFound();
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "Error deleting agent");
+        return Results.Json(new { error = "Failed to delete agent" }, statusCode: 500);
+    }
+}).RequireAuthorization();
+
+app.MapPost("/api/agents/{id:guid}/heartbeat", async (
+    Guid id,
+    AgentHeartbeatRequest request,
+    HttpContext httpContext,
+    IAgentService agentService,
+    ILogger<Program> logger) =>
+{
+    var apiKey = httpContext.Request.Headers["X-Agent-ApiKey"].FirstOrDefault();
+    if (string.IsNullOrEmpty(apiKey))
+    {
+        return Results.Unauthorized();
+    }
+
+    try
+    {
+        var agent = await agentService.GetAgentByApiKeyAsync(apiKey);
+        if (agent == null || agent.Id != id)
+        {
+            return Results.Unauthorized();
+        }
+
+        var updated = await agentService.UpdateHeartbeatAsync(id, request);
+        return updated != null ? Results.Ok() : Results.NotFound();
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "Error updating agent heartbeat");
+        return Results.Json(new { error = "Failed to update heartbeat" }, statusCode: 500);
+    }
+});
+
+app.MapGet("/api/agents/{id:guid}/jobs", async (
+    Guid id,
+    HttpContext httpContext,
+    IAgentService agentService,
+    ILogger<Program> logger) =>
+{
+    var apiKey = httpContext.Request.Headers["X-Agent-ApiKey"].FirstOrDefault();
+    if (string.IsNullOrEmpty(apiKey))
+    {
+        return Results.Unauthorized();
+    }
+
+    try
+    {
+        var agent = await agentService.GetAgentByApiKeyAsync(apiKey);
+        if (agent == null || agent.Id != id)
+        {
+            return Results.Unauthorized();
+        }
+
+        var jobs = await agentService.GetPendingJobsForAgentAsync(id);
+        var response = jobs.Select(j => new JobResponse
+        {
+            Id = j.Id,
+            AgentId = j.AgentId,
+            JobType = j.JobType,
+            JobName = j.JobName,
+            Description = j.Description,
+            Parameters = j.Parameters,
+            Status = j.Status,
+            Progress = j.Progress,
+            Priority = j.Priority,
+            CreatedAt = j.CreatedAt
+        });
+        return Results.Ok(response);
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "Error fetching jobs for agent");
+        return Results.Json(new { error = "Failed to fetch jobs" }, statusCode: 500);
+    }
+});
+
+app.MapPost("/api/agents/{id:guid}/jobs/{jobId:guid}/claim", async (
+    Guid id,
+    Guid jobId,
+    HttpContext httpContext,
+    IAgentService agentService,
+    ILogger<Program> logger) =>
+{
+    var apiKey = httpContext.Request.Headers["X-Agent-ApiKey"].FirstOrDefault();
+    if (string.IsNullOrEmpty(apiKey))
+    {
+        return Results.Unauthorized();
+    }
+
+    try
+    {
+        var agent = await agentService.GetAgentByApiKeyAsync(apiKey);
+        if (agent == null || agent.Id != id)
+        {
+            return Results.Unauthorized();
+        }
+
+        var job = await agentService.ClaimJobAsync(id, jobId);
+        if (job == null)
+        {
+            return Results.Json(new { error = "Job not available or already claimed" }, statusCode: 409);
+        }
+
+        return Results.Ok(new JobResponse
+        {
+            Id = job.Id,
+            AgentId = job.AgentId,
+            JobType = job.JobType,
+            JobName = job.JobName,
+            Description = job.Description,
+            Parameters = job.Parameters,
+            Status = job.Status,
+            Progress = job.Progress,
+            Priority = job.Priority,
+            CreatedAt = job.CreatedAt,
+            StartedAt = job.StartedAt
+        });
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "Error claiming job");
+        return Results.Json(new { error = "Failed to claim job" }, statusCode: 500);
+    }
+});
+
+app.MapPost("/api/agents/{id:guid}/jobs/{jobId:guid}/progress", async (
+    Guid id,
+    Guid jobId,
+    JobProgressRequest request,
+    HttpContext httpContext,
+    IAgentService agentService,
+    ILogger<Program> logger) =>
+{
+    var apiKey = httpContext.Request.Headers["X-Agent-ApiKey"].FirstOrDefault();
+    if (string.IsNullOrEmpty(apiKey))
+    {
+        return Results.Unauthorized();
+    }
+
+    try
+    {
+        var agent = await agentService.GetAgentByApiKeyAsync(apiKey);
+        if (agent == null || agent.Id != id)
+        {
+            return Results.Unauthorized();
+        }
+
+        var job = await agentService.UpdateJobProgressAsync(jobId, request);
+        return job != null ? Results.Ok() : Results.NotFound();
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "Error updating job progress");
+        return Results.Json(new { error = "Failed to update progress" }, statusCode: 500);
+    }
+});
+
+app.MapPost("/api/agents/{id:guid}/jobs/{jobId:guid}/complete", async (
+    Guid id,
+    Guid jobId,
+    JobCompleteRequest request,
+    HttpContext httpContext,
+    IAgentService agentService,
+    ILogger<Program> logger) =>
+{
+    var apiKey = httpContext.Request.Headers["X-Agent-ApiKey"].FirstOrDefault();
+    if (string.IsNullOrEmpty(apiKey))
+    {
+        return Results.Unauthorized();
+    }
+
+    try
+    {
+        var agent = await agentService.GetAgentByApiKeyAsync(apiKey);
+        if (agent == null || agent.Id != id)
+        {
+            return Results.Unauthorized();
+        }
+
+        var job = await agentService.CompleteJobAsync(jobId, request);
+        return job != null ? Results.Ok() : Results.NotFound();
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "Error completing job");
+        return Results.Json(new { error = "Failed to complete job" }, statusCode: 500);
+    }
+});
+
+app.MapGet("/api/jobs", async (
+    HttpContext httpContext,
+    IAgentService agentService,
+    ILogger<Program> logger) =>
+{
+    if (!httpContext.User.Identity?.IsAuthenticated ?? true)
+    {
+        return Results.Unauthorized();
+    }
+
+    try
+    {
+        var jobs = await agentService.GetJobsAsync();
+        var response = jobs.Select(j => new JobResponse
+        {
+            Id = j.Id,
+            AgentId = j.AgentId,
+            AgentName = j.Agent?.Name,
+            JobType = j.JobType,
+            JobName = j.JobName,
+            Description = j.Description,
+            Parameters = j.Parameters,
+            Status = j.Status,
+            Progress = j.Progress,
+            Result = j.Result,
+            ErrorMessage = j.ErrorMessage,
+            Priority = j.Priority,
+            CreatedAt = j.CreatedAt,
+            StartedAt = j.StartedAt,
+            CompletedAt = j.CompletedAt
+        });
+        return Results.Ok(response);
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "Error fetching jobs");
+        return Results.Json(new { error = "Failed to fetch jobs" }, statusCode: 500);
+    }
+}).RequireAuthorization();
+
+app.MapPost("/api/jobs", async (
+    HttpContext httpContext,
+    CreateJobRequest request,
+    IAgentService agentService,
+    ILogger<Program> logger) =>
+{
+    if (!httpContext.User.Identity?.IsAuthenticated ?? true)
+    {
+        return Results.Unauthorized();
+    }
+
+    try
+    {
+        var userId = httpContext.User.FindFirst("http://schemas.microsoft.com/identity/claims/objectidentifier")?.Value 
+            ?? httpContext.User.FindFirst("oid")?.Value 
+            ?? string.Empty;
+        var userEmail = httpContext.User.FindFirst("preferred_username")?.Value 
+            ?? httpContext.User.FindFirst("email")?.Value 
+            ?? httpContext.User.Identity?.Name 
+            ?? string.Empty;
+
+        var job = await agentService.CreateJobAsync(userId, userEmail, request);
+        return Results.Ok(new JobResponse
+        {
+            Id = job.Id,
+            AgentId = job.AgentId,
+            JobType = job.JobType,
+            JobName = job.JobName,
+            Description = job.Description,
+            Parameters = job.Parameters,
+            Status = job.Status,
+            Progress = job.Progress,
+            Priority = job.Priority,
+            CreatedAt = job.CreatedAt
+        });
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "Error creating job");
+        return Results.Json(new { error = "Failed to create job" }, statusCode: 500);
+    }
+}).RequireAuthorization();
+
+app.MapPost("/api/jobs/{id:guid}/cancel", async (
+    Guid id,
+    HttpContext httpContext,
+    IAgentService agentService,
+    ILogger<Program> logger) =>
+{
+    if (!httpContext.User.Identity?.IsAuthenticated ?? true)
+    {
+        return Results.Unauthorized();
+    }
+
+    try
+    {
+        var success = await agentService.CancelJobAsync(id);
+        return success ? Results.Ok() : Results.NotFound();
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "Error cancelling job");
+        return Results.Json(new { error = "Failed to cancel job" }, statusCode: 500);
     }
 }).RequireAuthorization();
 
