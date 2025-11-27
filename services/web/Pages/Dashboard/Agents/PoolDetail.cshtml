@@ -596,6 +596,87 @@
         gap: 1rem;
     }
     
+    .installation-steps {
+        margin-top: 1rem;
+        padding: 1.25rem;
+        background: var(--bg-darker);
+        border-radius: 8px;
+        border: 1px solid var(--border-subtle);
+    }
+    
+    .step-header {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 1rem;
+        color: var(--primary);
+        font-weight: 600;
+    }
+    
+    .step-header i {
+        font-size: 1.1rem;
+    }
+    
+    .download-section {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        margin-bottom: 1.25rem;
+    }
+    
+    .download-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.625rem 1rem;
+        background: linear-gradient(135deg, hsl(175, 70%, 45%), hsl(175, 70%, 35%));
+        color: hsl(220, 15%, 6%);
+        border-radius: 6px;
+        text-decoration: none;
+        font-weight: 500;
+        font-size: 0.85rem;
+        transition: all 0.2s ease;
+    }
+    
+    .download-link:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(45, 212, 191, 0.3);
+    }
+    
+    .steps-list {
+        margin: 0;
+        padding-left: 1.25rem;
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+        line-height: 1.6;
+    }
+    
+    .steps-list li {
+        margin-bottom: 0.75rem;
+    }
+    
+    .steps-list li:last-child {
+        margin-bottom: 0;
+    }
+    
+    .code-block {
+        display: block;
+        margin-top: 0.5rem;
+        padding: 0.75rem 1rem;
+        background: hsl(220, 15%, 6%);
+        border: 1px solid var(--border-subtle);
+        border-radius: 6px;
+        color: var(--primary);
+        font-family: 'Fira Code', 'Monaco', 'Consolas', monospace;
+        font-size: 0.8rem;
+        white-space: pre-wrap;
+        word-break: break-all;
+    }
+    
+    .code-block .highlight {
+        color: #60a5fa;
+    }
+    
     .labels-input-container {
         display: flex;
         flex-direction: column;
@@ -822,8 +903,8 @@
         left: 0;
         right: 0;
         bottom: 0;
-        background: rgba(0, 0, 0, 0.6);
-        backdrop-filter: blur(4px);
+        background: rgba(0, 0, 0, 0.35);
+        backdrop-filter: blur(2px);
     }
     
     .modal-content {
@@ -1016,51 +1097,84 @@
                 </div>
                 
                 <div class="form-section">
-                    <h4>Machine Information</h4>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="hostName">Hostname</label>
-                            <input type="text" id="hostName" name="hostName" placeholder="e.g., server-01.corp.local">
-                        </div>
-                        <div class="form-group">
-                            <label for="ipAddress">IP Address</label>
-                            <input type="text" id="ipAddress" name="ipAddress" placeholder="e.g., 192.168.1.100">
-                        </div>
+                    <h4>Installation</h4>
+                    <div class="form-group">
+                        <label for="agentType">Agent Type <span class="required">*</span></label>
+                        <select id="agentType" name="agentType" required onchange="updateInstallationSteps()">
+                            <option value="">Select agent type...</option>
+                            <option value="vm">VM (Virtual Machine)</option>
+                            <option value="kubernetes">Container (Kubernetes)</option>
+                        </select>
                     </div>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="operatingSystem">Operating System</label>
-                            <input type="text" id="operatingSystem" name="operatingSystem" placeholder="e.g., Windows Server 2022">
+                    
+                    <div id="installationSteps" class="installation-steps" style="display: none;">
+                        <div id="vmSteps" class="install-type-steps" style="display: none;">
+                            <div class="step-header">
+                                <i class="fas fa-server"></i>
+                                <span>VM Installation Steps</span>
+                            </div>
+                            <div class="download-section">
+                                <a href="/downloads/cloudops-agent-linux-x64.tar.gz" class="download-link">
+                                    <i class="fas fa-download"></i>
+                                    <span>Download Agent (Linux x64)</span>
+                                </a>
+                                <a href="/downloads/cloudops-agent-windows-x64.zip" class="download-link">
+                                    <i class="fas fa-download"></i>
+                                    <span>Download Agent (Windows x64)</span>
+                                </a>
+                            </div>
+                            <ol class="steps-list">
+                                <li>Download the agent binary for your operating system</li>
+                                <li>Extract the archive to your preferred location</li>
+                                <li>Run the configuration command with your API key:
+                                    <code class="code-block">./cloudops-agent configure --url https://your-api-url --pool <span class="highlight pool-id-placeholder"></span></code>
+                                </li>
+                                <li>Start the agent service:
+                                    <code class="code-block">./cloudops-agent run</code>
+                                </li>
+                                <li>Or install as a system service:
+                                    <code class="code-block">sudo ./cloudops-agent service install && sudo ./cloudops-agent service start</code>
+                                </li>
+                            </ol>
                         </div>
-                        <div class="form-group">
-                            <label for="architecture">Architecture</label>
-                            <select id="architecture" name="architecture">
-                                <option value="">Select...</option>
-                                <option value="x64">x64 (64-bit)</option>
-                                <option value="x86">x86 (32-bit)</option>
-                                <option value="arm64">ARM64</option>
-                                <option value="arm">ARM</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="cpuModel">CPU Model</label>
-                            <input type="text" id="cpuModel" name="cpuModel" placeholder="e.g., Intel Xeon E5-2680">
-                        </div>
-                        <div class="form-group">
-                            <label for="logicalCores">Logical Cores</label>
-                            <input type="number" id="logicalCores" name="logicalCores" min="1" max="256" placeholder="e.g., 8">
-                        </div>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="memoryGb">Memory (GB)</label>
-                            <input type="number" id="memoryGb" name="memoryGb" min="0.5" max="4096" step="0.5" placeholder="e.g., 16">
-                        </div>
-                        <div class="form-group">
-                            <label for="diskSpaceGb">Disk Space (GB)</label>
-                            <input type="number" id="diskSpaceGb" name="diskSpaceGb" min="1" max="100000" placeholder="e.g., 500">
+                        
+                        <div id="k8sSteps" class="install-type-steps" style="display: none;">
+                            <div class="step-header">
+                                <i class="fas fa-dharmachakra"></i>
+                                <span>Kubernetes Installation Steps</span>
+                            </div>
+                            <div class="download-section">
+                                <a href="/downloads/cloudops-agent-helm-chart.tgz" class="download-link">
+                                    <i class="fas fa-download"></i>
+                                    <span>Download Helm Chart</span>
+                                </a>
+                                <a href="/downloads/cloudops-agent-k8s-manifests.yaml" class="download-link">
+                                    <i class="fas fa-download"></i>
+                                    <span>Download K8s Manifests</span>
+                                </a>
+                            </div>
+                            <ol class="steps-list">
+                                <li>Create a namespace for the agent:
+                                    <code class="code-block">kubectl create namespace cloudops-agent</code>
+                                </li>
+                                <li>Create a secret with your API key:
+                                    <code class="code-block">kubectl create secret generic cloudops-agent-secret \
+  --from-literal=api-key=YOUR_API_KEY \
+  -n cloudops-agent</code>
+                                </li>
+                                <li>Deploy using Helm:
+                                    <code class="code-block">helm install cloudops-agent ./cloudops-agent-helm-chart.tgz \
+  --set poolId=<span class="highlight pool-id-placeholder"></span> \
+  --set apiUrl=https://your-api-url \
+  -n cloudops-agent</code>
+                                </li>
+                                <li>Or apply the manifests directly:
+                                    <code class="code-block">kubectl apply -f cloudops-agent-k8s-manifests.yaml -n cloudops-agent</code>
+                                </li>
+                                <li>Verify the deployment:
+                                    <code class="code-block">kubectl get pods -n cloudops-agent</code>
+                                </li>
+                            </ol>
                         </div>
                     </div>
                 </div>
@@ -1469,6 +1583,29 @@
                 </button>
             </div>
         `;
+        document.getElementById('installationSteps').style.display = 'none';
+        document.getElementById('vmSteps').style.display = 'none';
+        document.getElementById('k8sSteps').style.display = 'none';
+    }
+    
+    function updateInstallationSteps() {
+        const agentType = document.getElementById('agentType').value;
+        const installationSteps = document.getElementById('installationSteps');
+        const vmSteps = document.getElementById('vmSteps');
+        const k8sSteps = document.getElementById('k8sSteps');
+        
+        if (!agentType) {
+            installationSteps.style.display = 'none';
+            return;
+        }
+        
+        installationSteps.style.display = 'block';
+        vmSteps.style.display = agentType === 'vm' ? 'block' : 'none';
+        k8sSteps.style.display = agentType === 'kubernetes' ? 'block' : 'none';
+        
+        document.querySelectorAll('.pool-id-placeholder').forEach(el => {
+            el.textContent = currentPoolId;
+        });
     }
 
     function addLabelRow() {
@@ -1520,14 +1657,7 @@
                     description: document.getElementById('agentDescription').value || null,
                     poolId: currentPoolId,
                     maxParallelJobs: parseInt(document.getElementById('maxParallelJobs').value) || 2,
-                    hostName: document.getElementById('hostName').value || null,
-                    ipAddress: document.getElementById('ipAddress').value || null,
-                    operatingSystem: document.getElementById('operatingSystem').value || null,
-                    architecture: document.getElementById('architecture').value || null,
-                    cpuModel: document.getElementById('cpuModel').value || null,
-                    logicalCores: document.getElementById('logicalCores').value ? parseInt(document.getElementById('logicalCores').value) : null,
-                    memoryGb: document.getElementById('memoryGb').value ? parseFloat(document.getElementById('memoryGb').value) : null,
-                    diskSpaceGb: document.getElementById('diskSpaceGb').value ? parseFloat(document.getElementById('diskSpaceGb').value) : null,
+                    agentType: document.getElementById('agentType').value,
                     labels: labels
                 })
             });
