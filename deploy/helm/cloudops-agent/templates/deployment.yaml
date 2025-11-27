@@ -1,0 +1,125 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "cloudops-agent.fullname" . }}
+  labels:
+    {{- include "cloudops-agent.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "cloudops-agent.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "cloudops-agent.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "cloudops-agent.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          args:
+            - "run"
+            - "--url"
+            - "$(API_URL)"
+            - "--api-key"
+            - "$(API_KEY)"
+            - "--pool"
+            - "$(POOL_ID)"
+            {{- if .Values.agent.name }}
+            - "--name"
+            - "{{ .Values.agent.name }}"
+            {{- end }}
+            - "--max-jobs"
+            - "{{ .Values.agent.maxParallelJobs }}"
+          env:
+            - name: API_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "cloudops-agent.fullname" . }}-config
+                  key: API_URL
+            - name: API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "cloudops-agent.secretName" . }}
+                  key: API_KEY
+            - name: POOL_ID
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "cloudops-agent.fullname" . }}-config
+                  key: POOL_ID
+            {{- with .Values.extraEnv }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          {{- if .Values.livenessProbe.enabled }}
+          livenessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - "pgrep -f cloudops-agent"
+            initialDelaySeconds: 30
+            periodSeconds: 30
+          {{- end }}
+          {{- if .Values.readinessProbe.enabled }}
+          readinessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - "pgrep -f cloudops-agent"
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          {{- end }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+            - name: work
+              mountPath: {{ .Values.persistence.workDir }}
+            - name: logs
+              mountPath: {{ .Values.persistence.logsDir }}
+            {{- with .Values.extraVolumeMounts }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+      volumes:
+        {{- if .Values.persistence.enabled }}
+        - name: work
+          persistentVolumeClaim:
+            claimName: {{ include "cloudops-agent.fullname" . }}-work
+        - name: logs
+          persistentVolumeClaim:
+            claimName: {{ include "cloudops-agent.fullname" . }}-logs
+        {{- else }}
+        - name: work
+          emptyDir: {}
+        - name: logs
+          emptyDir: {}
+        {{- end }}
+        {{- with .Values.extraVolumes }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

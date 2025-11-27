@@ -1,0 +1,285 @@
+@page "/Dashboard/AgentDownloads"
+@model CloudOps.Web.Pages.Dashboard.AgentDownloadsModel
+@{
+    ViewData["Title"] = "Agent Downloads";
+    Layout = "_DashboardLayout";
+}
+
+<style>
+    .downloads-container {
+        max-width: 1000px;
+        margin: 0 auto;
+    }
+    
+    .page-title {
+        font-size: 1.75rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 0.5rem;
+    }
+    
+    .page-subtitle {
+        color: var(--text-secondary);
+        margin-bottom: 2rem;
+    }
+    
+    .download-section {
+        background: var(--card-bg);
+        border: 1px solid var(--border-subtle);
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .section-header {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-bottom: 1rem;
+    }
+    
+    .section-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+    }
+    
+    .section-icon.vm {
+        background: linear-gradient(135deg, hsl(220, 60%, 50%), hsl(220, 60%, 40%));
+        color: white;
+    }
+    
+    .section-icon.k8s {
+        background: linear-gradient(135deg, hsl(210, 80%, 50%), hsl(210, 80%, 40%));
+        color: white;
+    }
+    
+    .section-icon.docker {
+        background: linear-gradient(135deg, hsl(200, 70%, 50%), hsl(200, 70%, 40%));
+        color: white;
+    }
+    
+    .section-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+    
+    .section-description {
+        color: var(--text-secondary);
+        font-size: 0.875rem;
+        margin-bottom: 1rem;
+    }
+    
+    .download-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1rem;
+    }
+    
+    .download-card {
+        background: var(--bg-darker);
+        border: 1px solid var(--border-subtle);
+        border-radius: 8px;
+        padding: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        text-decoration: none;
+        transition: all 0.2s ease;
+    }
+    
+    .download-card:hover {
+        border-color: var(--primary);
+        transform: translateY(-2px);
+    }
+    
+    .download-card .icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 8px;
+        background: var(--bg-primary);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        color: var(--text-secondary);
+    }
+    
+    .download-card .info {
+        flex: 1;
+    }
+    
+    .download-card .name {
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 0.25rem;
+    }
+    
+    .download-card .meta {
+        font-size: 0.75rem;
+        color: var(--text-muted);
+    }
+    
+    .download-card .download-icon {
+        color: var(--primary);
+        font-size: 1.25rem;
+    }
+    
+    .version-badge {
+        display: inline-block;
+        background: var(--primary);
+        color: var(--bg-primary);
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        margin-left: 0.5rem;
+    }
+    
+    .install-instructions {
+        background: var(--bg-darker);
+        border: 1px solid var(--border-subtle);
+        border-radius: 8px;
+        padding: 1rem;
+        margin-top: 1rem;
+    }
+    
+    .install-instructions h5 {
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 0.75rem;
+    }
+    
+    .install-instructions code {
+        display: block;
+        background: hsl(220, 15%, 8%);
+        padding: 0.75rem 1rem;
+        border-radius: 6px;
+        font-family: 'Monaco', 'Menlo', monospace;
+        font-size: 0.8rem;
+        color: hsl(175, 70%, 55%);
+        overflow-x: auto;
+        margin-bottom: 0.5rem;
+    }
+</style>
+
+<div class="downloads-container">
+    <h1 class="page-title">Agent Downloads <span class="version-badge">v1.0.0</span></h1>
+    <p class="page-subtitle">Download CloudOps Agent binaries and deployment resources for your infrastructure.</p>
+    
+    <div class="download-section">
+        <div class="section-header">
+            <div class="section-icon vm">
+                <i class="fas fa-server"></i>
+            </div>
+            <h2 class="section-title">VM / Bare Metal Agent</h2>
+        </div>
+        <p class="section-description">Self-contained binaries for running the agent on virtual machines or physical servers.</p>
+        
+        <div class="download-grid">
+            <a href="/downloads/cloudops-agent-linux-x64.tar.gz" class="download-card">
+                <div class="icon">
+                    <i class="fab fa-linux"></i>
+                </div>
+                <div class="info">
+                    <div class="name">Linux x64</div>
+                    <div class="meta">cloudops-agent-linux-x64.tar.gz</div>
+                </div>
+                <i class="fas fa-download download-icon"></i>
+            </a>
+            
+            <a href="/downloads/cloudops-agent-windows-x64.zip" class="download-card">
+                <div class="icon">
+                    <i class="fab fa-windows"></i>
+                </div>
+                <div class="info">
+                    <div class="name">Windows x64</div>
+                    <div class="meta">cloudops-agent-windows-x64.zip</div>
+                </div>
+                <i class="fas fa-download download-icon"></i>
+            </a>
+        </div>
+        
+        <div class="install-instructions">
+            <h5>Quick Install (Linux)</h5>
+            <code>tar -xzf cloudops-agent-linux-x64.tar.gz && sudo ./install.sh</code>
+            <h5>Quick Install (Windows PowerShell - as Admin)</h5>
+            <code>Expand-Archive cloudops-agent-windows-x64.zip -DestinationPath . ; .\install.ps1</code>
+        </div>
+    </div>
+    
+    <div class="download-section">
+        <div class="section-header">
+            <div class="section-icon k8s">
+                <i class="fas fa-dharmachakra"></i>
+            </div>
+            <h2 class="section-title">Kubernetes Deployment</h2>
+        </div>
+        <p class="section-description">Helm charts and manifests for deploying agents to Kubernetes clusters.</p>
+        
+        <div class="download-grid">
+            <a href="/downloads/cloudops-agent-helm-chart.tgz" class="download-card">
+                <div class="icon">
+                    <i class="fas fa-cubes"></i>
+                </div>
+                <div class="info">
+                    <div class="name">Helm Chart</div>
+                    <div class="meta">cloudops-agent-helm-chart.tgz</div>
+                </div>
+                <i class="fas fa-download download-icon"></i>
+            </a>
+            
+            <a href="/downloads/cloudops-agent-k8s-manifests.yaml" class="download-card">
+                <div class="icon">
+                    <i class="fas fa-file-code"></i>
+                </div>
+                <div class="info">
+                    <div class="name">K8s Manifests</div>
+                    <div class="meta">cloudops-agent-k8s-manifests.yaml</div>
+                </div>
+                <i class="fas fa-download download-icon"></i>
+            </a>
+        </div>
+        
+        <div class="install-instructions">
+            <h5>Helm Installation</h5>
+            <code>helm install cloudops-agent ./cloudops-agent-helm-chart.tgz --set agent.apiUrl=YOUR_API_URL --set agent.poolId=YOUR_POOL_ID -n cloudops-agent</code>
+            <h5>Plain Manifests</h5>
+            <code>kubectl apply -f cloudops-agent-k8s-manifests.yaml</code>
+        </div>
+    </div>
+    
+    <div class="download-section">
+        <div class="section-header">
+            <div class="section-icon docker">
+                <i class="fab fa-docker"></i>
+            </div>
+            <h2 class="section-title">Docker / Container</h2>
+        </div>
+        <p class="section-description">Build and push the agent container image to your private registry.</p>
+        
+        <div class="download-grid">
+            <a href="/downloads/Dockerfile" class="download-card">
+                <div class="icon">
+                    <i class="fas fa-file"></i>
+                </div>
+                <div class="info">
+                    <div class="name">Dockerfile</div>
+                    <div class="meta">Multi-stage build for ACR</div>
+                </div>
+                <i class="fas fa-download download-icon"></i>
+            </a>
+        </div>
+        
+        <div class="install-instructions">
+            <h5>Build & Push to ACR</h5>
+            <code>docker build -t your-acr.azurecr.io/cloudops-agent:1.0.0 . && docker push your-acr.azurecr.io/cloudops-agent:1.0.0</code>
+        </div>
+    </div>
+</div>

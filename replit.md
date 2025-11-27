@@ -36,6 +36,19 @@ The platform is built as a monorepo leveraging ASP.NET Core 9.0, following core 
 - A `dev.sh` script facilitates local development by starting both API (port 5056) and Frontend (port 5000). Swagger UI is available for API documentation.
 
 ## Recent Changes (November 27, 2025)
+- **Created CloudOps Agent Application** (`services/agent/CloudOps.Agent`):
+  - .NET 9 console worker application for self-hosted agents
+  - Pull-based architecture with API key authentication
+  - Features: Agent registration, heartbeat (30s interval), job polling (5s interval), concurrent job execution
+  - Job handlers: DatabaseBackupHandler, DatabaseRestoreHandler, ScriptExecutionHandler, PodRestartHandler
+  - Configuration via CLI args or appsettings.json
+  - Polly-based retry policies and Serilog logging
+- **Agent Deployment Artifacts**:
+  - Build script: `scripts/package-agent.sh` - Creates Linux/Windows binaries
+  - Dockerfile: `services/agent/Dockerfile` - Multi-stage container build
+  - Helm chart: `deploy/helm/cloudops-agent/` - Full K8s deployment
+  - K8s manifests: `deploy/k8s/cloudops-agent-k8s-manifests.yaml`
+  - Download page: `/Dashboard/AgentDownloads` - Web UI for artifact downloads
 - **Restructured Agent Management to Azure DevOps-style Agent Pools**:
   - Created `AgentPool` model with fields: Id, Name, Description, IsHosted, CreatedAt, CreatedByUserId, CreatedByUserEmail
   - Created `AgentLabel` model for tagging agents with key-value labels (Id, AgentId, Name, Value)

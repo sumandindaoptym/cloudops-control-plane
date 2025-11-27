@@ -1,0 +1,76 @@
+# CloudOps Agent Helm Chart Values
+
+replicaCount: 1
+
+image:
+  repository: your-acr.azurecr.io/cloudops-agent
+  pullPolicy: IfNotPresent
+  tag: ""
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+agent:
+  apiUrl: ""
+  poolId: ""
+  name: ""
+  maxParallelJobs: 2
+  heartbeatIntervalSeconds: 30
+  jobPollIntervalSeconds: 5
+
+existingSecret: "cloudops-agent-secret"
+
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+podAnnotations: {}
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  runAsGroup: 1000
+  fsGroup: 1000
+
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: false
+  capabilities:
+    drop:
+      - ALL
+
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+persistence:
+  enabled: true
+  storageClass: ""
+  accessMode: ReadWriteOnce
+  size: 1Gi
+  workDir: /app/work
+  logsDir: /app/logs
+
+livenessProbe:
+  enabled: true
+
+readinessProbe:
+  enabled: true
+
+extraEnv: []
+
+extraVolumes: []
+
+extraVolumeMounts: []

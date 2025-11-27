@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "cloudops-agent.fullname" . }}-config
+  labels:
+    {{- include "cloudops-agent.labels" . | nindent 4 }}
+data:
+  API_URL: {{ .Values.agent.apiUrl | quote }}
+  POOL_ID: {{ .Values.agent.poolId | quote }}
+  MAX_PARALLEL_JOBS: {{ .Values.agent.maxParallelJobs | quote }}
+  HEARTBEAT_INTERVAL: {{ .Values.agent.heartbeatIntervalSeconds | quote }}
+  JOB_POLL_INTERVAL: {{ .Values.agent.jobPollIntervalSeconds | quote }}

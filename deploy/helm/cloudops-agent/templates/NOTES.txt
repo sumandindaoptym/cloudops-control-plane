@@ -1,0 +1,28 @@
+Thank you for installing {{ .Chart.Name }}!
+
+Your CloudOps Agent has been deployed to the cluster.
+
+To configure the agent:
+
+1. Create a secret with your API key (if not using existingSecret):
+
+   kubectl create secret generic {{ include "cloudops-agent.fullname" . }}-secret \
+     --from-literal=API_KEY=your-api-key-here \
+     -n {{ .Release.Namespace }}
+
+2. Update the release with your configuration:
+
+   helm upgrade {{ .Release.Name }} {{ .Chart.Name }} \
+     --set agent.apiUrl=https://your-cloudops-api.example.com \
+     --set agent.poolId=your-pool-id \
+     -n {{ .Release.Namespace }}
+
+3. Check the agent status:
+
+   kubectl get pods -l "app.kubernetes.io/name={{ include "cloudops-agent.name" . }}" -n {{ .Release.Namespace }}
+
+4. View agent logs:
+
+   kubectl logs -l "app.kubernetes.io/name={{ include "cloudops-agent.name" . }}" -n {{ .Release.Namespace }} -f
+
+For more information, visit: https://github.com/optym/cloudops

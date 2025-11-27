@@ -1,0 +1,15 @@
+apiVersion: v2
+name: cloudops-agent
+description: CloudOps Agent Helm Chart - Self-hosted agent for CloudOps Control Plane
+type: application
+version: 1.0.0
+appVersion: "1.0.0"
+keywords:
+  - cloudops
+  - agent
+  - devops
+  - automation
+home: https://github.com/optym/cloudops
+maintainers:
+  - name: Optym
+    email: devops@optym.com
