@@ -613,6 +613,30 @@
         font-weight: 600;
     }
     
+    .api-key-note {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.75rem;
+        padding: 0.875rem 1rem;
+        background: hsl(200, 60%, 15%);
+        border: 1px solid hsl(200, 60%, 30%);
+        border-radius: 8px;
+        margin-bottom: 1rem;
+        font-size: 0.875rem;
+        color: hsl(200, 80%, 75%);
+    }
+    
+    .api-key-note i {
+        color: hsl(200, 80%, 65%);
+        font-size: 1rem;
+        margin-top: 0.125rem;
+        flex-shrink: 0;
+    }
+    
+    .api-key-note strong {
+        color: hsl(175, 70%, 55%);
+    }
+    
     .step-header i {
         font-size: 1.1rem;
     }
@@ -1114,6 +1138,10 @@
                                 <i class="fas fa-server"></i>
                                 <span>VM Installation Steps</span>
                             </div>
+                            <div class="api-key-note">
+                                <i class="fas fa-info-circle"></i>
+                                <span>Your API key will be displayed after you click <strong>Register agent</strong>. Copy it securely - it won't be shown again.</span>
+                            </div>
                             <div class="download-section">
                                 <a href="/downloads/cloudops-agent-linux-x64.tar.gz" class="download-link">
                                     <i class="fas fa-download"></i>
@@ -1143,6 +1171,10 @@
                             <div class="step-header">
                                 <i class="fas fa-dharmachakra"></i>
                                 <span>Kubernetes Installation Steps</span>
+                            </div>
+                            <div class="api-key-note">
+                                <i class="fas fa-info-circle"></i>
+                                <span>Your API key will be displayed after you click <strong>Register agent</strong>. Copy it securely - it won't be shown again.</span>
                             </div>
                             <div class="download-section">
                                 <a href="/downloads/cloudops-agent-helm-chart.tgz" class="download-link">
