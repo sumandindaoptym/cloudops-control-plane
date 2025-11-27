@@ -36,36 +36,41 @@ The platform is built as a monorepo leveraging ASP.NET Core 9.0, following core 
 - A `dev.sh` script facilitates local development by starting both API (port 5056) and Frontend (port 5000). Swagger UI is available for API documentation.
 
 ## Recent Changes (November 27, 2025)
-- **Implemented Pull-Based Agent System for job execution in private networks**:
-  - Created `Agent` model with fields: Id, Name, Description, Status, ApiKey, MaxParallelJobs, CurrentRunningJobs, HostName, IpAddress, OperatingSystem, AgentVersion, CreatedAt, LastHeartbeat, CreatedByUserId, CreatedByUserEmail
-  - Created `AgentJob` model with fields: Id, AgentId, JobType, JobName, Description, Parameters (JSON), Status, Progress, Result (JSON), ErrorMessage, Priority, CreatedAt, StartedAt, CompletedAt, CreatedByUserId, CreatedByUserEmail
-  - Implemented `AgentService` with full CRUD operations for agents and jobs
-  - Added `AgentStatusService` background service to monitor agent heartbeats and mark offline agents
-  - API endpoints for agents:
-    - `GET /api/agents` - List all agents (requires Azure AD auth)
-    - `POST /api/agents` - Register new agent (requires Azure AD auth)
-    - `DELETE /api/agents/{id}` - Delete agent (requires Azure AD auth)
-    - `POST /api/agents/{id}/heartbeat` - Agent heartbeat (requires API key auth)
-    - `GET /api/agents/{id}/jobs` - Get pending jobs for agent (requires API key auth)
-    - `POST /api/agents/{id}/jobs/{jobId}/claim` - Claim a job (requires API key auth)
-    - `POST /api/agents/{id}/jobs/{jobId}/progress` - Update job progress (requires API key auth)
-    - `POST /api/agents/{id}/jobs/{jobId}/complete` - Complete a job (requires API key auth)
-  - API endpoints for jobs:
-    - `GET /api/jobs` - List all jobs (requires Azure AD auth)
-    - `POST /api/jobs` - Create new job (requires Azure AD auth)
-    - `POST /api/jobs/{id}/cancel` - Cancel a job (requires Azure AD auth)
-  - Enhanced security:
-    - Agent endpoints use API key authentication via X-Agent-ApiKey header
-    - Job claiming uses atomic database updates with ExecuteUpdateAsync for concurrency protection
-    - Ownership validation ensures agents can only update their own jobs
-    - Capacity checks prevent agents from exceeding MaxParallelJobs
-  - Updated Hosted Agents page with:
-    - Statistics cards showing Total, Online, Busy, and Offline agent counts
-    - Tabs for Agents and Jobs views
-    - Agent cards with status, capacity, and heartbeat information
-    - Register Agent modal with API key display after creation
-    - Create Job modal with agent selection and parameters
-    - Real-time refresh functionality
+- **Restructured Agent Management to Azure DevOps-style Agent Pools**:
+  - Created `AgentPool` model with fields: Id, Name, Description, IsHosted, CreatedAt, CreatedByUserId, CreatedByUserEmail
+  - Created `AgentLabel` model for tagging agents with key-value labels (Id, AgentId, Name, Value)
+  - Extended `Agent` model with pool relationship and machine telemetry:
+    - Added PoolId foreign key to AgentPool
+    - Added machine info: MachineName, Architecture, CpuModel, LogicalCores, MemoryGb, DiskSpaceGb, Capabilities, LastCapabilitiesSync
+    - Labels collection for agent tagging
+  - Extended `AgentJob` model with PoolId for pool-based job routing
+  - New Agent Pools page structure (Azure DevOps pattern):
+    - `/Dashboard/Agents/Pools` - List all pools with statistics (agent counts, online status, running jobs)
+    - `/Dashboard/Agents/PoolDetail?id={poolId}` - Pool details with tabbed interface:
+      - Agents tab: Agent cards with status, machine info, labels, and filtering
+      - Jobs tab: Job queue and history for the pool
+      - Settings tab: Pool configuration and danger zone for deletion
+    - Removed "New agent" button from main page; agents are registered within pools
+  - API endpoints for pools:
+    - `GET /api/agentpools` - List all pools with aggregated stats (requires Azure AD auth)
+    - `GET /api/agentpools/{id}` - Get pool details (requires Azure AD auth)
+    - `POST /api/agentpools` - Create new pool (requires Azure AD auth)
+    - `PUT /api/agentpools/{id}` - Update pool settings (requires Azure AD auth)
+    - `DELETE /api/agentpools/{id}` - Delete pool, agents become unassigned (requires Azure AD auth)
+  - Updated agent API endpoints:
+    - `GET /api/agents?poolId={poolId}` - Filter agents by pool
+    - `POST /api/agents` - Register agent with poolId, machine info, and labels
+    - Agent responses now include PoolId, PoolName, machine telemetry, and labels array
+  - Updated jobs API endpoints:
+    - `GET /api/jobs?poolId={poolId}` - Filter jobs by pool
+    - `POST /api/jobs` - Create job with optional TargetPoolId for pool-based routing
+  - Hosted Agents page (`/Dashboard/HostedAgents`) now redirects to `/Dashboard/Agents/Pools`
+- **Previous agent system features preserved**:
+  - Pull-based agent communication with API key authentication
+  - 2-minute heartbeat timeout for offline detection
+  - Atomic job claiming with ExecuteUpdateAsync for concurrency protection
+  - Agent capacity checks (MaxParallelJobs limit)
+  - Job ownership validation for progress/completion updates
 
 ## Recent Changes (November 26, 2025)
 - **Implemented Activity Logging feature**:

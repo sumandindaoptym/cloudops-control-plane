@@ -7,20 +7,32 @@ namespace CloudOps.Web.Services;
 
 public interface IAgentService
 {
+    Task<AgentPool> CreatePoolAsync(string userId, string userEmail, AgentPoolRequest request);
+    Task<AgentPool?> GetPoolByIdAsync(Guid poolId);
+    Task<List<AgentPool>> GetAllPoolsAsync();
+    Task<AgentPool?> UpdatePoolAsync(Guid poolId, AgentPoolRequest request);
+    Task<bool> DeletePoolAsync(Guid poolId);
+    
     Task<Agent> CreateAgentAsync(string userId, string userEmail, AgentRegistrationRequest request);
     Task<Agent?> GetAgentByIdAsync(Guid agentId);
     Task<Agent?> GetAgentByApiKeyAsync(string apiKey);
+    Task<List<Agent>> GetAgentsByPoolAsync(Guid poolId);
     Task<List<Agent>> GetAgentsByUserAsync(string userId);
     Task<List<Agent>> GetAllAgentsAsync();
     Task<Agent?> UpdateHeartbeatAsync(Guid agentId, AgentHeartbeatRequest request);
     Task<bool> DeleteAgentAsync(Guid agentId);
+    
+    Task<AgentLabel> AddLabelAsync(Guid agentId, AgentLabelRequest request);
+    Task<List<AgentLabel>> GetLabelsForAgentAsync(Guid agentId);
+    Task<bool> RemoveLabelAsync(Guid labelId);
+    Task<bool> UpdateLabelsAsync(Guid agentId, List<AgentLabelRequest> labels);
     
     Task<AgentJob> CreateJobAsync(string userId, string userEmail, CreateJobRequest request);
     Task<List<AgentJob>> GetPendingJobsForAgentAsync(Guid agentId, int limit = 5);
     Task<AgentJob?> ClaimJobAsync(Guid agentId, Guid jobId);
     Task<AgentJob?> UpdateJobProgressAsync(Guid agentId, Guid jobId, JobProgressRequest request);
     Task<AgentJob?> CompleteJobAsync(Guid agentId, Guid jobId, JobCompleteRequest request);
-    Task<List<AgentJob>> GetJobsAsync(string? userId = null, int limit = 100);
+    Task<List<AgentJob>> GetJobsAsync(string? userId = null, Guid? poolId = null, int limit = 100);
     Task<AgentJob?> GetJobByIdAsync(Guid jobId);
     Task<bool> CancelJobAsync(Guid jobId);
     
@@ -39,6 +51,73 @@ public class AgentService : IAgentService
         _logger = logger;
     }
 
+    public async Task<AgentPool> CreatePoolAsync(string userId, string userEmail, AgentPoolRequest request)
+    {
+        var pool = new AgentPool
+        {
+            Name = request.Name,
+            Description = request.Description,
+            IsHosted = request.IsHosted,
+            CreatedByUserId = userId,
+            CreatedByUserEmail = userEmail,
+            CreatedAt = DateTime.UtcNow
+        };
+
+        _context.AgentPools.Add(pool);
+        await _context.SaveChangesAsync();
+        
+        _logger.LogInformation("Agent pool {PoolName} created by user {UserId}", pool.Name, userId);
+        return pool;
+    }
+
+    public async Task<AgentPool?> GetPoolByIdAsync(Guid poolId)
+    {
+        return await _context.AgentPools
+            .Include(p => p.Agents)
+            .FirstOrDefaultAsync(p => p.Id == poolId);
+    }
+
+    public async Task<List<AgentPool>> GetAllPoolsAsync()
+    {
+        return await _context.AgentPools
+            .Include(p => p.Agents)
+            .OrderByDescending(p => p.CreatedAt)
+            .ToListAsync();
+    }
+
+    public async Task<AgentPool?> UpdatePoolAsync(Guid poolId, AgentPoolRequest request)
+    {
+        var pool = await _context.AgentPools.FindAsync(poolId);
+        if (pool == null) return null;
+
+        pool.Name = request.Name;
+        pool.Description = request.Description;
+        pool.IsHosted = request.IsHosted;
+
+        await _context.SaveChangesAsync();
+        return pool;
+    }
+
+    public async Task<bool> DeletePoolAsync(Guid poolId)
+    {
+        var pool = await _context.AgentPools
+            .Include(p => p.Agents)
+            .FirstOrDefaultAsync(p => p.Id == poolId);
+        
+        if (pool == null) return false;
+
+        foreach (var agent in pool.Agents)
+        {
+            agent.PoolId = null;
+        }
+
+        _context.AgentPools.Remove(pool);
+        await _context.SaveChangesAsync();
+        
+        _logger.LogInformation("Agent pool {PoolId} deleted", poolId);
+        return true;
+    }
+
     public async Task<Agent> CreateAgentAsync(string userId, string userEmail, AgentRegistrationRequest request)
     {
         var apiKey = GenerateApiKey();
@@ -47,11 +126,18 @@ public class AgentService : IAgentService
         {
             Name = request.Name,
             Description = request.Description,
+            PoolId = request.PoolId != Guid.Empty ? request.PoolId : null,
             MaxParallelJobs = request.MaxParallelJobs > 0 ? request.MaxParallelJobs : 2,
             HostName = request.HostName,
             IpAddress = request.IpAddress,
             OperatingSystem = request.OperatingSystem,
             AgentVersion = request.AgentVersion,
+            MachineName = request.MachineName,
+            Architecture = request.Architecture,
+            CpuModel = request.CpuModel,
+            LogicalCores = request.LogicalCores,
+            MemoryGb = request.MemoryGb,
+            DiskSpaceGb = request.DiskSpaceGb,
             ApiKey = apiKey,
             Status = "Offline",
             CreatedByUserId = userId,
@@ -61,24 +147,57 @@ public class AgentService : IAgentService
 
         _context.Agents.Add(agent);
         await _context.SaveChangesAsync();
+
+        if (request.Labels != null && request.Labels.Any())
+        {
+            foreach (var labelReq in request.Labels)
+            {
+                var label = new AgentLabel
+                {
+                    AgentId = agent.Id,
+                    Name = labelReq.Name,
+                    Value = labelReq.Value
+                };
+                _context.AgentLabels.Add(label);
+            }
+            await _context.SaveChangesAsync();
+        }
         
-        _logger.LogInformation("Agent {AgentName} created by user {UserId}", agent.Name, userId);
+        _logger.LogInformation("Agent {AgentName} created in pool {PoolId} by user {UserId}", 
+            agent.Name, agent.PoolId, userId);
         return agent;
     }
 
     public async Task<Agent?> GetAgentByIdAsync(Guid agentId)
     {
-        return await _context.Agents.FindAsync(agentId);
+        return await _context.Agents
+            .Include(a => a.Pool)
+            .Include(a => a.Labels)
+            .FirstOrDefaultAsync(a => a.Id == agentId);
     }
 
     public async Task<Agent?> GetAgentByApiKeyAsync(string apiKey)
     {
-        return await _context.Agents.FirstOrDefaultAsync(a => a.ApiKey == apiKey);
+        return await _context.Agents
+            .Include(a => a.Pool)
+            .Include(a => a.Labels)
+            .FirstOrDefaultAsync(a => a.ApiKey == apiKey);
+    }
+
+    public async Task<List<Agent>> GetAgentsByPoolAsync(Guid poolId)
+    {
+        return await _context.Agents
+            .Include(a => a.Labels)
+            .Where(a => a.PoolId == poolId)
+            .OrderByDescending(a => a.CreatedAt)
+            .ToListAsync();
     }
 
     public async Task<List<Agent>> GetAgentsByUserAsync(string userId)
     {
         return await _context.Agents
+            .Include(a => a.Pool)
+            .Include(a => a.Labels)
             .Where(a => a.CreatedByUserId == userId)
             .OrderByDescending(a => a.CreatedAt)
             .ToListAsync();
@@ -87,6 +206,8 @@ public class AgentService : IAgentService
     public async Task<List<Agent>> GetAllAgentsAsync()
     {
         return await _context.Agents
+            .Include(a => a.Pool)
+            .Include(a => a.Labels)
             .OrderByDescending(a => a.CreatedAt)
             .ToListAsync();
     }
@@ -108,6 +229,20 @@ public class AgentService : IAgentService
             agent.OperatingSystem = request.OperatingSystem;
         if (!string.IsNullOrEmpty(request.AgentVersion))
             agent.AgentVersion = request.AgentVersion;
+        if (!string.IsNullOrEmpty(request.MachineName))
+            agent.MachineName = request.MachineName;
+        if (!string.IsNullOrEmpty(request.Architecture))
+            agent.Architecture = request.Architecture;
+        if (!string.IsNullOrEmpty(request.CpuModel))
+            agent.CpuModel = request.CpuModel;
+        if (request.LogicalCores.HasValue)
+            agent.LogicalCores = request.LogicalCores;
+        if (request.MemoryGb.HasValue)
+            agent.MemoryGb = request.MemoryGb;
+        if (request.DiskSpaceGb.HasValue)
+            agent.DiskSpaceGb = request.DiskSpaceGb;
+        
+        agent.LastCapabilitiesSync = DateTime.UtcNow;
 
         await _context.SaveChangesAsync();
         return agent;
@@ -125,6 +260,63 @@ public class AgentService : IAgentService
         return true;
     }
 
+    public async Task<AgentLabel> AddLabelAsync(Guid agentId, AgentLabelRequest request)
+    {
+        var label = new AgentLabel
+        {
+            AgentId = agentId,
+            Name = request.Name,
+            Value = request.Value
+        };
+
+        _context.AgentLabels.Add(label);
+        await _context.SaveChangesAsync();
+        
+        return label;
+    }
+
+    public async Task<List<AgentLabel>> GetLabelsForAgentAsync(Guid agentId)
+    {
+        return await _context.AgentLabels
+            .Where(l => l.AgentId == agentId)
+            .OrderBy(l => l.Name)
+            .ToListAsync();
+    }
+
+    public async Task<bool> RemoveLabelAsync(Guid labelId)
+    {
+        var label = await _context.AgentLabels.FindAsync(labelId);
+        if (label == null) return false;
+
+        _context.AgentLabels.Remove(label);
+        await _context.SaveChangesAsync();
+        
+        return true;
+    }
+
+    public async Task<bool> UpdateLabelsAsync(Guid agentId, List<AgentLabelRequest> labels)
+    {
+        var existingLabels = await _context.AgentLabels
+            .Where(l => l.AgentId == agentId)
+            .ToListAsync();
+
+        _context.AgentLabels.RemoveRange(existingLabels);
+
+        foreach (var labelReq in labels)
+        {
+            var label = new AgentLabel
+            {
+                AgentId = agentId,
+                Name = labelReq.Name,
+                Value = labelReq.Value
+            };
+            _context.AgentLabels.Add(label);
+        }
+
+        await _context.SaveChangesAsync();
+        return true;
+    }
+
     public async Task<AgentJob> CreateJobAsync(string userId, string userEmail, CreateJobRequest request)
     {
         var job = new AgentJob
@@ -134,6 +326,7 @@ public class AgentService : IAgentService
             Description = request.Description,
             Parameters = request.Parameters,
             AgentId = request.TargetAgentId,
+            PoolId = request.TargetPoolId,
             Priority = request.Priority,
             Status = "Pending",
             CreatedByUserId = userId,
@@ -150,8 +343,13 @@ public class AgentService : IAgentService
 
     public async Task<List<AgentJob>> GetPendingJobsForAgentAsync(Guid agentId, int limit = 5)
     {
+        var agent = await _context.Agents.FindAsync(agentId);
+        if (agent == null) return new List<AgentJob>();
+
         return await _context.AgentJobs
-            .Where(j => j.Status == "Pending" && (j.AgentId == null || j.AgentId == agentId))
+            .Where(j => j.Status == "Pending" && 
+                       (j.AgentId == null || j.AgentId == agentId) &&
+                       (j.PoolId == null || j.PoolId == agent.PoolId))
             .OrderByDescending(j => j.Priority)
             .ThenBy(j => j.CreatedAt)
             .Take(limit)
@@ -171,7 +369,9 @@ public class AgentService : IAgentService
         }
 
         var rowsAffected = await _context.AgentJobs
-            .Where(j => j.Id == jobId && j.Status == "Pending" && (j.AgentId == null || j.AgentId == agentId))
+            .Where(j => j.Id == jobId && j.Status == "Pending" && 
+                       (j.AgentId == null || j.AgentId == agentId) &&
+                       (j.PoolId == null || j.PoolId == agent.PoolId))
             .ExecuteUpdateAsync(setters => setters
                 .SetProperty(j => j.AgentId, agentId)
                 .SetProperty(j => j.Status, "Running")
@@ -251,7 +451,7 @@ public class AgentService : IAgentService
         return job;
     }
 
-    public async Task<List<AgentJob>> GetJobsAsync(string? userId = null, int limit = 100)
+    public async Task<List<AgentJob>> GetJobsAsync(string? userId = null, Guid? poolId = null, int limit = 100)
     {
         var query = _context.AgentJobs
             .Include(j => j.Agent)
@@ -260,6 +460,12 @@ public class AgentService : IAgentService
         if (!string.IsNullOrEmpty(userId))
         {
             query = query.Where(j => j.CreatedByUserId == userId);
+        }
+
+        if (poolId.HasValue)
+        {
+            query = query.Where(j => j.PoolId == poolId || 
+                (j.Agent != null && j.Agent.PoolId == poolId));
         }
         
         return await query

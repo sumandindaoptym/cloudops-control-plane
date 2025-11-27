@@ -478,7 +478,7 @@ app.MapGet("/api/activities", async (
     }
 }).RequireAuthorization();
 
-app.MapGet("/api/agents", async (
+app.MapGet("/api/agentpools", async (
     HttpContext httpContext,
     IAgentService agentService,
     ILogger<Program> logger) =>
@@ -490,10 +490,176 @@ app.MapGet("/api/agents", async (
 
     try
     {
-        var agents = await agentService.GetAllAgentsAsync();
+        var pools = await agentService.GetAllPoolsAsync();
+        var response = pools.Select(p => new AgentPoolResponse
+        {
+            Id = p.Id,
+            Name = p.Name,
+            Description = p.Description,
+            IsHosted = p.IsHosted,
+            TotalAgents = p.Agents.Count,
+            OnlineAgents = p.Agents.Count(a => a.Status == "Online" || a.Status == "Busy"),
+            OfflineAgents = p.Agents.Count(a => a.Status == "Offline"),
+            RunningJobs = p.Agents.Sum(a => a.CurrentRunningJobs),
+            CreatedAt = p.CreatedAt
+        });
+        return Results.Ok(response);
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "Error fetching agent pools");
+        return Results.Json(new { error = "Failed to fetch agent pools" }, statusCode: 500);
+    }
+}).RequireAuthorization();
+
+app.MapGet("/api/agentpools/{id:guid}", async (
+    Guid id,
+    HttpContext httpContext,
+    IAgentService agentService,
+    ILogger<Program> logger) =>
+{
+    if (!httpContext.User.Identity?.IsAuthenticated ?? true)
+    {
+        return Results.Unauthorized();
+    }
+
+    try
+    {
+        var pool = await agentService.GetPoolByIdAsync(id);
+        if (pool == null) return Results.NotFound();
+        
+        return Results.Ok(new AgentPoolResponse
+        {
+            Id = pool.Id,
+            Name = pool.Name,
+            Description = pool.Description,
+            IsHosted = pool.IsHosted,
+            TotalAgents = pool.Agents.Count,
+            OnlineAgents = pool.Agents.Count(a => a.Status == "Online" || a.Status == "Busy"),
+            OfflineAgents = pool.Agents.Count(a => a.Status == "Offline"),
+            RunningJobs = pool.Agents.Sum(a => a.CurrentRunningJobs),
+            CreatedAt = pool.CreatedAt
+        });
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "Error fetching agent pool");
+        return Results.Json(new { error = "Failed to fetch agent pool" }, statusCode: 500);
+    }
+}).RequireAuthorization();
+
+app.MapPost("/api/agentpools", async (
+    HttpContext httpContext,
+    AgentPoolRequest request,
+    IAgentService agentService,
+    ILogger<Program> logger) =>
+{
+    if (!httpContext.User.Identity?.IsAuthenticated ?? true)
+    {
+        return Results.Unauthorized();
+    }
+
+    try
+    {
+        var userId = httpContext.User.FindFirst("http://schemas.microsoft.com/identity/claims/objectidentifier")?.Value 
+            ?? httpContext.User.FindFirst("oid")?.Value 
+            ?? string.Empty;
+        var userEmail = httpContext.User.FindFirst("preferred_username")?.Value 
+            ?? httpContext.User.FindFirst("email")?.Value 
+            ?? httpContext.User.Identity?.Name 
+            ?? string.Empty;
+
+        var pool = await agentService.CreatePoolAsync(userId, userEmail, request);
+        return Results.Ok(new AgentPoolResponse
+        {
+            Id = pool.Id,
+            Name = pool.Name,
+            Description = pool.Description,
+            IsHosted = pool.IsHosted,
+            TotalAgents = 0,
+            OnlineAgents = 0,
+            OfflineAgents = 0,
+            RunningJobs = 0,
+            CreatedAt = pool.CreatedAt
+        });
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "Error creating agent pool");
+        return Results.Json(new { error = "Failed to create agent pool" }, statusCode: 500);
+    }
+}).RequireAuthorization();
+
+app.MapPut("/api/agentpools/{id:guid}", async (
+    Guid id,
+    HttpContext httpContext,
+    AgentPoolRequest request,
+    IAgentService agentService,
+    ILogger<Program> logger) =>
+{
+    if (!httpContext.User.Identity?.IsAuthenticated ?? true)
+    {
+        return Results.Unauthorized();
+    }
+
+    try
+    {
+        var pool = await agentService.UpdatePoolAsync(id, request);
+        if (pool == null) return Results.NotFound();
+        
+        return Results.Ok();
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "Error updating agent pool");
+        return Results.Json(new { error = "Failed to update agent pool" }, statusCode: 500);
+    }
+}).RequireAuthorization();
+
+app.MapDelete("/api/agentpools/{id:guid}", async (
+    Guid id,
+    HttpContext httpContext,
+    IAgentService agentService,
+    ILogger<Program> logger) =>
+{
+    if (!httpContext.User.Identity?.IsAuthenticated ?? true)
+    {
+        return Results.Unauthorized();
+    }
+
+    try
+    {
+        var success = await agentService.DeletePoolAsync(id);
+        return success ? Results.Ok() : Results.NotFound();
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "Error deleting agent pool");
+        return Results.Json(new { error = "Failed to delete agent pool" }, statusCode: 500);
+    }
+}).RequireAuthorization();
+
+app.MapGet("/api/agents", async (
+    HttpContext httpContext,
+    IAgentService agentService,
+    ILogger<Program> logger,
+    Guid? poolId = null) =>
+{
+    if (!httpContext.User.Identity?.IsAuthenticated ?? true)
+    {
+        return Results.Unauthorized();
+    }
+
+    try
+    {
+        var agents = poolId.HasValue 
+            ? await agentService.GetAgentsByPoolAsync(poolId.Value)
+            : await agentService.GetAllAgentsAsync();
         var response = agents.Select(a => new AgentResponse
         {
             Id = a.Id,
+            PoolId = a.PoolId,
+            PoolName = a.Pool?.Name,
             Name = a.Name,
             Description = a.Description,
             Status = a.Status,
@@ -503,8 +669,20 @@ app.MapGet("/api/agents", async (
             IpAddress = a.IpAddress,
             OperatingSystem = a.OperatingSystem,
             AgentVersion = a.AgentVersion,
+            MachineName = a.MachineName,
+            Architecture = a.Architecture,
+            CpuModel = a.CpuModel,
+            LogicalCores = a.LogicalCores,
+            MemoryGb = a.MemoryGb,
+            DiskSpaceGb = a.DiskSpaceGb,
             CreatedAt = a.CreatedAt,
-            LastHeartbeat = a.LastHeartbeat
+            LastHeartbeat = a.LastHeartbeat,
+            Labels = a.Labels.Select(l => new AgentLabelResponse
+            {
+                Id = l.Id,
+                Name = l.Name,
+                Value = l.Value
+            }).ToList()
         });
         return Results.Ok(response);
     }
@@ -537,9 +715,11 @@ app.MapPost("/api/agents", async (
             ?? string.Empty;
 
         var agent = await agentService.CreateAgentAsync(userId, userEmail, request);
+        var agentWithLabels = await agentService.GetAgentByIdAsync(agent.Id);
         return Results.Ok(new AgentResponse
         {
             Id = agent.Id,
+            PoolId = agent.PoolId,
             Name = agent.Name,
             Description = agent.Description,
             Status = agent.Status,
@@ -549,9 +729,21 @@ app.MapPost("/api/agents", async (
             IpAddress = agent.IpAddress,
             OperatingSystem = agent.OperatingSystem,
             AgentVersion = agent.AgentVersion,
+            MachineName = agent.MachineName,
+            Architecture = agent.Architecture,
+            CpuModel = agent.CpuModel,
+            LogicalCores = agent.LogicalCores,
+            MemoryGb = agent.MemoryGb,
+            DiskSpaceGb = agent.DiskSpaceGb,
             CreatedAt = agent.CreatedAt,
             LastHeartbeat = agent.LastHeartbeat,
-            ApiKey = agent.ApiKey
+            ApiKey = agent.ApiKey,
+            Labels = agentWithLabels?.Labels.Select(l => new AgentLabelResponse
+            {
+                Id = l.Id,
+                Name = l.Name,
+                Value = l.Value
+            }).ToList() ?? new List<AgentLabelResponse>()
         });
     }
     catch (Exception ex)
@@ -774,7 +966,8 @@ app.MapPost("/api/agents/{id:guid}/jobs/{jobId:guid}/complete", async (
 app.MapGet("/api/jobs", async (
     HttpContext httpContext,
     IAgentService agentService,
-    ILogger<Program> logger) =>
+    ILogger<Program> logger,
+    Guid? poolId = null) =>
 {
     if (!httpContext.User.Identity?.IsAuthenticated ?? true)
     {
@@ -783,12 +976,13 @@ app.MapGet("/api/jobs", async (
 
     try
     {
-        var jobs = await agentService.GetJobsAsync();
+        var jobs = await agentService.GetJobsAsync(null, poolId);
         var response = jobs.Select(j => new JobResponse
         {
             Id = j.Id,
             AgentId = j.AgentId,
             AgentName = j.Agent?.Name,
+            PoolId = j.PoolId,
             JobType = j.JobType,
             JobName = j.JobName,
             Description = j.Description,

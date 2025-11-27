@@ -1,0 +1,679 @@
+@page
+@model CloudOps.Web.Pages.Dashboard.Agents.PoolsModel
+@{
+    ViewData["Title"] = "Agent Pools";
+    Layout = "Shared/_DashboardLayout";
+}
+
+<div class="page-header">
+    <div class="header-content">
+        <div class="header-title-section">
+            <h1 class="page-title">
+                <i class="fas fa-layer-group"></i>
+                Agent Pools
+            </h1>
+            <p class="page-subtitle">Manage agent pools to organize and group your self-hosted agents</p>
+        </div>
+        <div class="header-actions">
+            <button type="button" class="btn btn-primary" onclick="showCreatePoolModal()">
+                <i class="fas fa-plus"></i>
+                <span>New pool</span>
+            </button>
+        </div>
+    </div>
+</div>
+
+<div class="pools-container">
+    <div class="pools-table-wrapper">
+        <table class="pools-table">
+            <thead>
+                <tr>
+                    <th class="col-name">Name</th>
+                    <th class="col-type">Type</th>
+                    <th class="col-agents">Agents</th>
+                    <th class="col-online">Online</th>
+                    <th class="col-jobs">Running Jobs</th>
+                    <th class="col-actions"></th>
+                </tr>
+            </thead>
+            <tbody id="poolsTableBody">
+                <tr class="loading-row">
+                    <td colspan="6">
+                        <div class="loading-spinner">
+                            <i class="fas fa-spinner fa-spin"></i>
+                            <span>Loading pools...</span>
+                        </div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    
+    <div id="emptyState" class="empty-state" style="display: none;">
+        <div class="empty-icon">
+            <i class="fas fa-layer-group"></i>
+        </div>
+        <h3>No agent pools yet</h3>
+        <p>Create your first agent pool to organize and manage your self-hosted agents.</p>
+        <button type="button" class="btn btn-primary" onclick="showCreatePoolModal()">
+            <i class="fas fa-plus"></i>
+            Create pool
+        </button>
+    </div>
+</div>
+
+<div id="createPoolModal" class="modal">
+    <div class="modal-backdrop" onclick="closeCreatePoolModal()"></div>
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Create Agent Pool</h2>
+            <button type="button" class="modal-close" onclick="closeCreatePoolModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <form id="createPoolForm" onsubmit="createPool(event)">
+                <div class="form-group">
+                    <label for="poolName">Pool name <span class="required">*</span></label>
+                    <input type="text" id="poolName" name="name" required
+                           placeholder="e.g., Production-Agents" maxlength="100">
+                    <span class="form-hint">A unique name for the agent pool</span>
+                </div>
+                <div class="form-group">
+                    <label for="poolDescription">Description</label>
+                    <textarea id="poolDescription" name="description" rows="3"
+                              placeholder="Describe the purpose of this pool..." maxlength="500"></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="poolIsHosted" name="isHosted">
+                        <span class="checkbox-text">Hosted pool (managed by the organization)</span>
+                    </label>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeCreatePoolModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary" id="createPoolBtn">
+                        <span class="btn-text">Create pool</span>
+                        <i class="fas fa-spinner fa-spin btn-spinner" style="display: none;"></i>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+    .page-header {
+        margin-bottom: 2rem;
+        padding-bottom: 1.5rem;
+        border-bottom: 1px solid var(--border-subtle);
+    }
+    
+    .header-content {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+    
+    .page-title {
+        font-size: 1.75rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+    
+    .page-title i {
+        color: var(--primary);
+    }
+    
+    .page-subtitle {
+        color: var(--text-secondary);
+        margin: 0.5rem 0 0 0;
+        font-size: 0.95rem;
+    }
+    
+    .pools-container {
+        background: var(--card-bg);
+        border-radius: 12px;
+        border: 1px solid var(--border-subtle);
+        overflow: hidden;
+    }
+    
+    .pools-table-wrapper {
+        overflow-x: auto;
+    }
+    
+    .pools-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    
+    .pools-table th {
+        text-align: left;
+        padding: 1rem 1.25rem;
+        background: var(--bg-darker);
+        color: var(--text-secondary);
+        font-weight: 500;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        border-bottom: 1px solid var(--border-subtle);
+    }
+    
+    .pools-table td {
+        padding: 1rem 1.25rem;
+        border-bottom: 1px solid var(--border-subtle);
+        color: var(--text-primary);
+    }
+    
+    .pools-table tbody tr:hover {
+        background: var(--bg-darker);
+    }
+    
+    .pools-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+    
+    .col-name { width: 30%; }
+    .col-type { width: 15%; }
+    .col-agents { width: 15%; }
+    .col-online { width: 15%; }
+    .col-jobs { width: 15%; }
+    .col-actions { width: 10%; text-align: right; }
+    
+    .pool-name {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+    
+    .pool-name-link {
+        color: var(--primary);
+        font-weight: 500;
+        text-decoration: none;
+        font-size: 1rem;
+    }
+    
+    .pool-name-link:hover {
+        text-decoration: underline;
+    }
+    
+    .pool-description {
+        color: var(--text-secondary);
+        font-size: 0.85rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 300px;
+    }
+    
+    .pool-type-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        padding: 0.35rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 500;
+    }
+    
+    .pool-type-badge.hosted {
+        background: rgba(59, 130, 246, 0.15);
+        color: #60a5fa;
+    }
+    
+    .pool-type-badge.self-hosted {
+        background: rgba(139, 92, 246, 0.15);
+        color: #a78bfa;
+    }
+    
+    .agent-count {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .agent-count-number {
+        font-weight: 600;
+        font-size: 1.1rem;
+    }
+    
+    .online-count {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .online-indicator {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--success);
+    }
+    
+    .jobs-count {
+        font-weight: 500;
+    }
+    
+    .pool-actions {
+        display: flex;
+        gap: 0.5rem;
+        justify-content: flex-end;
+    }
+    
+    .pool-actions .btn-icon {
+        width: 32px;
+        height: 32px;
+        padding: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 6px;
+        background: transparent;
+        border: 1px solid var(--border-subtle);
+        color: var(--text-secondary);
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    
+    .pool-actions .btn-icon:hover {
+        background: var(--bg-darker);
+        color: var(--text-primary);
+    }
+    
+    .pool-actions .btn-icon.danger:hover {
+        background: rgba(239, 68, 68, 0.15);
+        color: #f87171;
+        border-color: rgba(239, 68, 68, 0.3);
+    }
+    
+    .loading-row td {
+        padding: 3rem;
+    }
+    
+    .loading-spinner {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.75rem;
+        color: var(--text-secondary);
+    }
+    
+    .empty-state {
+        padding: 4rem 2rem;
+        text-align: center;
+    }
+    
+    .empty-icon {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        background: var(--bg-darker);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1.5rem;
+    }
+    
+    .empty-icon i {
+        font-size: 2rem;
+        color: var(--text-secondary);
+    }
+    
+    .empty-state h3 {
+        margin: 0 0 0.5rem;
+        color: var(--text-primary);
+    }
+    
+    .empty-state p {
+        color: var(--text-secondary);
+        margin: 0 0 1.5rem;
+    }
+    
+    .modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 1000;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .modal.active {
+        display: flex;
+    }
+    
+    .modal-backdrop {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.6);
+        backdrop-filter: blur(4px);
+    }
+    
+    .modal-content {
+        position: relative;
+        background: var(--card-bg);
+        border-radius: 12px;
+        border: 1px solid var(--border-subtle);
+        width: 100%;
+        max-width: 500px;
+        max-height: 90vh;
+        overflow-y: auto;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    }
+    
+    .modal-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 1.25rem 1.5rem;
+        border-bottom: 1px solid var(--border-subtle);
+    }
+    
+    .modal-header h2 {
+        margin: 0;
+        font-size: 1.25rem;
+        color: var(--text-primary);
+    }
+    
+    .modal-close {
+        background: transparent;
+        border: none;
+        color: var(--text-secondary);
+        cursor: pointer;
+        padding: 0.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 6px;
+        transition: all 0.2s ease;
+    }
+    
+    .modal-close:hover {
+        background: var(--bg-darker);
+        color: var(--text-primary);
+    }
+    
+    .modal-body {
+        padding: 1.5rem;
+    }
+    
+    .form-group {
+        margin-bottom: 1.25rem;
+    }
+    
+    .form-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 500;
+        color: var(--text-primary);
+    }
+    
+    .form-group .required {
+        color: #f87171;
+    }
+    
+    .form-group input[type="text"],
+    .form-group textarea {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        background: var(--bg-darker);
+        border: 1px solid var(--border-subtle);
+        border-radius: 8px;
+        color: var(--text-primary);
+        font-size: 0.95rem;
+        transition: all 0.2s ease;
+    }
+    
+    .form-group input[type="text"]:focus,
+    .form-group textarea:focus {
+        outline: none;
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(45, 212, 191, 0.15);
+    }
+    
+    .form-group input[type="text"]::placeholder,
+    .form-group textarea::placeholder {
+        color: var(--text-muted);
+    }
+    
+    .form-hint {
+        display: block;
+        margin-top: 0.35rem;
+        font-size: 0.8rem;
+        color: var(--text-secondary);
+    }
+    
+    .checkbox-label {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        cursor: pointer;
+    }
+    
+    .checkbox-label input[type="checkbox"] {
+        width: 18px;
+        height: 18px;
+        accent-color: var(--primary);
+    }
+    
+    .checkbox-text {
+        color: var(--text-primary);
+        font-weight: normal;
+    }
+    
+    .form-actions {
+        display: flex;
+        gap: 0.75rem;
+        justify-content: flex-end;
+        margin-top: 1.5rem;
+        padding-top: 1.25rem;
+        border-top: 1px solid var(--border-subtle);
+    }
+    
+    .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.625rem 1.25rem;
+        border-radius: 8px;
+        font-weight: 500;
+        font-size: 0.9rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        border: none;
+    }
+    
+    .btn-primary {
+        background: var(--primary);
+        color: var(--bg-darkest);
+    }
+    
+    .btn-primary:hover {
+        background: var(--primary-hover);
+    }
+    
+    .btn-secondary {
+        background: var(--bg-darker);
+        color: var(--text-primary);
+        border: 1px solid var(--border-subtle);
+    }
+    
+    .btn-secondary:hover {
+        background: var(--border-subtle);
+    }
+    
+    .btn-spinner {
+        margin-left: 0.25rem;
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        loadPools();
+    });
+
+    async function loadPools() {
+        try {
+            const response = await fetch('/api/agentpools');
+            if (!response.ok) throw new Error('Failed to load pools');
+            
+            const pools = await response.json();
+            renderPools(pools);
+        } catch (error) {
+            console.error('Error loading pools:', error);
+            document.getElementById('poolsTableBody').innerHTML = `
+                <tr>
+                    <td colspan="6" class="error-message">
+                        <i class="fas fa-exclamation-circle"></i>
+                        Failed to load agent pools. Please try again.
+                    </td>
+                </tr>
+            `;
+        }
+    }
+
+    function renderPools(pools) {
+        const tbody = document.getElementById('poolsTableBody');
+        const emptyState = document.getElementById('emptyState');
+        const tableWrapper = document.querySelector('.pools-table-wrapper');
+        
+        if (pools.length === 0) {
+            tableWrapper.style.display = 'none';
+            emptyState.style.display = 'block';
+            return;
+        }
+        
+        tableWrapper.style.display = 'block';
+        emptyState.style.display = 'none';
+        
+        tbody.innerHTML = pools.map(pool => `
+            <tr>
+                <td>
+                    <div class="pool-name">
+                        <a href="/Dashboard/Agents/PoolDetail?id=${pool.id}" class="pool-name-link">
+                            ${escapeHtml(pool.name)}
+                        </a>
+                        ${pool.description ? `<span class="pool-description">${escapeHtml(pool.description)}</span>` : ''}
+                    </div>
+                </td>
+                <td>
+                    <span class="pool-type-badge ${pool.isHosted ? 'hosted' : 'self-hosted'}">
+                        <i class="fas ${pool.isHosted ? 'fa-cloud' : 'fa-server'}"></i>
+                        ${pool.isHosted ? 'Hosted' : 'Self-hosted'}
+                    </span>
+                </td>
+                <td>
+                    <div class="agent-count">
+                        <span class="agent-count-number">${pool.totalAgents}</span>
+                        <span style="color: var(--text-secondary);">agents</span>
+                    </div>
+                </td>
+                <td>
+                    <div class="online-count">
+                        ${pool.onlineAgents > 0 ? '<span class="online-indicator"></span>' : ''}
+                        <span>${pool.onlineAgents}</span>
+                    </div>
+                </td>
+                <td>
+                    <span class="jobs-count">${pool.runningJobs}</span>
+                </td>
+                <td>
+                    <div class="pool-actions">
+                        <a href="/Dashboard/Agents/PoolDetail?id=${pool.id}" class="btn-icon" title="View pool">
+                            <i class="fas fa-arrow-right"></i>
+                        </a>
+                        <button type="button" class="btn-icon danger" title="Delete pool" onclick="deletePool('${pool.id}', '${escapeHtml(pool.name)}')">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    function showCreatePoolModal() {
+        document.getElementById('createPoolModal').classList.add('active');
+        document.getElementById('poolName').focus();
+    }
+
+    function closeCreatePoolModal() {
+        document.getElementById('createPoolModal').classList.remove('active');
+        document.getElementById('createPoolForm').reset();
+    }
+
+    async function createPool(event) {
+        event.preventDefault();
+        
+        const btn = document.getElementById('createPoolBtn');
+        const btnText = btn.querySelector('.btn-text');
+        const btnSpinner = btn.querySelector('.btn-spinner');
+        
+        btn.disabled = true;
+        btnText.textContent = 'Creating...';
+        btnSpinner.style.display = 'inline-block';
+        
+        try {
+            const response = await fetch('/api/agentpools', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    name: document.getElementById('poolName').value,
+                    description: document.getElementById('poolDescription').value,
+                    isHosted: document.getElementById('poolIsHosted').checked
+                })
+            });
+            
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.error || 'Failed to create pool');
+            }
+            
+            closeCreatePoolModal();
+            loadPools();
+        } catch (error) {
+            console.error('Error creating pool:', error);
+            alert('Failed to create pool: ' + error.message);
+        } finally {
+            btn.disabled = false;
+            btnText.textContent = 'Create pool';
+            btnSpinner.style.display = 'none';
+        }
+    }
+
+    async function deletePool(poolId, poolName) {
+        if (!confirm(`Are you sure you want to delete pool "${poolName}"?\n\nAgents in this pool will not be deleted but will become unassigned.`)) {
+            return;
+        }
+        
+        try {
+            const response = await fetch(`/api/agentpools/${poolId}`, {
+                method: 'DELETE'
+            });
+            
+            if (!response.ok) throw new Error('Failed to delete pool');
+            
+            loadPools();
+        } catch (error) {
+            console.error('Error deleting pool:', error);
+            alert('Failed to delete pool. Please try again.');
+        }
+    }
+
+    function escapeHtml(text) {
+        if (!text) return '';
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+</script>

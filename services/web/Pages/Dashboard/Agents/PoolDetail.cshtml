@@ -1,0 +1,1777 @@
+@page
+@model CloudOps.Web.Pages.Dashboard.Agents.PoolDetailModel
+@{
+    ViewData["Title"] = "Pool Details";
+    Layout = "Shared/_DashboardLayout";
+}
+
+<div class="page-header">
+    <div class="breadcrumb">
+        <a href="/Dashboard/Agents/Pools" class="breadcrumb-link">
+            <i class="fas fa-layer-group"></i>
+            Agent Pools
+        </a>
+        <i class="fas fa-chevron-right breadcrumb-separator"></i>
+        <span id="poolNameBreadcrumb" class="breadcrumb-current">Loading...</span>
+    </div>
+</div>
+
+<div class="pool-header">
+    <div class="pool-info">
+        <h1 id="poolName" class="pool-title">Loading...</h1>
+        <p id="poolDescription" class="pool-description"></p>
+    </div>
+    <div class="pool-actions">
+        <button type="button" class="btn btn-primary" onclick="showAddAgentModal()">
+            <i class="fas fa-plus"></i>
+            <span>New agent</span>
+        </button>
+    </div>
+</div>
+
+<div class="tabs">
+    <button class="tab active" data-tab="agents" onclick="switchTab('agents')">
+        <i class="fas fa-server"></i>
+        Agents
+        <span id="agentCount" class="tab-badge">0</span>
+    </button>
+    <button class="tab" data-tab="jobs" onclick="switchTab('jobs')">
+        <i class="fas fa-tasks"></i>
+        Jobs
+        <span id="jobCount" class="tab-badge">0</span>
+    </button>
+    <button class="tab" data-tab="settings" onclick="switchTab('settings')">
+        <i class="fas fa-cog"></i>
+        Settings
+    </button>
+</div>
+
+<div id="agentsTab" class="tab-content active">
+    <div class="agents-toolbar">
+        <div class="search-box">
+            <i class="fas fa-search"></i>
+            <input type="text" id="agentSearch" placeholder="Filter agents..." oninput="filterAgents()">
+        </div>
+        <div class="filter-labels" id="labelFilters"></div>
+    </div>
+    
+    <div id="agentsList" class="agents-list">
+        <div class="loading-state">
+            <i class="fas fa-spinner fa-spin"></i>
+            <span>Loading agents...</span>
+        </div>
+    </div>
+</div>
+
+<div id="jobsTab" class="tab-content">
+    <div class="jobs-toolbar">
+        <button type="button" class="btn btn-primary" onclick="showCreateJobModal()">
+            <i class="fas fa-plus"></i>
+            Queue new job
+        </button>
+    </div>
+    
+    <div id="jobsList" class="jobs-list">
+        <div class="loading-state">
+            <i class="fas fa-spinner fa-spin"></i>
+            <span>Loading jobs...</span>
+        </div>
+    </div>
+</div>
+
+<div id="settingsTab" class="tab-content">
+    <div class="settings-section">
+        <h3>Pool Settings</h3>
+        <form id="poolSettingsForm" onsubmit="updatePoolSettings(event)">
+            <div class="form-group">
+                <label for="editPoolName">Pool name</label>
+                <input type="text" id="editPoolName" name="name" required maxlength="100">
+            </div>
+            <div class="form-group">
+                <label for="editPoolDescription">Description</label>
+                <textarea id="editPoolDescription" name="description" rows="3" maxlength="500"></textarea>
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Save changes</button>
+            </div>
+        </form>
+    </div>
+    
+    <div class="settings-section danger-zone">
+        <h3>Danger Zone</h3>
+        <div class="danger-action">
+            <div>
+                <strong>Delete this pool</strong>
+                <p>Once deleted, the pool cannot be recovered. Agents will be unassigned but not deleted.</p>
+            </div>
+            <button type="button" class="btn btn-danger" onclick="deleteCurrentPool()">Delete pool</button>
+        </div>
+    </div>
+</div>
+
+<div id="addAgentModal" class="modal">
+    <div class="modal-backdrop" onclick="closeAddAgentModal()"></div>
+    <div class="modal-content modal-lg">
+        <div class="modal-header">
+            <h2>Register New Agent</h2>
+            <button type="button" class="modal-close" onclick="closeAddAgentModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <form id="addAgentForm" onsubmit="createAgent(event)">
+                <div class="form-section">
+                    <h4>Agent Information</h4>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="agentName">Agent name <span class="required">*</span></label>
+                            <input type="text" id="agentName" name="name" required
+                                   placeholder="e.g., agent-prod-01" maxlength="100">
+                        </div>
+                        <div class="form-group">
+                            <label for="maxParallelJobs">Max parallel jobs</label>
+                            <input type="number" id="maxParallelJobs" name="maxParallelJobs" 
+                                   value="2" min="1" max="10">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="agentDescription">Description</label>
+                        <textarea id="agentDescription" name="description" rows="2"
+                                  placeholder="Optional description..." maxlength="500"></textarea>
+                    </div>
+                </div>
+                
+                <div class="form-section">
+                    <h4>Machine Information</h4>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="hostName">Hostname</label>
+                            <input type="text" id="hostName" name="hostName" placeholder="e.g., server-01.corp.local">
+                        </div>
+                        <div class="form-group">
+                            <label for="ipAddress">IP Address</label>
+                            <input type="text" id="ipAddress" name="ipAddress" placeholder="e.g., 192.168.1.100">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="operatingSystem">Operating System</label>
+                            <input type="text" id="operatingSystem" name="operatingSystem" placeholder="e.g., Windows Server 2022">
+                        </div>
+                        <div class="form-group">
+                            <label for="architecture">Architecture</label>
+                            <select id="architecture" name="architecture">
+                                <option value="">Select...</option>
+                                <option value="x64">x64 (64-bit)</option>
+                                <option value="x86">x86 (32-bit)</option>
+                                <option value="arm64">ARM64</option>
+                                <option value="arm">ARM</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="cpuModel">CPU Model</label>
+                            <input type="text" id="cpuModel" name="cpuModel" placeholder="e.g., Intel Xeon E5-2680">
+                        </div>
+                        <div class="form-group">
+                            <label for="logicalCores">Logical Cores</label>
+                            <input type="number" id="logicalCores" name="logicalCores" min="1" max="256" placeholder="e.g., 8">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="memoryGb">Memory (GB)</label>
+                            <input type="number" id="memoryGb" name="memoryGb" min="0.5" max="4096" step="0.5" placeholder="e.g., 16">
+                        </div>
+                        <div class="form-group">
+                            <label for="diskSpaceGb">Disk Space (GB)</label>
+                            <input type="number" id="diskSpaceGb" name="diskSpaceGb" min="1" max="100000" placeholder="e.g., 500">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-section">
+                    <h4>Labels</h4>
+                    <p class="form-hint">Add labels to identify capabilities and filter agents</p>
+                    <div id="labelsContainer" class="labels-input-container">
+                        <div class="label-input-row">
+                            <input type="text" placeholder="Label name" class="label-name">
+                            <input type="text" placeholder="Value (optional)" class="label-value">
+                            <button type="button" class="btn-icon" onclick="removeLabelRow(this)">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-sm btn-secondary" onclick="addLabelRow()">
+                        <i class="fas fa-plus"></i>
+                        Add label
+                    </button>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeAddAgentModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary" id="createAgentBtn">
+                        <span class="btn-text">Register agent</span>
+                        <i class="fas fa-spinner fa-spin btn-spinner" style="display: none;"></i>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div id="agentApiKeyModal" class="modal">
+    <div class="modal-backdrop" onclick="closeAgentApiKeyModal()"></div>
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Agent Registered Successfully</h2>
+            <button type="button" class="modal-close" onclick="closeAgentApiKeyModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <div class="success-message">
+                <i class="fas fa-check-circle"></i>
+                <span>Agent has been registered and is ready to connect.</span>
+            </div>
+            <div class="api-key-section">
+                <label>API Key</label>
+                <p class="api-key-warning">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    Copy this key now. It will not be shown again!
+                </p>
+                <div class="api-key-display">
+                    <code id="agentApiKey"></code>
+                    <button type="button" class="btn-icon" onclick="copyApiKey()">
+                        <i class="fas fa-copy"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="form-actions">
+                <button type="button" class="btn btn-primary" onclick="closeAgentApiKeyModal()">Done</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="agentDetailModal" class="modal">
+    <div class="modal-backdrop" onclick="closeAgentDetailModal()"></div>
+    <div class="modal-content modal-lg">
+        <div class="modal-header">
+            <h2 id="agentDetailName">Agent Details</h2>
+            <button type="button" class="modal-close" onclick="closeAgentDetailModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body" id="agentDetailContent">
+        </div>
+    </div>
+</div>
+
+<div id="createJobModal" class="modal">
+    <div class="modal-backdrop" onclick="closeCreateJobModal()"></div>
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Queue New Job</h2>
+            <button type="button" class="modal-close" onclick="closeCreateJobModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <form id="createJobForm" onsubmit="createJob(event)">
+                <div class="form-group">
+                    <label for="jobType">Job Type <span class="required">*</span></label>
+                    <select id="jobType" name="jobType" required>
+                        <option value="">Select type...</option>
+                        <option value="DbBackup">Database Backup</option>
+                        <option value="DbRestore">Database Restore</option>
+                        <option value="FileSync">File Sync</option>
+                        <option value="Script">Script Execution</option>
+                        <option value="Custom">Custom</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="jobName">Job Name <span class="required">*</span></label>
+                    <input type="text" id="jobName" name="jobName" required
+                           placeholder="e.g., Daily backup - Production DB" maxlength="200">
+                </div>
+                <div class="form-group">
+                    <label for="jobDescription">Description</label>
+                    <textarea id="jobDescription" name="description" rows="2"
+                              placeholder="Optional description..." maxlength="1000"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="targetAgent">Target Agent</label>
+                    <select id="targetAgent" name="targetAgent">
+                        <option value="">Any available agent in pool</option>
+                    </select>
+                    <span class="form-hint">Leave empty to let any agent pick up the job</span>
+                </div>
+                <div class="form-group">
+                    <label for="jobPriority">Priority</label>
+                    <select id="jobPriority" name="priority">
+                        <option value="0">Normal</option>
+                        <option value="1">High</option>
+                        <option value="2">Critical</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="jobParameters">Parameters (JSON)</label>
+                    <textarea id="jobParameters" name="parameters" rows="4"
+                              placeholder='{"key": "value"}'></textarea>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeCreateJobModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary" id="createJobBtn">Queue job</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+    .breadcrumb {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .breadcrumb-link {
+        color: var(--primary);
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .breadcrumb-link:hover {
+        text-decoration: underline;
+    }
+    
+    .breadcrumb-separator {
+        color: var(--text-muted);
+        font-size: 0.75rem;
+    }
+    
+    .breadcrumb-current {
+        color: var(--text-primary);
+        font-weight: 500;
+    }
+    
+    .pool-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 2rem;
+        padding-bottom: 1.5rem;
+        border-bottom: 1px solid var(--border-subtle);
+    }
+    
+    .pool-title {
+        font-size: 1.75rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin: 0 0 0.5rem;
+    }
+    
+    .pool-description {
+        color: var(--text-secondary);
+        margin: 0;
+    }
+    
+    .tabs {
+        display: flex;
+        gap: 0.25rem;
+        border-bottom: 1px solid var(--border-subtle);
+        margin-bottom: 1.5rem;
+    }
+    
+    .tab {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.75rem 1.25rem;
+        background: transparent;
+        border: none;
+        color: var(--text-secondary);
+        font-size: 0.95rem;
+        cursor: pointer;
+        position: relative;
+        transition: all 0.2s ease;
+    }
+    
+    .tab:hover {
+        color: var(--text-primary);
+    }
+    
+    .tab.active {
+        color: var(--primary);
+    }
+    
+    .tab.active::after {
+        content: '';
+        position: absolute;
+        bottom: -1px;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: var(--primary);
+    }
+    
+    .tab-badge {
+        background: var(--bg-darker);
+        padding: 0.15rem 0.5rem;
+        border-radius: 10px;
+        font-size: 0.75rem;
+        font-weight: 500;
+    }
+    
+    .tab.active .tab-badge {
+        background: rgba(45, 212, 191, 0.15);
+        color: var(--primary);
+    }
+    
+    .tab-content {
+        display: none;
+    }
+    
+    .tab-content.active {
+        display: block;
+    }
+    
+    .agents-toolbar {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+        flex-wrap: wrap;
+    }
+    
+    .search-box {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.625rem 1rem;
+        background: var(--card-bg);
+        border: 1px solid var(--border-subtle);
+        border-radius: 8px;
+        min-width: 250px;
+    }
+    
+    .search-box i {
+        color: var(--text-muted);
+    }
+    
+    .search-box input {
+        flex: 1;
+        background: transparent;
+        border: none;
+        color: var(--text-primary);
+        font-size: 0.9rem;
+        outline: none;
+    }
+    
+    .search-box input::placeholder {
+        color: var(--text-muted);
+    }
+    
+    .filter-labels {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+    
+    .filter-label {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        padding: 0.35rem 0.75rem;
+        background: var(--bg-darker);
+        border: 1px solid var(--border-subtle);
+        border-radius: 20px;
+        font-size: 0.8rem;
+        color: var(--text-secondary);
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    
+    .filter-label:hover,
+    .filter-label.active {
+        background: rgba(45, 212, 191, 0.15);
+        border-color: var(--primary);
+        color: var(--primary);
+    }
+    
+    .agents-list {
+        display: grid;
+        gap: 1rem;
+    }
+    
+    .agent-card {
+        background: var(--card-bg);
+        border: 1px solid var(--border-subtle);
+        border-radius: 12px;
+        padding: 1.25rem;
+        transition: all 0.2s ease;
+        cursor: pointer;
+    }
+    
+    .agent-card:hover {
+        border-color: var(--primary);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+    
+    .agent-card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 1rem;
+    }
+    
+    .agent-info {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+    
+    .agent-status-indicator {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+    }
+    
+    .agent-status-indicator.online {
+        background: var(--success);
+        box-shadow: 0 0 8px rgba(34, 197, 94, 0.5);
+    }
+    
+    .agent-status-indicator.offline {
+        background: var(--text-muted);
+    }
+    
+    .agent-status-indicator.busy {
+        background: #fbbf24;
+        box-shadow: 0 0 8px rgba(251, 191, 36, 0.5);
+    }
+    
+    .agent-name {
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+    
+    .agent-status-badge {
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 500;
+        text-transform: uppercase;
+    }
+    
+    .agent-status-badge.online {
+        background: rgba(34, 197, 94, 0.15);
+        color: #4ade80;
+    }
+    
+    .agent-status-badge.offline {
+        background: var(--bg-darker);
+        color: var(--text-muted);
+    }
+    
+    .agent-status-badge.busy {
+        background: rgba(251, 191, 36, 0.15);
+        color: #fbbf24;
+    }
+    
+    .agent-card-body {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 1rem;
+    }
+    
+    .agent-detail {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+    
+    .agent-detail-label {
+        font-size: 0.75rem;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+    
+    .agent-detail-value {
+        color: var(--text-primary);
+        font-size: 0.9rem;
+    }
+    
+    .agent-labels {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.35rem;
+        margin-top: 0.75rem;
+        padding-top: 0.75rem;
+        border-top: 1px solid var(--border-subtle);
+    }
+    
+    .agent-label {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        padding: 0.2rem 0.5rem;
+        background: var(--bg-darker);
+        border-radius: 4px;
+        font-size: 0.75rem;
+        color: var(--text-secondary);
+    }
+    
+    .agent-label-name {
+        color: var(--primary);
+    }
+    
+    .loading-state {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.75rem;
+        padding: 3rem;
+        color: var(--text-secondary);
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
+        background: var(--card-bg);
+        border: 1px solid var(--border-subtle);
+        border-radius: 12px;
+    }
+    
+    .empty-state i {
+        font-size: 3rem;
+        color: var(--text-muted);
+        margin-bottom: 1rem;
+    }
+    
+    .empty-state h3 {
+        color: var(--text-primary);
+        margin: 0 0 0.5rem;
+    }
+    
+    .empty-state p {
+        color: var(--text-secondary);
+        margin: 0 0 1.5rem;
+    }
+    
+    .jobs-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .job-item {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 1rem 1.25rem;
+        background: var(--card-bg);
+        border: 1px solid var(--border-subtle);
+        border-radius: 8px;
+    }
+    
+    .job-status-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.9rem;
+    }
+    
+    .job-status-icon.pending {
+        background: var(--bg-darker);
+        color: var(--text-muted);
+    }
+    
+    .job-status-icon.running {
+        background: rgba(59, 130, 246, 0.15);
+        color: #60a5fa;
+    }
+    
+    .job-status-icon.completed {
+        background: rgba(34, 197, 94, 0.15);
+        color: #4ade80;
+    }
+    
+    .job-status-icon.failed {
+        background: rgba(239, 68, 68, 0.15);
+        color: #f87171;
+    }
+    
+    .job-info {
+        flex: 1;
+    }
+    
+    .job-name {
+        font-weight: 500;
+        color: var(--text-primary);
+    }
+    
+    .job-meta {
+        display: flex;
+        gap: 1rem;
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+        margin-top: 0.25rem;
+    }
+    
+    .job-progress {
+        width: 100px;
+    }
+    
+    .job-progress-bar {
+        height: 4px;
+        background: var(--bg-darker);
+        border-radius: 2px;
+        overflow: hidden;
+    }
+    
+    .job-progress-fill {
+        height: 100%;
+        background: var(--primary);
+        transition: width 0.3s ease;
+    }
+    
+    .settings-section {
+        background: var(--card-bg);
+        border: 1px solid var(--border-subtle);
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .settings-section h3 {
+        margin: 0 0 1.5rem;
+        color: var(--text-primary);
+        font-size: 1.1rem;
+    }
+    
+    .danger-zone {
+        border-color: rgba(239, 68, 68, 0.3);
+    }
+    
+    .danger-zone h3 {
+        color: #f87171;
+    }
+    
+    .danger-action {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 1rem;
+    }
+    
+    .danger-action p {
+        color: var(--text-secondary);
+        margin: 0.25rem 0 0;
+        font-size: 0.9rem;
+    }
+    
+    .btn-danger {
+        background: rgba(239, 68, 68, 0.15);
+        color: #f87171;
+        border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+    
+    .btn-danger:hover {
+        background: rgba(239, 68, 68, 0.25);
+    }
+    
+    .modal-lg {
+        max-width: 700px;
+    }
+    
+    .form-section {
+        margin-bottom: 1.5rem;
+        padding-bottom: 1.5rem;
+        border-bottom: 1px solid var(--border-subtle);
+    }
+    
+    .form-section:last-of-type {
+        border-bottom: none;
+    }
+    
+    .form-section h4 {
+        margin: 0 0 1rem;
+        color: var(--text-primary);
+        font-size: 1rem;
+    }
+    
+    .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+    }
+    
+    .labels-input-container {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        margin-bottom: 0.75rem;
+    }
+    
+    .label-input-row {
+        display: flex;
+        gap: 0.5rem;
+    }
+    
+    .label-input-row input {
+        flex: 1;
+        padding: 0.5rem 0.75rem;
+        background: var(--bg-darker);
+        border: 1px solid var(--border-subtle);
+        border-radius: 6px;
+        color: var(--text-primary);
+        font-size: 0.9rem;
+    }
+    
+    .label-input-row input:focus {
+        outline: none;
+        border-color: var(--primary);
+    }
+    
+    .btn-sm {
+        padding: 0.4rem 0.75rem;
+        font-size: 0.85rem;
+    }
+    
+    .success-message {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 1rem;
+        background: rgba(34, 197, 94, 0.1);
+        border: 1px solid rgba(34, 197, 94, 0.3);
+        border-radius: 8px;
+        color: #4ade80;
+        margin-bottom: 1.5rem;
+    }
+    
+    .api-key-section {
+        margin-bottom: 1.5rem;
+    }
+    
+    .api-key-section label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 500;
+        color: var(--text-primary);
+    }
+    
+    .api-key-warning {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: #fbbf24;
+        font-size: 0.85rem;
+        margin-bottom: 0.75rem;
+    }
+    
+    .api-key-display {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.75rem 1rem;
+        background: var(--bg-darker);
+        border-radius: 8px;
+    }
+    
+    .api-key-display code {
+        flex: 1;
+        font-family: 'Fira Code', monospace;
+        font-size: 0.85rem;
+        color: var(--primary);
+        word-break: break-all;
+    }
+    
+    .jobs-toolbar {
+        margin-bottom: 1.5rem;
+    }
+    
+    .form-group select {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        background: var(--bg-darker);
+        border: 1px solid var(--border-subtle);
+        border-radius: 8px;
+        color: var(--text-primary);
+        font-size: 0.95rem;
+    }
+    
+    .form-group select:focus {
+        outline: none;
+        border-color: var(--primary);
+    }
+    
+    .form-group input[type="text"],
+    .form-group input[type="number"],
+    .form-group textarea {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        background: var(--bg-darker);
+        border: 1px solid var(--border-subtle);
+        border-radius: 8px;
+        color: var(--text-primary);
+        font-size: 0.95rem;
+    }
+    
+    .form-group input[type="text"]:focus,
+    .form-group input[type="number"]:focus,
+    .form-group textarea:focus {
+        outline: none;
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(45, 212, 191, 0.15);
+    }
+    
+    .form-group input::placeholder,
+    .form-group textarea::placeholder {
+        color: var(--text-muted);
+    }
+    
+    .form-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 500;
+        color: var(--text-primary);
+    }
+    
+    .form-group .required {
+        color: #f87171;
+    }
+    
+    .form-hint {
+        display: block;
+        margin-top: 0.35rem;
+        font-size: 0.8rem;
+        color: var(--text-secondary);
+    }
+    
+    .form-actions {
+        display: flex;
+        gap: 0.75rem;
+        justify-content: flex-end;
+        margin-top: 1.5rem;
+        padding-top: 1.25rem;
+        border-top: 1px solid var(--border-subtle);
+    }
+    
+    .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.625rem 1.25rem;
+        border-radius: 8px;
+        font-weight: 500;
+        font-size: 0.9rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        border: none;
+    }
+    
+    .btn-primary {
+        background: var(--primary);
+        color: var(--bg-darkest);
+    }
+    
+    .btn-primary:hover {
+        background: var(--primary-hover);
+    }
+    
+    .btn-secondary {
+        background: var(--bg-darker);
+        color: var(--text-primary);
+        border: 1px solid var(--border-subtle);
+    }
+    
+    .btn-secondary:hover {
+        background: var(--border-subtle);
+    }
+    
+    .btn-icon {
+        width: 32px;
+        height: 32px;
+        padding: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 6px;
+        background: transparent;
+        border: 1px solid var(--border-subtle);
+        color: var(--text-secondary);
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    
+    .btn-icon:hover {
+        background: var(--bg-darker);
+        color: var(--text-primary);
+    }
+    
+    .modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 1000;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .modal.active {
+        display: flex;
+    }
+    
+    .modal-backdrop {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.6);
+        backdrop-filter: blur(4px);
+    }
+    
+    .modal-content {
+        position: relative;
+        background: var(--card-bg);
+        border-radius: 12px;
+        border: 1px solid var(--border-subtle);
+        width: 100%;
+        max-width: 500px;
+        max-height: 90vh;
+        overflow-y: auto;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    }
+    
+    .modal-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 1.25rem 1.5rem;
+        border-bottom: 1px solid var(--border-subtle);
+    }
+    
+    .modal-header h2 {
+        margin: 0;
+        font-size: 1.25rem;
+        color: var(--text-primary);
+    }
+    
+    .modal-close {
+        background: transparent;
+        border: none;
+        color: var(--text-secondary);
+        cursor: pointer;
+        padding: 0.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 6px;
+        transition: all 0.2s ease;
+    }
+    
+    .modal-close:hover {
+        background: var(--bg-darker);
+        color: var(--text-primary);
+    }
+    
+    .modal-body {
+        padding: 1.5rem;
+    }
+</style>
+
+<script>
+    let currentPoolId = null;
+    let currentPool = null;
+    let allAgents = [];
+    let allJobs = [];
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        currentPoolId = urlParams.get('id');
+        
+        if (!currentPoolId) {
+            window.location.href = '/Dashboard/Agents/Pools';
+            return;
+        }
+        
+        loadPoolDetails();
+    });
+
+    async function loadPoolDetails() {
+        try {
+            const response = await fetch(`/api/agentpools/${currentPoolId}`);
+            if (!response.ok) throw new Error('Pool not found');
+            
+            currentPool = await response.json();
+            
+            document.getElementById('poolNameBreadcrumb').textContent = currentPool.name;
+            document.getElementById('poolName').textContent = currentPool.name;
+            document.getElementById('poolDescription').textContent = currentPool.description || '';
+            document.getElementById('editPoolName').value = currentPool.name;
+            document.getElementById('editPoolDescription').value = currentPool.description || '';
+            
+            await Promise.all([loadAgents(), loadJobs()]);
+        } catch (error) {
+            console.error('Error loading pool:', error);
+            alert('Failed to load pool details. Redirecting to pools list.');
+            window.location.href = '/Dashboard/Agents/Pools';
+        }
+    }
+
+    async function loadAgents() {
+        const container = document.getElementById('agentsList');
+        
+        try {
+            const response = await fetch(`/api/agents?poolId=${currentPoolId}`);
+            if (!response.ok) throw new Error('Failed to load agents');
+            
+            allAgents = await response.json();
+            document.getElementById('agentCount').textContent = allAgents.length;
+            
+            renderAgents(allAgents);
+            updateLabelFilters();
+            updateTargetAgentDropdown();
+        } catch (error) {
+            console.error('Error loading agents:', error);
+            container.innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <h3>Failed to load agents</h3>
+                    <p>Please try refreshing the page.</p>
+                </div>
+            `;
+        }
+    }
+
+    function renderAgents(agents) {
+        const container = document.getElementById('agentsList');
+        
+        if (agents.length === 0) {
+            container.innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-server"></i>
+                    <h3>No agents in this pool</h3>
+                    <p>Register your first agent to start running jobs.</p>
+                    <button type="button" class="btn btn-primary" onclick="showAddAgentModal()">
+                        <i class="fas fa-plus"></i>
+                        Register agent
+                    </button>
+                </div>
+            `;
+            return;
+        }
+        
+        container.innerHTML = agents.map(agent => `
+            <div class="agent-card" onclick="showAgentDetail('${agent.id}')">
+                <div class="agent-card-header">
+                    <div class="agent-info">
+                        <span class="agent-status-indicator ${agent.status.toLowerCase()}"></span>
+                        <span class="agent-name">${escapeHtml(agent.name)}</span>
+                    </div>
+                    <span class="agent-status-badge ${agent.status.toLowerCase()}">${agent.status}</span>
+                </div>
+                <div class="agent-card-body">
+                    <div class="agent-detail">
+                        <span class="agent-detail-label">Hostname</span>
+                        <span class="agent-detail-value">${agent.hostName || '-'}</span>
+                    </div>
+                    <div class="agent-detail">
+                        <span class="agent-detail-label">IP Address</span>
+                        <span class="agent-detail-value">${agent.ipAddress || '-'}</span>
+                    </div>
+                    <div class="agent-detail">
+                        <span class="agent-detail-label">OS</span>
+                        <span class="agent-detail-value">${agent.operatingSystem || '-'}</span>
+                    </div>
+                    <div class="agent-detail">
+                        <span class="agent-detail-label">Capacity</span>
+                        <span class="agent-detail-value">${agent.currentRunningJobs} / ${agent.maxParallelJobs} jobs</span>
+                    </div>
+                    <div class="agent-detail">
+                        <span class="agent-detail-label">Last Heartbeat</span>
+                        <span class="agent-detail-value">${agent.lastHeartbeat ? formatTimeAgo(agent.lastHeartbeat) : 'Never'}</span>
+                    </div>
+                </div>
+                ${agent.labels && agent.labels.length > 0 ? `
+                    <div class="agent-labels">
+                        ${agent.labels.map(l => `
+                            <span class="agent-label">
+                                <span class="agent-label-name">${escapeHtml(l.name)}</span>${l.value ? `: ${escapeHtml(l.value)}` : ''}
+                            </span>
+                        `).join('')}
+                    </div>
+                ` : ''}
+            </div>
+        `).join('');
+    }
+
+    function updateLabelFilters() {
+        const container = document.getElementById('labelFilters');
+        const uniqueLabels = new Map();
+        
+        allAgents.forEach(agent => {
+            if (agent.labels) {
+                agent.labels.forEach(label => {
+                    uniqueLabels.set(label.name, (uniqueLabels.get(label.name) || 0) + 1);
+                });
+            }
+        });
+        
+        container.innerHTML = Array.from(uniqueLabels.entries()).map(([name, count]) => `
+            <button type="button" class="filter-label" data-label="${escapeHtml(name)}" onclick="toggleLabelFilter(this)">
+                ${escapeHtml(name)} (${count})
+            </button>
+        `).join('');
+    }
+
+    function toggleLabelFilter(btn) {
+        btn.classList.toggle('active');
+        filterAgents();
+    }
+
+    function filterAgents() {
+        const searchTerm = document.getElementById('agentSearch').value.toLowerCase();
+        const activeLabels = Array.from(document.querySelectorAll('.filter-label.active'))
+            .map(btn => btn.dataset.label);
+        
+        const filtered = allAgents.filter(agent => {
+            const matchesSearch = agent.name.toLowerCase().includes(searchTerm) ||
+                (agent.hostName && agent.hostName.toLowerCase().includes(searchTerm)) ||
+                (agent.ipAddress && agent.ipAddress.toLowerCase().includes(searchTerm));
+            
+            const matchesLabels = activeLabels.length === 0 ||
+                (agent.labels && activeLabels.every(label => 
+                    agent.labels.some(l => l.name === label)));
+            
+            return matchesSearch && matchesLabels;
+        });
+        
+        renderAgents(filtered);
+    }
+
+    async function loadJobs() {
+        try {
+            const response = await fetch(`/api/jobs?poolId=${currentPoolId}`);
+            if (!response.ok) throw new Error('Failed to load jobs');
+            
+            allJobs = await response.json();
+            document.getElementById('jobCount').textContent = allJobs.length;
+            
+            renderJobs(allJobs);
+        } catch (error) {
+            console.error('Error loading jobs:', error);
+        }
+    }
+
+    function renderJobs(jobs) {
+        const container = document.getElementById('jobsList');
+        
+        if (jobs.length === 0) {
+            container.innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-tasks"></i>
+                    <h3>No jobs yet</h3>
+                    <p>Queue your first job to run on agents in this pool.</p>
+                    <button type="button" class="btn btn-primary" onclick="showCreateJobModal()">
+                        <i class="fas fa-plus"></i>
+                        Queue job
+                    </button>
+                </div>
+            `;
+            return;
+        }
+        
+        container.innerHTML = jobs.map(job => `
+            <div class="job-item">
+                <div class="job-status-icon ${job.status.toLowerCase()}">
+                    <i class="fas ${getJobStatusIcon(job.status)}"></i>
+                </div>
+                <div class="job-info">
+                    <div class="job-name">${escapeHtml(job.jobName)}</div>
+                    <div class="job-meta">
+                        <span><i class="fas fa-tag"></i> ${job.jobType}</span>
+                        <span><i class="fas fa-server"></i> ${job.agentName || 'Unassigned'}</span>
+                        <span><i class="fas fa-clock"></i> ${formatTimeAgo(job.createdAt)}</span>
+                    </div>
+                </div>
+                ${job.status === 'Running' ? `
+                    <div class="job-progress">
+                        <div class="job-progress-bar">
+                            <div class="job-progress-fill" style="width: ${job.progress}%"></div>
+                        </div>
+                    </div>
+                ` : ''}
+            </div>
+        `).join('');
+    }
+
+    function getJobStatusIcon(status) {
+        switch (status.toLowerCase()) {
+            case 'pending': return 'fa-clock';
+            case 'running': return 'fa-spinner fa-spin';
+            case 'completed': return 'fa-check';
+            case 'failed': return 'fa-times';
+            case 'cancelled': return 'fa-ban';
+            default: return 'fa-question';
+        }
+    }
+
+    function switchTab(tabName) {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        
+        document.querySelector(`.tab[data-tab="${tabName}"]`).classList.add('active');
+        document.getElementById(`${tabName}Tab`).classList.add('active');
+    }
+
+    function showAddAgentModal() {
+        document.getElementById('addAgentModal').classList.add('active');
+        document.getElementById('agentName').focus();
+    }
+
+    function closeAddAgentModal() {
+        document.getElementById('addAgentModal').classList.remove('active');
+        document.getElementById('addAgentForm').reset();
+        document.getElementById('labelsContainer').innerHTML = `
+            <div class="label-input-row">
+                <input type="text" placeholder="Label name" class="label-name">
+                <input type="text" placeholder="Value (optional)" class="label-value">
+                <button type="button" class="btn-icon" onclick="removeLabelRow(this)">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        `;
+    }
+
+    function addLabelRow() {
+        const container = document.getElementById('labelsContainer');
+        const row = document.createElement('div');
+        row.className = 'label-input-row';
+        row.innerHTML = `
+            <input type="text" placeholder="Label name" class="label-name">
+            <input type="text" placeholder="Value (optional)" class="label-value">
+            <button type="button" class="btn-icon" onclick="removeLabelRow(this)">
+                <i class="fas fa-times"></i>
+            </button>
+        `;
+        container.appendChild(row);
+    }
+
+    function removeLabelRow(btn) {
+        const container = document.getElementById('labelsContainer');
+        if (container.children.length > 1) {
+            btn.closest('.label-input-row').remove();
+        }
+    }
+
+    async function createAgent(event) {
+        event.preventDefault();
+        
+        const btn = document.getElementById('createAgentBtn');
+        btn.disabled = true;
+        btn.querySelector('.btn-text').textContent = 'Registering...';
+        btn.querySelector('.btn-spinner').style.display = 'inline-block';
+        
+        const labels = [];
+        document.querySelectorAll('.label-input-row').forEach(row => {
+            const name = row.querySelector('.label-name').value.trim();
+            if (name) {
+                labels.push({
+                    name: name,
+                    value: row.querySelector('.label-value').value.trim() || null
+                });
+            }
+        });
+        
+        try {
+            const response = await fetch('/api/agents', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    name: document.getElementById('agentName').value,
+                    description: document.getElementById('agentDescription').value || null,
+                    poolId: currentPoolId,
+                    maxParallelJobs: parseInt(document.getElementById('maxParallelJobs').value) || 2,
+                    hostName: document.getElementById('hostName').value || null,
+                    ipAddress: document.getElementById('ipAddress').value || null,
+                    operatingSystem: document.getElementById('operatingSystem').value || null,
+                    architecture: document.getElementById('architecture').value || null,
+                    cpuModel: document.getElementById('cpuModel').value || null,
+                    logicalCores: document.getElementById('logicalCores').value ? parseInt(document.getElementById('logicalCores').value) : null,
+                    memoryGb: document.getElementById('memoryGb').value ? parseFloat(document.getElementById('memoryGb').value) : null,
+                    diskSpaceGb: document.getElementById('diskSpaceGb').value ? parseFloat(document.getElementById('diskSpaceGb').value) : null,
+                    labels: labels
+                })
+            });
+            
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.error || 'Failed to register agent');
+            }
+            
+            const agent = await response.json();
+            
+            closeAddAgentModal();
+            
+            document.getElementById('agentApiKey').textContent = agent.apiKey;
+            document.getElementById('agentApiKeyModal').classList.add('active');
+            
+            loadAgents();
+        } catch (error) {
+            console.error('Error creating agent:', error);
+            alert('Failed to register agent: ' + error.message);
+        } finally {
+            btn.disabled = false;
+            btn.querySelector('.btn-text').textContent = 'Register agent';
+            btn.querySelector('.btn-spinner').style.display = 'none';
+        }
+    }
+
+    function closeAgentApiKeyModal() {
+        document.getElementById('agentApiKeyModal').classList.remove('active');
+    }
+
+    function copyApiKey() {
+        const apiKey = document.getElementById('agentApiKey').textContent;
+        navigator.clipboard.writeText(apiKey).then(() => {
+            alert('API key copied to clipboard!');
+        });
+    }
+
+    function showAgentDetail(agentId) {
+        const agent = allAgents.find(a => a.id === agentId);
+        if (!agent) return;
+        
+        document.getElementById('agentDetailName').textContent = agent.name;
+        document.getElementById('agentDetailContent').innerHTML = `
+            <div class="agent-detail-grid">
+                <div class="detail-section">
+                    <h4>Status</h4>
+                    <div class="status-row">
+                        <span class="agent-status-indicator ${agent.status.toLowerCase()}"></span>
+                        <span class="agent-status-badge ${agent.status.toLowerCase()}">${agent.status}</span>
+                    </div>
+                </div>
+                
+                <div class="detail-section">
+                    <h4>Machine Information</h4>
+                    <div class="detail-grid">
+                        <div class="detail-item">
+                            <label>Hostname</label>
+                            <span>${agent.hostName || '-'}</span>
+                        </div>
+                        <div class="detail-item">
+                            <label>IP Address</label>
+                            <span>${agent.ipAddress || '-'}</span>
+                        </div>
+                        <div class="detail-item">
+                            <label>Operating System</label>
+                            <span>${agent.operatingSystem || '-'}</span>
+                        </div>
+                        <div class="detail-item">
+                            <label>Architecture</label>
+                            <span>${agent.architecture || '-'}</span>
+                        </div>
+                        <div class="detail-item">
+                            <label>CPU Model</label>
+                            <span>${agent.cpuModel || '-'}</span>
+                        </div>
+                        <div class="detail-item">
+                            <label>Logical Cores</label>
+                            <span>${agent.logicalCores || '-'}</span>
+                        </div>
+                        <div class="detail-item">
+                            <label>Memory</label>
+                            <span>${agent.memoryGb ? agent.memoryGb + ' GB' : '-'}</span>
+                        </div>
+                        <div class="detail-item">
+                            <label>Disk Space</label>
+                            <span>${agent.diskSpaceGb ? agent.diskSpaceGb + ' GB' : '-'}</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="detail-section">
+                    <h4>Capacity & Jobs</h4>
+                    <div class="detail-grid">
+                        <div class="detail-item">
+                            <label>Running Jobs</label>
+                            <span>${agent.currentRunningJobs} / ${agent.maxParallelJobs}</span>
+                        </div>
+                        <div class="detail-item">
+                            <label>Agent Version</label>
+                            <span>${agent.agentVersion || '-'}</span>
+                        </div>
+                        <div class="detail-item">
+                            <label>Last Heartbeat</label>
+                            <span>${agent.lastHeartbeat ? formatTimeAgo(agent.lastHeartbeat) : 'Never'}</span>
+                        </div>
+                        <div class="detail-item">
+                            <label>Registered</label>
+                            <span>${formatDate(agent.createdAt)}</span>
+                        </div>
+                    </div>
+                </div>
+                
+                ${agent.labels && agent.labels.length > 0 ? `
+                    <div class="detail-section">
+                        <h4>Labels</h4>
+                        <div class="labels-list">
+                            ${agent.labels.map(l => `
+                                <span class="label-chip">
+                                    <span class="label-chip-name">${escapeHtml(l.name)}</span>
+                                    ${l.value ? `<span class="label-chip-value">${escapeHtml(l.value)}</span>` : ''}
+                                </span>
+                            `).join('')}
+                        </div>
+                    </div>
+                ` : ''}
+            </div>
+            
+            <div class="detail-actions">
+                <button type="button" class="btn btn-danger" onclick="deleteAgent('${agent.id}', '${escapeHtml(agent.name)}')">
+                    <i class="fas fa-trash"></i>
+                    Delete agent
+                </button>
+            </div>
+        `;
+        
+        document.getElementById('agentDetailModal').classList.add('active');
+    }
+
+    function closeAgentDetailModal() {
+        document.getElementById('agentDetailModal').classList.remove('active');
+    }
+
+    async function deleteAgent(agentId, agentName) {
+        if (!confirm(`Are you sure you want to delete agent "${agentName}"?\n\nThis action cannot be undone.`)) {
+            return;
+        }
+        
+        try {
+            const response = await fetch(`/api/agents/${agentId}`, { method: 'DELETE' });
+            if (!response.ok) throw new Error('Failed to delete agent');
+            
+            closeAgentDetailModal();
+            loadAgents();
+        } catch (error) {
+            console.error('Error deleting agent:', error);
+            alert('Failed to delete agent. Please try again.');
+        }
+    }
+
+    function updateTargetAgentDropdown() {
+        const select = document.getElementById('targetAgent');
+        select.innerHTML = '<option value="">Any available agent in pool</option>';
+        
+        allAgents.forEach(agent => {
+            const option = document.createElement('option');
+            option.value = agent.id;
+            option.textContent = `${agent.name} (${agent.status})`;
+            select.appendChild(option);
+        });
+    }
+
+    function showCreateJobModal() {
+        document.getElementById('createJobModal').classList.add('active');
+    }
+
+    function closeCreateJobModal() {
+        document.getElementById('createJobModal').classList.remove('active');
+        document.getElementById('createJobForm').reset();
+    }
+
+    async function createJob(event) {
+        event.preventDefault();
+        
+        try {
+            const response = await fetch('/api/jobs', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    jobType: document.getElementById('jobType').value,
+                    jobName: document.getElementById('jobName').value,
+                    description: document.getElementById('jobDescription').value || null,
+                    targetAgentId: document.getElementById('targetAgent').value || null,
+                    targetPoolId: currentPoolId,
+                    priority: parseInt(document.getElementById('jobPriority').value) || 0,
+                    parameters: document.getElementById('jobParameters').value || null
+                })
+            });
+            
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.error || 'Failed to create job');
+            }
+            
+            closeCreateJobModal();
+            loadJobs();
+        } catch (error) {
+            console.error('Error creating job:', error);
+            alert('Failed to create job: ' + error.message);
+        }
+    }
+
+    async function updatePoolSettings(event) {
+        event.preventDefault();
+        
+        try {
+            const response = await fetch(`/api/agentpools/${currentPoolId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    name: document.getElementById('editPoolName').value,
+                    description: document.getElementById('editPoolDescription').value || null,
+                    isHosted: currentPool.isHosted
+                })
+            });
+            
+            if (!response.ok) throw new Error('Failed to update pool');
+            
+            loadPoolDetails();
+            alert('Pool settings updated successfully.');
+        } catch (error) {
+            console.error('Error updating pool:', error);
+            alert('Failed to update pool settings. Please try again.');
+        }
+    }
+
+    async function deleteCurrentPool() {
+        if (!confirm(`Are you sure you want to delete pool "${currentPool.name}"?\n\nAgents in this pool will be unassigned but not deleted.`)) {
+            return;
+        }
+        
+        try {
+            const response = await fetch(`/api/agentpools/${currentPoolId}`, { method: 'DELETE' });
+            if (!response.ok) throw new Error('Failed to delete pool');
+            
+            window.location.href = '/Dashboard/Agents/Pools';
+        } catch (error) {
+            console.error('Error deleting pool:', error);
+            alert('Failed to delete pool. Please try again.');
+        }
+    }
+
+    function formatTimeAgo(dateString) {
+        const date = new Date(dateString);
+        const now = new Date();
+        const seconds = Math.floor((now - date) / 1000);
+        
+        if (seconds < 60) return 'just now';
+        if (seconds < 3600) return Math.floor(seconds / 60) + 'm ago';
+        if (seconds < 86400) return Math.floor(seconds / 3600) + 'h ago';
+        return Math.floor(seconds / 86400) + 'd ago';
+    }
+
+    function formatDate(dateString) {
+        return new Date(dateString).toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric'
+        });
+    }
+
+    function escapeHtml(text) {
+        if (!text) return '';
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+</script>
+
+<style>
+    .agent-detail-grid {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+    
+    .detail-section h4 {
+        margin: 0 0 0.75rem;
+        color: var(--text-primary);
+        font-size: 0.95rem;
+    }
+    
+    .status-row {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+    
+    .detail-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+    }
+    
+    .detail-item {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+    
+    .detail-item label {
+        font-size: 0.75rem;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+    
+    .detail-item span {
+        color: var(--text-primary);
+    }
+    
+    .labels-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+    
+    .label-chip {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.35rem 0.75rem;
+        background: var(--bg-darker);
+        border: 1px solid var(--border-subtle);
+        border-radius: 20px;
+        font-size: 0.85rem;
+    }
+    
+    .label-chip-name {
+        color: var(--primary);
+        font-weight: 500;
+    }
+    
+    .label-chip-value {
+        color: var(--text-secondary);
+        margin-left: 0.35rem;
+    }
+    
+    .label-chip-value::before {
+        content: ': ';
+    }
+    
+    .detail-actions {
+        margin-top: 1.5rem;
+        padding-top: 1.25rem;
+        border-top: 1px solid var(--border-subtle);
+        display: flex;
+        justify-content: flex-end;
+    }
+</style>
