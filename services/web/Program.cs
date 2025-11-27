@@ -729,7 +729,7 @@ app.MapPost("/api/agents/{id:guid}/jobs/{jobId:guid}/progress", async (
             return Results.Unauthorized();
         }
 
-        var job = await agentService.UpdateJobProgressAsync(jobId, request);
+        var job = await agentService.UpdateJobProgressAsync(id, jobId, request);
         return job != null ? Results.Ok() : Results.NotFound();
     }
     catch (Exception ex)
@@ -761,7 +761,7 @@ app.MapPost("/api/agents/{id:guid}/jobs/{jobId:guid}/complete", async (
             return Results.Unauthorized();
         }
 
-        var job = await agentService.CompleteJobAsync(jobId, request);
+        var job = await agentService.CompleteJobAsync(id, jobId, request);
         return job != null ? Results.Ok() : Results.NotFound();
     }
     catch (Exception ex)

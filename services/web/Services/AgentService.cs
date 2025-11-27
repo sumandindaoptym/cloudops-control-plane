@@ -18,8 +18,8 @@ public interface IAgentService
     Task<AgentJob> CreateJobAsync(string userId, string userEmail, CreateJobRequest request);
     Task<List<AgentJob>> GetPendingJobsForAgentAsync(Guid agentId, int limit = 5);
     Task<AgentJob?> ClaimJobAsync(Guid agentId, Guid jobId);
-    Task<AgentJob?> UpdateJobProgressAsync(Guid jobId, JobProgressRequest request);
-    Task<AgentJob?> CompleteJobAsync(Guid jobId, JobCompleteRequest request);
+    Task<AgentJob?> UpdateJobProgressAsync(Guid agentId, Guid jobId, JobProgressRequest request);
+    Task<AgentJob?> CompleteJobAsync(Guid agentId, Guid jobId, JobCompleteRequest request);
     Task<List<AgentJob>> GetJobsAsync(string? userId = null, int limit = 100);
     Task<AgentJob?> GetJobByIdAsync(Guid jobId);
     Task<bool> CancelJobAsync(Guid jobId);
@@ -160,33 +160,51 @@ public class AgentService : IAgentService
 
     public async Task<AgentJob?> ClaimJobAsync(Guid agentId, Guid jobId)
     {
-        var job = await _context.AgentJobs.FindAsync(jobId);
-        if (job == null || job.Status != "Pending") return null;
-
-        if (job.AgentId != null && job.AgentId != agentId) return null;
-
-        job.AgentId = agentId;
-        job.Status = "Running";
-        job.StartedAt = DateTime.UtcNow;
-
         var agent = await _context.Agents.FindAsync(agentId);
-        if (agent != null)
+        if (agent == null || agent.Status == "Offline") return null;
+        
+        if (agent.CurrentRunningJobs >= agent.MaxParallelJobs)
         {
-            agent.CurrentRunningJobs++;
-            if (agent.CurrentRunningJobs > 0)
-                agent.Status = "Busy";
+            _logger.LogWarning("Agent {AgentId} at capacity ({Running}/{Max})", 
+                agentId, agent.CurrentRunningJobs, agent.MaxParallelJobs);
+            return null;
         }
 
+        var rowsAffected = await _context.AgentJobs
+            .Where(j => j.Id == jobId && j.Status == "Pending" && (j.AgentId == null || j.AgentId == agentId))
+            .ExecuteUpdateAsync(setters => setters
+                .SetProperty(j => j.AgentId, agentId)
+                .SetProperty(j => j.Status, "Running")
+                .SetProperty(j => j.StartedAt, DateTime.UtcNow));
+
+        if (rowsAffected == 0)
+        {
+            _logger.LogWarning("Job {JobId} could not be claimed - already taken or not pending", jobId);
+            return null;
+        }
+
+        agent.CurrentRunningJobs++;
+        if (agent.CurrentRunningJobs > 0)
+            agent.Status = "Busy";
+
         await _context.SaveChangesAsync();
-        
+
+        var job = await _context.AgentJobs.FindAsync(jobId);
         _logger.LogInformation("Job {JobId} claimed by agent {AgentId}", jobId, agentId);
         return job;
     }
 
-    public async Task<AgentJob?> UpdateJobProgressAsync(Guid jobId, JobProgressRequest request)
+    public async Task<AgentJob?> UpdateJobProgressAsync(Guid agentId, Guid jobId, JobProgressRequest request)
     {
         var job = await _context.AgentJobs.FindAsync(jobId);
         if (job == null || job.Status != "Running") return null;
+        
+        if (job.AgentId != agentId)
+        {
+            _logger.LogWarning("Agent {AgentId} attempted to update job {JobId} owned by {OwnerId}", 
+                agentId, jobId, job.AgentId);
+            return null;
+        }
 
         job.Progress = request.Progress;
         
@@ -201,10 +219,17 @@ public class AgentService : IAgentService
         return job;
     }
 
-    public async Task<AgentJob?> CompleteJobAsync(Guid jobId, JobCompleteRequest request)
+    public async Task<AgentJob?> CompleteJobAsync(Guid agentId, Guid jobId, JobCompleteRequest request)
     {
         var job = await _context.AgentJobs.FindAsync(jobId);
         if (job == null || job.Status != "Running") return null;
+
+        if (job.AgentId != agentId)
+        {
+            _logger.LogWarning("Agent {AgentId} attempted to complete job {JobId} owned by {OwnerId}", 
+                agentId, jobId, job.AgentId);
+            return null;
+        }
 
         job.Status = request.Success ? "Completed" : "Failed";
         job.Progress = 100;
@@ -212,15 +237,12 @@ public class AgentService : IAgentService
         job.ErrorMessage = request.ErrorMessage;
         job.CompletedAt = DateTime.UtcNow;
 
-        if (job.AgentId.HasValue)
+        var agent = await _context.Agents.FindAsync(agentId);
+        if (agent != null)
         {
-            var agent = await _context.Agents.FindAsync(job.AgentId.Value);
-            if (agent != null)
-            {
-                agent.CurrentRunningJobs = Math.Max(0, agent.CurrentRunningJobs - 1);
-                if (agent.CurrentRunningJobs == 0 && agent.Status == "Busy")
-                    agent.Status = "Online";
-            }
+            agent.CurrentRunningJobs = Math.Max(0, agent.CurrentRunningJobs - 1);
+            if (agent.CurrentRunningJobs == 0 && agent.Status == "Busy")
+                agent.Status = "Online";
         }
 
         await _context.SaveChangesAsync();

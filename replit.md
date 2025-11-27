@@ -35,6 +35,38 @@ The platform is built as a monorepo leveraging ASP.NET Core 9.0, following core 
 **Development Environment:**
 - A `dev.sh` script facilitates local development by starting both API (port 5056) and Frontend (port 5000). Swagger UI is available for API documentation.
 
+## Recent Changes (November 27, 2025)
+- **Implemented Pull-Based Agent System for job execution in private networks**:
+  - Created `Agent` model with fields: Id, Name, Description, Status, ApiKey, MaxParallelJobs, CurrentRunningJobs, HostName, IpAddress, OperatingSystem, AgentVersion, CreatedAt, LastHeartbeat, CreatedByUserId, CreatedByUserEmail
+  - Created `AgentJob` model with fields: Id, AgentId, JobType, JobName, Description, Parameters (JSON), Status, Progress, Result (JSON), ErrorMessage, Priority, CreatedAt, StartedAt, CompletedAt, CreatedByUserId, CreatedByUserEmail
+  - Implemented `AgentService` with full CRUD operations for agents and jobs
+  - Added `AgentStatusService` background service to monitor agent heartbeats and mark offline agents
+  - API endpoints for agents:
+    - `GET /api/agents` - List all agents (requires Azure AD auth)
+    - `POST /api/agents` - Register new agent (requires Azure AD auth)
+    - `DELETE /api/agents/{id}` - Delete agent (requires Azure AD auth)
+    - `POST /api/agents/{id}/heartbeat` - Agent heartbeat (requires API key auth)
+    - `GET /api/agents/{id}/jobs` - Get pending jobs for agent (requires API key auth)
+    - `POST /api/agents/{id}/jobs/{jobId}/claim` - Claim a job (requires API key auth)
+    - `POST /api/agents/{id}/jobs/{jobId}/progress` - Update job progress (requires API key auth)
+    - `POST /api/agents/{id}/jobs/{jobId}/complete` - Complete a job (requires API key auth)
+  - API endpoints for jobs:
+    - `GET /api/jobs` - List all jobs (requires Azure AD auth)
+    - `POST /api/jobs` - Create new job (requires Azure AD auth)
+    - `POST /api/jobs/{id}/cancel` - Cancel a job (requires Azure AD auth)
+  - Enhanced security:
+    - Agent endpoints use API key authentication via X-Agent-ApiKey header
+    - Job claiming uses atomic database updates with ExecuteUpdateAsync for concurrency protection
+    - Ownership validation ensures agents can only update their own jobs
+    - Capacity checks prevent agents from exceeding MaxParallelJobs
+  - Updated Hosted Agents page with:
+    - Statistics cards showing Total, Online, Busy, and Offline agent counts
+    - Tabs for Agents and Jobs views
+    - Agent cards with status, capacity, and heartbeat information
+    - Register Agent modal with API key display after creation
+    - Create Job modal with agent selection and parameters
+    - Real-time refresh functionality
+
 ## Recent Changes (November 26, 2025)
 - **Implemented Activity Logging feature**:
   - Created `ActivityLog` model with fields: UserId, UserEmail, TaskName, TaskType, SubscriptionName, SubscriptionId, ResourceName, SubResourceName, Status, ItemsProcessed, ErrorMessage, StartTime, EndTime
