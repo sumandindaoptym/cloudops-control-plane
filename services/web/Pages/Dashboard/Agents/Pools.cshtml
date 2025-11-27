@@ -5,104 +5,102 @@
     Layout = "Shared/_DashboardLayout";
 }
 
-<div class="page-header">
-    <div class="header-content">
-        <div class="header-title-section">
-            <h1 class="page-title">
-                <i class="fas fa-layer-group"></i>
-                Agent Pools
-            </h1>
-            <p class="page-subtitle">Manage agent pools to organize and group your self-hosted agents</p>
-        </div>
-        <div class="header-actions">
-            <button type="button" class="btn btn-primary" onclick="showCreatePoolModal()">
-                <i class="fas fa-plus"></i>
-                <span>New pool</span>
-            </button>
-        </div>
-    </div>
-</div>
-
-<div class="pools-container">
-    <div class="pools-table-wrapper">
-        <table class="pools-table">
-            <thead>
-                <tr>
-                    <th class="col-name">Name</th>
-                    <th class="col-type">Type</th>
-                    <th class="col-agents">Agents</th>
-                    <th class="col-online">Online</th>
-                    <th class="col-jobs">Running Jobs</th>
-                    <th class="col-actions"></th>
-                </tr>
-            </thead>
-            <tbody id="poolsTableBody">
-                <tr class="loading-row">
-                    <td colspan="6">
-                        <div class="loading-spinner">
-                            <i class="fas fa-spinner fa-spin"></i>
-                            <span>Loading pools...</span>
-                        </div>
-                    </td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
-    
-    <div id="emptyState" class="empty-state" style="display: none;">
-        <div class="empty-icon">
-            <i class="fas fa-layer-group"></i>
-        </div>
-        <h3>No agent pools yet</h3>
-        <p>Create your first agent pool to organize and manage your self-hosted agents.</p>
-        <button type="button" class="btn btn-primary" onclick="showCreatePoolModal()">
-            <i class="fas fa-plus"></i>
-            Create pool
-        </button>
-    </div>
-</div>
-
-<div id="createPoolModal" class="modal">
-    <div class="modal-backdrop" onclick="closeCreatePoolModal()"></div>
-    <div class="modal-content">
-        <div class="modal-header">
-            <h2>Create Agent Pool</h2>
-            <button type="button" class="modal-close" onclick="closeCreatePoolModal()">
-                <i class="fas fa-times"></i>
-            </button>
-        </div>
-        <div class="modal-body">
-            <form id="createPoolForm" onsubmit="createPool(event)">
-                <div class="form-group">
-                    <label for="poolName">Pool name <span class="required">*</span></label>
-                    <input type="text" id="poolName" name="name" required
-                           placeholder="e.g., Production-Agents" maxlength="100">
-                    <span class="form-hint">A unique name for the agent pool</span>
-                </div>
-                <div class="form-group">
-                    <label for="poolDescription">Description</label>
-                    <textarea id="poolDescription" name="description" rows="3"
-                              placeholder="Describe the purpose of this pool..." maxlength="500"></textarea>
-                </div>
-                <div class="form-group">
-                    <label class="checkbox-label">
-                        <input type="checkbox" id="poolIsHosted" name="isHosted">
-                        <span class="checkbox-text">Hosted pool (managed by the organization)</span>
-                    </label>
-                </div>
-                <div class="form-actions">
-                    <button type="button" class="btn btn-secondary" onclick="closeCreatePoolModal()">Cancel</button>
-                    <button type="submit" class="btn btn-primary" id="createPoolBtn">
-                        <span class="btn-text">Create pool</span>
-                        <i class="fas fa-spinner fa-spin btn-spinner" style="display: none;"></i>
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
 <style>
+    /* Animated Button Styles - Like Purge DLQ */
+    .animated-btn {
+        height: 45px;
+        border-radius: 45px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        background-color: hsl(220, 15%, 9%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition-duration: 0.3s;
+        overflow: hidden;
+        position: relative;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    }
+
+    .animated-btn:not(.animated-btn-large) {
+        width: 130px;
+    }
+
+    .animated-btn-large {
+        width: 160px;
+        height: 48px;
+    }
+
+    .animated-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    .icon-container {
+        width: 35px;
+        height: 35px;
+        background: linear-gradient(135deg, hsl(175, 70%, 55%), hsl(175, 70%, 45%));
+        border-radius: 50px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        z-index: 2;
+        transition-duration: 0.3s;
+    }
+
+    .animated-btn-large .icon-container {
+        width: 38px;
+        height: 38px;
+    }
+
+    .icon-container .icon {
+        color: hsl(220, 15%, 6%);
+        font-size: 1rem;
+    }
+
+    .animated-btn .btn-text {
+        height: 100%;
+        width: 80px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        z-index: 1;
+        transition-duration: 0.3s;
+        font-size: 0.9rem;
+        font-weight: 500;
+    }
+
+    .animated-btn-large .btn-text {
+        width: 105px;
+        font-size: 0.95rem;
+        font-weight: 600;
+    }
+
+    .animated-btn:not(:disabled):hover .icon-container {
+        width: 95px;
+        transition-duration: 0.3s;
+    }
+
+    .animated-btn-large:not(:disabled):hover .icon-container {
+        width: 150px;
+        transition-duration: 0.3s;
+    }
+
+    .animated-btn:not(:disabled):hover .btn-text {
+        transform: translate(10px);
+        width: 0;
+        font-size: 0;
+        transition-duration: 0.3s;
+    }
+
+    .animated-btn:not(:disabled):active {
+        transform: scale(0.95);
+        transition-duration: 0.3s;
+    }
+
+    /* Core Page Styles */
     .page-header {
         margin-bottom: 2rem;
         padding-bottom: 1.5rem;
@@ -517,6 +515,106 @@
         margin-left: 0.25rem;
     }
 </style>
+
+<div class="page-header">
+    <div class="header-content">
+        <div class="header-title-section">
+            <h1 class="page-title">
+                <i class="fas fa-layer-group"></i>
+                Agent Pools
+            </h1>
+            <p class="page-subtitle">Manage agent pools to organize and group your self-hosted agents</p>
+        </div>
+        <div class="header-actions">
+            <button type="button" class="animated-btn" onclick="showCreatePoolModal()">
+                <div class="icon-container">
+                    <i class="fas fa-plus icon"></i>
+                </div>
+                <span class="btn-text">New pool</span>
+            </button>
+        </div>
+    </div>
+</div>
+
+<div class="pools-container">
+    <div class="pools-table-wrapper">
+        <table class="pools-table">
+            <thead>
+                <tr>
+                    <th class="col-name">Name</th>
+                    <th class="col-type">Type</th>
+                    <th class="col-agents">Agents</th>
+                    <th class="col-online">Online</th>
+                    <th class="col-jobs">Running Jobs</th>
+                    <th class="col-actions"></th>
+                </tr>
+            </thead>
+            <tbody id="poolsTableBody">
+                <tr class="loading-row">
+                    <td colspan="6">
+                        <div class="loading-spinner">
+                            <i class="fas fa-spinner fa-spin"></i>
+                            <span>Loading pools...</span>
+                        </div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    
+    <div id="emptyState" class="empty-state" style="display: none;">
+        <div class="empty-icon">
+            <i class="fas fa-layer-group"></i>
+        </div>
+        <h3>No agent pools yet</h3>
+        <p>Create your first agent pool to organize and manage your self-hosted agents.</p>
+        <button type="button" class="btn btn-primary" onclick="showCreatePoolModal()">
+            <i class="fas fa-plus"></i>
+            Create pool
+        </button>
+    </div>
+</div>
+
+<div id="createPoolModal" class="modal">
+    <div class="modal-backdrop" onclick="closeCreatePoolModal()"></div>
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Create Agent Pool</h2>
+            <button type="button" class="modal-close" onclick="closeCreatePoolModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <form id="createPoolForm" onsubmit="createPool(event)">
+                <div class="form-group">
+                    <label for="poolName">Pool name <span class="required">*</span></label>
+                    <input type="text" id="poolName" name="name" required
+                           placeholder="e.g., Production-Agents" maxlength="100">
+                    <span class="form-hint">A unique name for the agent pool</span>
+                </div>
+                <div class="form-group">
+                    <label for="poolDescription">Description</label>
+                    <textarea id="poolDescription" name="description" rows="3"
+                              placeholder="Describe the purpose of this pool..." maxlength="500"></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="poolIsHosted" name="isHosted">
+                        <span class="checkbox-text">Hosted pool (managed by the organization)</span>
+                    </label>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeCreatePoolModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary" id="createPoolBtn">
+                        <span class="btn-text">Create pool</span>
+                        <i class="fas fa-spinner fa-spin btn-spinner" style="display: none;"></i>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {

@@ -5,332 +5,102 @@
     Layout = "Shared/_DashboardLayout";
 }
 
-<div class="page-header">
-    <div class="breadcrumb">
-        <a href="/Dashboard/Agents/Pools" class="breadcrumb-link">
-            <i class="fas fa-layer-group"></i>
-            Agent Pools
-        </a>
-        <i class="fas fa-chevron-right breadcrumb-separator"></i>
-        <span id="poolNameBreadcrumb" class="breadcrumb-current">Loading...</span>
-    </div>
-</div>
-
-<div class="pool-header">
-    <div class="pool-info">
-        <h1 id="poolName" class="pool-title">Loading...</h1>
-        <p id="poolDescription" class="pool-description"></p>
-    </div>
-    <div class="pool-actions">
-        <button type="button" class="btn btn-primary" onclick="showAddAgentModal()">
-            <i class="fas fa-plus"></i>
-            <span>New agent</span>
-        </button>
-    </div>
-</div>
-
-<div class="tabs">
-    <button class="tab active" data-tab="agents" onclick="switchTab('agents')">
-        <i class="fas fa-server"></i>
-        Agents
-        <span id="agentCount" class="tab-badge">0</span>
-    </button>
-    <button class="tab" data-tab="jobs" onclick="switchTab('jobs')">
-        <i class="fas fa-tasks"></i>
-        Jobs
-        <span id="jobCount" class="tab-badge">0</span>
-    </button>
-    <button class="tab" data-tab="settings" onclick="switchTab('settings')">
-        <i class="fas fa-cog"></i>
-        Settings
-    </button>
-</div>
-
-<div id="agentsTab" class="tab-content active">
-    <div class="agents-toolbar">
-        <div class="search-box">
-            <i class="fas fa-search"></i>
-            <input type="text" id="agentSearch" placeholder="Filter agents..." oninput="filterAgents()">
-        </div>
-        <div class="filter-labels" id="labelFilters"></div>
-    </div>
-    
-    <div id="agentsList" class="agents-list">
-        <div class="loading-state">
-            <i class="fas fa-spinner fa-spin"></i>
-            <span>Loading agents...</span>
-        </div>
-    </div>
-</div>
-
-<div id="jobsTab" class="tab-content">
-    <div class="jobs-toolbar">
-        <button type="button" class="btn btn-primary" onclick="showCreateJobModal()">
-            <i class="fas fa-plus"></i>
-            Queue new job
-        </button>
-    </div>
-    
-    <div id="jobsList" class="jobs-list">
-        <div class="loading-state">
-            <i class="fas fa-spinner fa-spin"></i>
-            <span>Loading jobs...</span>
-        </div>
-    </div>
-</div>
-
-<div id="settingsTab" class="tab-content">
-    <div class="settings-section">
-        <h3>Pool Settings</h3>
-        <form id="poolSettingsForm" onsubmit="updatePoolSettings(event)">
-            <div class="form-group">
-                <label for="editPoolName">Pool name</label>
-                <input type="text" id="editPoolName" name="name" required maxlength="100">
-            </div>
-            <div class="form-group">
-                <label for="editPoolDescription">Description</label>
-                <textarea id="editPoolDescription" name="description" rows="3" maxlength="500"></textarea>
-            </div>
-            <div class="form-actions">
-                <button type="submit" class="btn btn-primary">Save changes</button>
-            </div>
-        </form>
-    </div>
-    
-    <div class="settings-section danger-zone">
-        <h3>Danger Zone</h3>
-        <div class="danger-action">
-            <div>
-                <strong>Delete this pool</strong>
-                <p>Once deleted, the pool cannot be recovered. Agents will be unassigned but not deleted.</p>
-            </div>
-            <button type="button" class="btn btn-danger" onclick="deleteCurrentPool()">Delete pool</button>
-        </div>
-    </div>
-</div>
-
-<div id="addAgentModal" class="modal">
-    <div class="modal-backdrop" onclick="closeAddAgentModal()"></div>
-    <div class="modal-content modal-lg">
-        <div class="modal-header">
-            <h2>Register New Agent</h2>
-            <button type="button" class="modal-close" onclick="closeAddAgentModal()">
-                <i class="fas fa-times"></i>
-            </button>
-        </div>
-        <div class="modal-body">
-            <form id="addAgentForm" onsubmit="createAgent(event)">
-                <div class="form-section">
-                    <h4>Agent Information</h4>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="agentName">Agent name <span class="required">*</span></label>
-                            <input type="text" id="agentName" name="name" required
-                                   placeholder="e.g., agent-prod-01" maxlength="100">
-                        </div>
-                        <div class="form-group">
-                            <label for="maxParallelJobs">Max parallel jobs</label>
-                            <input type="number" id="maxParallelJobs" name="maxParallelJobs" 
-                                   value="2" min="1" max="10">
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label for="agentDescription">Description</label>
-                        <textarea id="agentDescription" name="description" rows="2"
-                                  placeholder="Optional description..." maxlength="500"></textarea>
-                    </div>
-                </div>
-                
-                <div class="form-section">
-                    <h4>Machine Information</h4>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="hostName">Hostname</label>
-                            <input type="text" id="hostName" name="hostName" placeholder="e.g., server-01.corp.local">
-                        </div>
-                        <div class="form-group">
-                            <label for="ipAddress">IP Address</label>
-                            <input type="text" id="ipAddress" name="ipAddress" placeholder="e.g., 192.168.1.100">
-                        </div>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="operatingSystem">Operating System</label>
-                            <input type="text" id="operatingSystem" name="operatingSystem" placeholder="e.g., Windows Server 2022">
-                        </div>
-                        <div class="form-group">
-                            <label for="architecture">Architecture</label>
-                            <select id="architecture" name="architecture">
-                                <option value="">Select...</option>
-                                <option value="x64">x64 (64-bit)</option>
-                                <option value="x86">x86 (32-bit)</option>
-                                <option value="arm64">ARM64</option>
-                                <option value="arm">ARM</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="cpuModel">CPU Model</label>
-                            <input type="text" id="cpuModel" name="cpuModel" placeholder="e.g., Intel Xeon E5-2680">
-                        </div>
-                        <div class="form-group">
-                            <label for="logicalCores">Logical Cores</label>
-                            <input type="number" id="logicalCores" name="logicalCores" min="1" max="256" placeholder="e.g., 8">
-                        </div>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="memoryGb">Memory (GB)</label>
-                            <input type="number" id="memoryGb" name="memoryGb" min="0.5" max="4096" step="0.5" placeholder="e.g., 16">
-                        </div>
-                        <div class="form-group">
-                            <label for="diskSpaceGb">Disk Space (GB)</label>
-                            <input type="number" id="diskSpaceGb" name="diskSpaceGb" min="1" max="100000" placeholder="e.g., 500">
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="form-section">
-                    <h4>Labels</h4>
-                    <p class="form-hint">Add labels to identify capabilities and filter agents</p>
-                    <div id="labelsContainer" class="labels-input-container">
-                        <div class="label-input-row">
-                            <input type="text" placeholder="Label name" class="label-name">
-                            <input type="text" placeholder="Value (optional)" class="label-value">
-                            <button type="button" class="btn-icon" onclick="removeLabelRow(this)">
-                                <i class="fas fa-times"></i>
-                            </button>
-                        </div>
-                    </div>
-                    <button type="button" class="btn btn-sm btn-secondary" onclick="addLabelRow()">
-                        <i class="fas fa-plus"></i>
-                        Add label
-                    </button>
-                </div>
-                
-                <div class="form-actions">
-                    <button type="button" class="btn btn-secondary" onclick="closeAddAgentModal()">Cancel</button>
-                    <button type="submit" class="btn btn-primary" id="createAgentBtn">
-                        <span class="btn-text">Register agent</span>
-                        <i class="fas fa-spinner fa-spin btn-spinner" style="display: none;"></i>
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-<div id="agentApiKeyModal" class="modal">
-    <div class="modal-backdrop" onclick="closeAgentApiKeyModal()"></div>
-    <div class="modal-content">
-        <div class="modal-header">
-            <h2>Agent Registered Successfully</h2>
-            <button type="button" class="modal-close" onclick="closeAgentApiKeyModal()">
-                <i class="fas fa-times"></i>
-            </button>
-        </div>
-        <div class="modal-body">
-            <div class="success-message">
-                <i class="fas fa-check-circle"></i>
-                <span>Agent has been registered and is ready to connect.</span>
-            </div>
-            <div class="api-key-section">
-                <label>API Key</label>
-                <p class="api-key-warning">
-                    <i class="fas fa-exclamation-triangle"></i>
-                    Copy this key now. It will not be shown again!
-                </p>
-                <div class="api-key-display">
-                    <code id="agentApiKey"></code>
-                    <button type="button" class="btn-icon" onclick="copyApiKey()">
-                        <i class="fas fa-copy"></i>
-                    </button>
-                </div>
-            </div>
-            <div class="form-actions">
-                <button type="button" class="btn btn-primary" onclick="closeAgentApiKeyModal()">Done</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div id="agentDetailModal" class="modal">
-    <div class="modal-backdrop" onclick="closeAgentDetailModal()"></div>
-    <div class="modal-content modal-lg">
-        <div class="modal-header">
-            <h2 id="agentDetailName">Agent Details</h2>
-            <button type="button" class="modal-close" onclick="closeAgentDetailModal()">
-                <i class="fas fa-times"></i>
-            </button>
-        </div>
-        <div class="modal-body" id="agentDetailContent">
-        </div>
-    </div>
-</div>
-
-<div id="createJobModal" class="modal">
-    <div class="modal-backdrop" onclick="closeCreateJobModal()"></div>
-    <div class="modal-content">
-        <div class="modal-header">
-            <h2>Queue New Job</h2>
-            <button type="button" class="modal-close" onclick="closeCreateJobModal()">
-                <i class="fas fa-times"></i>
-            </button>
-        </div>
-        <div class="modal-body">
-            <form id="createJobForm" onsubmit="createJob(event)">
-                <div class="form-group">
-                    <label for="jobType">Job Type <span class="required">*</span></label>
-                    <select id="jobType" name="jobType" required>
-                        <option value="">Select type...</option>
-                        <option value="DbBackup">Database Backup</option>
-                        <option value="DbRestore">Database Restore</option>
-                        <option value="FileSync">File Sync</option>
-                        <option value="Script">Script Execution</option>
-                        <option value="Custom">Custom</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="jobName">Job Name <span class="required">*</span></label>
-                    <input type="text" id="jobName" name="jobName" required
-                           placeholder="e.g., Daily backup - Production DB" maxlength="200">
-                </div>
-                <div class="form-group">
-                    <label for="jobDescription">Description</label>
-                    <textarea id="jobDescription" name="description" rows="2"
-                              placeholder="Optional description..." maxlength="1000"></textarea>
-                </div>
-                <div class="form-group">
-                    <label for="targetAgent">Target Agent</label>
-                    <select id="targetAgent" name="targetAgent">
-                        <option value="">Any available agent in pool</option>
-                    </select>
-                    <span class="form-hint">Leave empty to let any agent pick up the job</span>
-                </div>
-                <div class="form-group">
-                    <label for="jobPriority">Priority</label>
-                    <select id="jobPriority" name="priority">
-                        <option value="0">Normal</option>
-                        <option value="1">High</option>
-                        <option value="2">Critical</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="jobParameters">Parameters (JSON)</label>
-                    <textarea id="jobParameters" name="parameters" rows="4"
-                              placeholder='{"key": "value"}'></textarea>
-                </div>
-                <div class="form-actions">
-                    <button type="button" class="btn btn-secondary" onclick="closeCreateJobModal()">Cancel</button>
-                    <button type="submit" class="btn btn-primary" id="createJobBtn">Queue job</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
 <style>
+    /* Animated Button Styles - Like Purge DLQ */
+    .animated-btn {
+        height: 45px;
+        border-radius: 45px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        background-color: hsl(220, 15%, 9%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition-duration: 0.3s;
+        overflow: hidden;
+        position: relative;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    }
+
+    .animated-btn:not(.animated-btn-large) {
+        width: 140px;
+    }
+
+    .animated-btn-large {
+        width: 170px;
+        height: 48px;
+    }
+
+    .animated-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    .icon-container {
+        width: 35px;
+        height: 35px;
+        background: linear-gradient(135deg, hsl(175, 70%, 55%), hsl(175, 70%, 45%));
+        border-radius: 50px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        z-index: 2;
+        transition-duration: 0.3s;
+    }
+
+    .animated-btn-large .icon-container {
+        width: 38px;
+        height: 38px;
+    }
+
+    .icon-container .icon {
+        color: hsl(220, 15%, 6%);
+        font-size: 1rem;
+    }
+
+    .animated-btn .btn-text {
+        height: 100%;
+        width: 90px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        z-index: 1;
+        transition-duration: 0.3s;
+        font-size: 0.9rem;
+        font-weight: 500;
+    }
+
+    .animated-btn-large .btn-text {
+        width: 115px;
+        font-size: 0.95rem;
+        font-weight: 600;
+    }
+
+    .animated-btn:not(:disabled):hover .icon-container {
+        width: 105px;
+        transition-duration: 0.3s;
+    }
+
+    .animated-btn-large:not(:disabled):hover .icon-container {
+        width: 160px;
+        transition-duration: 0.3s;
+    }
+
+    .animated-btn:not(:disabled):hover .btn-text {
+        transform: translate(10px);
+        width: 0;
+        font-size: 0;
+        transition-duration: 0.3s;
+    }
+
+    .animated-btn:not(:disabled):active {
+        transform: scale(0.95);
+        transition-duration: 0.3s;
+    }
+
+    /* Core Page Styles */
     .breadcrumb {
         display: flex;
         align-items: center;
@@ -1094,6 +864,336 @@
         padding: 1.5rem;
     }
 </style>
+
+<div class="page-header">
+    <div class="breadcrumb">
+        <a href="/Dashboard/Agents/Pools" class="breadcrumb-link">
+            <i class="fas fa-layer-group"></i>
+            Agent Pools
+        </a>
+        <i class="fas fa-chevron-right breadcrumb-separator"></i>
+        <span id="poolNameBreadcrumb" class="breadcrumb-current">Loading...</span>
+    </div>
+</div>
+
+<div class="pool-header">
+    <div class="pool-info">
+        <h1 id="poolName" class="pool-title">Loading...</h1>
+        <p id="poolDescription" class="pool-description"></p>
+    </div>
+    <div class="pool-actions">
+        <button type="button" class="animated-btn" onclick="showAddAgentModal()">
+            <div class="icon-container">
+                <i class="fas fa-plus icon"></i>
+            </div>
+            <span class="btn-text">New agent</span>
+        </button>
+    </div>
+</div>
+
+<div class="tabs">
+    <button class="tab active" data-tab="agents" onclick="switchTab('agents')">
+        <i class="fas fa-server"></i>
+        Agents
+        <span id="agentCount" class="tab-badge">0</span>
+    </button>
+    <button class="tab" data-tab="jobs" onclick="switchTab('jobs')">
+        <i class="fas fa-tasks"></i>
+        Jobs
+        <span id="jobCount" class="tab-badge">0</span>
+    </button>
+    <button class="tab" data-tab="settings" onclick="switchTab('settings')">
+        <i class="fas fa-cog"></i>
+        Settings
+    </button>
+</div>
+
+<div id="agentsTab" class="tab-content active">
+    <div class="agents-toolbar">
+        <div class="search-box">
+            <i class="fas fa-search"></i>
+            <input type="text" id="agentSearch" placeholder="Filter agents..." oninput="filterAgents()">
+        </div>
+        <div class="filter-labels" id="labelFilters"></div>
+    </div>
+    
+    <div id="agentsList" class="agents-list">
+        <div class="loading-state">
+            <i class="fas fa-spinner fa-spin"></i>
+            <span>Loading agents...</span>
+        </div>
+    </div>
+</div>
+
+<div id="jobsTab" class="tab-content">
+    <div class="jobs-toolbar">
+        <button type="button" class="animated-btn animated-btn-large" onclick="showCreateJobModal()">
+            <div class="icon-container">
+                <i class="fas fa-plus icon"></i>
+            </div>
+            <span class="btn-text">Queue new job</span>
+        </button>
+    </div>
+    
+    <div id="jobsList" class="jobs-list">
+        <div class="loading-state">
+            <i class="fas fa-spinner fa-spin"></i>
+            <span>Loading jobs...</span>
+        </div>
+    </div>
+</div>
+
+<div id="settingsTab" class="tab-content">
+    <div class="settings-section">
+        <h3>Pool Settings</h3>
+        <form id="poolSettingsForm" onsubmit="updatePoolSettings(event)">
+            <div class="form-group">
+                <label for="editPoolName">Pool name</label>
+                <input type="text" id="editPoolName" name="name" required maxlength="100">
+            </div>
+            <div class="form-group">
+                <label for="editPoolDescription">Description</label>
+                <textarea id="editPoolDescription" name="description" rows="3" maxlength="500"></textarea>
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Save changes</button>
+            </div>
+        </form>
+    </div>
+    
+    <div class="settings-section danger-zone">
+        <h3>Danger Zone</h3>
+        <div class="danger-action">
+            <div>
+                <strong>Delete this pool</strong>
+                <p>Once deleted, the pool cannot be recovered. Agents will be unassigned but not deleted.</p>
+            </div>
+            <button type="button" class="btn btn-danger" onclick="deleteCurrentPool()">Delete pool</button>
+        </div>
+    </div>
+</div>
+
+<div id="addAgentModal" class="modal">
+    <div class="modal-backdrop" onclick="closeAddAgentModal()"></div>
+    <div class="modal-content modal-lg">
+        <div class="modal-header">
+            <h2>Register New Agent</h2>
+            <button type="button" class="modal-close" onclick="closeAddAgentModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <form id="addAgentForm" onsubmit="createAgent(event)">
+                <div class="form-section">
+                    <h4>Agent Information</h4>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="agentName">Agent name <span class="required">*</span></label>
+                            <input type="text" id="agentName" name="name" required
+                                   placeholder="e.g., agent-prod-01" maxlength="100">
+                        </div>
+                        <div class="form-group">
+                            <label for="maxParallelJobs">Max parallel jobs</label>
+                            <input type="number" id="maxParallelJobs" name="maxParallelJobs" 
+                                   value="2" min="1" max="10">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="agentDescription">Description</label>
+                        <textarea id="agentDescription" name="description" rows="2"
+                                  placeholder="Optional description..." maxlength="500"></textarea>
+                    </div>
+                </div>
+                
+                <div class="form-section">
+                    <h4>Machine Information</h4>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="hostName">Hostname</label>
+                            <input type="text" id="hostName" name="hostName" placeholder="e.g., server-01.corp.local">
+                        </div>
+                        <div class="form-group">
+                            <label for="ipAddress">IP Address</label>
+                            <input type="text" id="ipAddress" name="ipAddress" placeholder="e.g., 192.168.1.100">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="operatingSystem">Operating System</label>
+                            <input type="text" id="operatingSystem" name="operatingSystem" placeholder="e.g., Windows Server 2022">
+                        </div>
+                        <div class="form-group">
+                            <label for="architecture">Architecture</label>
+                            <select id="architecture" name="architecture">
+                                <option value="">Select...</option>
+                                <option value="x64">x64 (64-bit)</option>
+                                <option value="x86">x86 (32-bit)</option>
+                                <option value="arm64">ARM64</option>
+                                <option value="arm">ARM</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="cpuModel">CPU Model</label>
+                            <input type="text" id="cpuModel" name="cpuModel" placeholder="e.g., Intel Xeon E5-2680">
+                        </div>
+                        <div class="form-group">
+                            <label for="logicalCores">Logical Cores</label>
+                            <input type="number" id="logicalCores" name="logicalCores" min="1" max="256" placeholder="e.g., 8">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="memoryGb">Memory (GB)</label>
+                            <input type="number" id="memoryGb" name="memoryGb" min="0.5" max="4096" step="0.5" placeholder="e.g., 16">
+                        </div>
+                        <div class="form-group">
+                            <label for="diskSpaceGb">Disk Space (GB)</label>
+                            <input type="number" id="diskSpaceGb" name="diskSpaceGb" min="1" max="100000" placeholder="e.g., 500">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-section">
+                    <h4>Labels</h4>
+                    <p class="form-hint">Add labels to identify capabilities and filter agents</p>
+                    <div id="labelsContainer" class="labels-input-container">
+                        <div class="label-input-row">
+                            <input type="text" placeholder="Label name" class="label-name">
+                            <input type="text" placeholder="Value (optional)" class="label-value">
+                            <button type="button" class="btn-icon" onclick="removeLabelRow(this)">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-sm btn-secondary" onclick="addLabelRow()">
+                        <i class="fas fa-plus"></i>
+                        Add label
+                    </button>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeAddAgentModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary" id="createAgentBtn">
+                        <span class="btn-text">Register agent</span>
+                        <i class="fas fa-spinner fa-spin btn-spinner" style="display: none;"></i>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div id="agentApiKeyModal" class="modal">
+    <div class="modal-backdrop" onclick="closeAgentApiKeyModal()"></div>
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Agent Registered Successfully</h2>
+            <button type="button" class="modal-close" onclick="closeAgentApiKeyModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <div class="success-message">
+                <i class="fas fa-check-circle"></i>
+                <span>Agent has been registered and is ready to connect.</span>
+            </div>
+            <div class="api-key-section">
+                <label>API Key</label>
+                <p class="api-key-warning">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    Copy this key now. It will not be shown again!
+                </p>
+                <div class="api-key-display">
+                    <code id="agentApiKey"></code>
+                    <button type="button" class="btn-icon" onclick="copyApiKey()">
+                        <i class="fas fa-copy"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="form-actions">
+                <button type="button" class="btn btn-primary" onclick="closeAgentApiKeyModal()">Done</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="agentDetailModal" class="modal">
+    <div class="modal-backdrop" onclick="closeAgentDetailModal()"></div>
+    <div class="modal-content modal-lg">
+        <div class="modal-header">
+            <h2 id="agentDetailName">Agent Details</h2>
+            <button type="button" class="modal-close" onclick="closeAgentDetailModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body" id="agentDetailContent">
+        </div>
+    </div>
+</div>
+
+<div id="createJobModal" class="modal">
+    <div class="modal-backdrop" onclick="closeCreateJobModal()"></div>
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Queue New Job</h2>
+            <button type="button" class="modal-close" onclick="closeCreateJobModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <form id="createJobForm" onsubmit="createJob(event)">
+                <div class="form-group">
+                    <label for="jobType">Job Type <span class="required">*</span></label>
+                    <select id="jobType" name="jobType" required>
+                        <option value="">Select type...</option>
+                        <option value="DbBackup">Database Backup</option>
+                        <option value="DbRestore">Database Restore</option>
+                        <option value="FileSync">File Sync</option>
+                        <option value="Script">Script Execution</option>
+                        <option value="Custom">Custom</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="jobName">Job Name <span class="required">*</span></label>
+                    <input type="text" id="jobName" name="jobName" required
+                           placeholder="e.g., Daily backup - Production DB" maxlength="200">
+                </div>
+                <div class="form-group">
+                    <label for="jobDescription">Description</label>
+                    <textarea id="jobDescription" name="description" rows="2"
+                              placeholder="Optional description..." maxlength="1000"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="targetAgent">Target Agent</label>
+                    <select id="targetAgent" name="targetAgent">
+                        <option value="">Any available agent in pool</option>
+                    </select>
+                    <span class="form-hint">Leave empty to let any agent pick up the job</span>
+                </div>
+                <div class="form-group">
+                    <label for="jobPriority">Priority</label>
+                    <select id="jobPriority" name="priority">
+                        <option value="0">Normal</option>
+                        <option value="1">High</option>
+                        <option value="2">Critical</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="jobParameters">Parameters (JSON)</label>
+                    <textarea id="jobParameters" name="parameters" rows="4"
+                              placeholder='{"key": "value"}'></textarea>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeCreateJobModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary" id="createJobBtn">Queue job</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 
 <script>
     let currentPoolId = null;
