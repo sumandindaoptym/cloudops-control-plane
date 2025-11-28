@@ -189,7 +189,7 @@
                 </div>
                 <div class="info">
                     <div class="name">Linux x64</div>
-                    <div class="meta">cloudops-agent-linux-x64.tar.gz</div>
+                    <div class="meta">Self-contained binary (.tar.gz)</div>
                 </div>
                 <i class="fas fa-download download-icon"></i>
             </a>
@@ -200,7 +200,29 @@
                 </div>
                 <div class="info">
                     <div class="name">Windows x64</div>
-                    <div class="meta">cloudops-agent-windows-x64.zip</div>
+                    <div class="meta">Self-contained binary (.zip)</div>
+                </div>
+                <i class="fas fa-download download-icon"></i>
+            </a>
+            
+            <a href="/downloads/install-linux.sh" class="download-card">
+                <div class="icon">
+                    <i class="fas fa-terminal"></i>
+                </div>
+                <div class="info">
+                    <div class="name">Linux Install Script</div>
+                    <div class="meta">install.sh (systemd service)</div>
+                </div>
+                <i class="fas fa-download download-icon"></i>
+            </a>
+            
+            <a href="/downloads/install-windows.ps1" class="download-card">
+                <div class="icon">
+                    <i class="fas fa-terminal"></i>
+                </div>
+                <div class="info">
+                    <div class="name">Windows Install Script</div>
+                    <div class="meta">install.ps1 (Windows service)</div>
                 </div>
                 <i class="fas fa-download download-icon"></i>
             </a>
@@ -210,7 +232,7 @@
             <h5>Quick Install (Linux)</h5>
             <code>tar -xzf cloudops-agent-linux-x64.tar.gz && sudo ./install.sh</code>
             <h5>Quick Install (Windows PowerShell - as Admin)</h5>
-            <code>Expand-Archive cloudops-agent-windows-x64.zip -DestinationPath . ; .\install.ps1</code>
+            <code>Expand-Archive cloudops-agent-windows-x64.zip -DestinationPath .\agent ; cd agent ; .\install.ps1</code>
         </div>
     </div>
     
