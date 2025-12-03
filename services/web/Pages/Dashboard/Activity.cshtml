@@ -253,6 +253,31 @@
         padding: 1rem;
         font-size: 0.9rem;
     }
+    
+    .btn-view-logs-small {
+        background: transparent;
+        border: 1px solid hsl(175, 70%, 50%);
+        color: hsl(175, 70%, 55%);
+        padding: 0.35rem 0.75rem;
+        border-radius: 4px;
+        font-size: 0.75rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        white-space: nowrap;
+    }
+    
+    .btn-view-logs-small:hover {
+        background: hsl(175, 70%, 50%);
+        color: hsl(220, 15%, 9%);
+    }
+    
+    .badge-cancelled {
+        background: hsl(220, 15%, 25%);
+        color: hsl(220, 10%, 70%);
+    }
 </style>
 
 <h1 class="page-title">Activity Log</h1>
@@ -320,6 +345,7 @@
                     <th>Start Time</th>
                     <th>End Time</th>
                     <th>Duration</th>
+                    <th>Actions</th>
                 </tr>
             </thead>
             <tbody id="activityTableBody">
@@ -541,6 +567,13 @@
             const statusClass = getStatusClass(activity.status);
             const duration = calculateDuration(activity.startTime, activity.endTime);
             
+            let actionsHtml = '-';
+            if (activity.isActuallyRunning && activity.purgeId) {
+                actionsHtml = '<button class="btn-view-logs-small" onclick="openLogsModal(\'' + activity.purgeId + '\', \'' + escapeHtml(activity.resourceName) + '\')">' +
+                    '<i class="fas fa-terminal"></i> View Logs' +
+                '</button>';
+            }
+            
             row.innerHTML = '<td>' + escapeHtml(activity.taskName) + '</td>' +
                 '<td>' + escapeHtml(activity.taskType) + '</td>' +
                 '<td title="' + escapeHtml(activity.subscriptionId) + '">' + escapeHtml(activity.subscriptionName) + '</td>' +
@@ -550,7 +583,8 @@
                 '<td>' + (activity.itemsProcessed !== null ? activity.itemsProcessed : '-') + '</td>' +
                 '<td>' + formatDateTime(activity.startTime) + '</td>' +
                 '<td>' + (activity.endTime ? formatDateTime(activity.endTime) : '-') + '</td>' +
-                '<td>' + duration + '</td>';
+                '<td>' + duration + '</td>' +
+                '<td>' + actionsHtml + '</td>';
             
             if (activity.errorMessage) {
                 row.title = activity.errorMessage;
@@ -566,6 +600,7 @@
             case 'Running': return 'badge-warning';
             case 'Completed': return 'badge-success';
             case 'Failed': return 'badge-danger';
+            case 'Cancelled': return 'badge-cancelled';
             default: return 'badge-secondary';
         }
     }

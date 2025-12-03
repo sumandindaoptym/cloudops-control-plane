@@ -453,6 +453,7 @@ app.MapHub<PurgeHub>("/hubs/purge");
 app.MapGet("/api/activities", async (
     HttpContext httpContext,
     IActivityService activityService,
+    IRunningJobsTracker jobsTracker,
     ILogger<Program> logger) =>
 {
     if (!httpContext.User.Identity?.IsAuthenticated ?? true)
@@ -467,7 +468,45 @@ app.MapGet("/api/activities", async (
             ?? string.Empty;
         
         var activities = await activityService.GetUserActivitiesAsync(userId);
-        return Results.Ok(activities);
+        
+        var reconciledActivities = new List<object>();
+        foreach (var activity in activities)
+        {
+            var isActuallyRunning = activity.Status == "Running" && jobsTracker.IsActivityRunning(activity.Id);
+            var wasAborted = activity.Status == "Running" && !jobsTracker.IsActivityRunning(activity.Id);
+            
+            if (wasAborted)
+            {
+                await activityService.UpdateActivityAsync(activity.Id, "Cancelled", null, "Job was interrupted (server restart or unexpected termination)");
+                activity.Status = "Cancelled";
+                activity.EndTime = DateTime.UtcNow;
+                activity.ErrorMessage = "Job was interrupted (server restart or unexpected termination)";
+            }
+            
+            var runningJob = isActuallyRunning ? jobsTracker.GetJobByActivityId(activity.Id) : null;
+            
+            reconciledActivities.Add(new 
+            {
+                activity.Id,
+                activity.UserId,
+                activity.UserEmail,
+                activity.TaskName,
+                activity.TaskType,
+                activity.SubscriptionName,
+                activity.SubscriptionId,
+                activity.ResourceName,
+                activity.SubResourceName,
+                activity.Status,
+                activity.ItemsProcessed,
+                activity.ErrorMessage,
+                activity.StartTime,
+                activity.EndTime,
+                IsActuallyRunning = isActuallyRunning,
+                PurgeId = runningJob?.PurgeId
+            });
+        }
+        
+        return Results.Ok(reconciledActivities);
     }
     catch (Exception ex)
     {

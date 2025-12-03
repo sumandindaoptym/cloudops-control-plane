@@ -33,8 +33,10 @@ public interface IRunningJobsTracker
     void UpdateJob(string purgeId, Action<RunningPurgeJob> update);
     void RemoveJob(string purgeId);
     RunningPurgeJob? GetJob(string purgeId);
+    RunningPurgeJob? GetJobByActivityId(Guid activityId);
     IEnumerable<RunningPurgeJob> GetJobsForUser(string userId);
     IEnumerable<RunningPurgeJob> GetAllRunningJobs();
+    bool IsActivityRunning(Guid activityId);
     void AddLog(string purgeId, string message, string level = "Info");
     IEnumerable<LogEntry> GetLogs(string purgeId, int skip = 0);
 }
@@ -65,6 +67,17 @@ public class RunningJobsTracker : IRunningJobsTracker
     public RunningPurgeJob? GetJob(string purgeId)
     {
         return _jobs.TryGetValue(purgeId, out var job) ? job : null;
+    }
+
+    public RunningPurgeJob? GetJobByActivityId(Guid activityId)
+    {
+        return _jobs.Values.FirstOrDefault(j => j.ActivityId == activityId);
+    }
+
+    public bool IsActivityRunning(Guid activityId)
+    {
+        var job = _jobs.Values.FirstOrDefault(j => j.ActivityId == activityId);
+        return job != null && (job.Status == "Running" || job.Status == "Starting");
     }
 
     public IEnumerable<RunningPurgeJob> GetJobsForUser(string userId)
