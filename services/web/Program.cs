@@ -118,6 +118,7 @@ builder.Services.AddScoped<IActivityService, ActivityService>();
 builder.Services.AddScoped<IAgentService, AgentService>();
 
 builder.Services.AddSingleton<IPurgeQueue, PurgeQueue>();
+builder.Services.AddSingleton<IRunningJobsTracker, RunningJobsTracker>();
 builder.Services.AddHostedService<PurgeBackgroundService>();
 builder.Services.AddHostedService<AgentStatusService>();
 
@@ -475,6 +476,99 @@ app.MapGet("/api/activities", async (
             new { error = "Failed to fetch activities" },
             statusCode: 500
         );
+    }
+}).RequireAuthorization();
+
+app.MapGet("/api/running-jobs", (
+    HttpContext httpContext,
+    IRunningJobsTracker jobsTracker,
+    ILogger<Program> logger) =>
+{
+    if (!httpContext.User.Identity?.IsAuthenticated ?? true)
+    {
+        return Results.Unauthorized();
+    }
+
+    try
+    {
+        var userId = httpContext.User.FindFirst("http://schemas.microsoft.com/identity/claims/objectidentifier")?.Value 
+            ?? httpContext.User.FindFirst("oid")?.Value 
+            ?? string.Empty;
+        
+        var jobs = jobsTracker.GetJobsForUser(userId).Select(j => new
+        {
+            j.PurgeId,
+            j.ActivityId,
+            j.NamespaceName,
+            j.EntityName,
+            j.EntityType,
+            j.TopicSubscriptionName,
+            j.Status,
+            j.Progress,
+            j.TotalPurged,
+            j.StartTime,
+            j.EndTime,
+            LogCount = j.Logs.Count
+        });
+        
+        return Results.Ok(jobs);
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "Error fetching running jobs");
+        return Results.Json(new { error = "Failed to fetch running jobs" }, statusCode: 500);
+    }
+}).RequireAuthorization();
+
+app.MapGet("/api/running-jobs/{purgeId}/logs", (
+    string purgeId,
+    HttpContext httpContext,
+    IRunningJobsTracker jobsTracker,
+    int? skip,
+    ILogger<Program> logger) =>
+{
+    if (!httpContext.User.Identity?.IsAuthenticated ?? true)
+    {
+        return Results.Unauthorized();
+    }
+
+    try
+    {
+        var userId = httpContext.User.FindFirst("http://schemas.microsoft.com/identity/claims/objectidentifier")?.Value 
+            ?? httpContext.User.FindFirst("oid")?.Value 
+            ?? string.Empty;
+            
+        var job = jobsTracker.GetJob(purgeId);
+        if (job == null)
+        {
+            return Results.NotFound(new { error = "Job not found" });
+        }
+        
+        if (job.UserId != userId)
+        {
+            return Results.Forbid();
+        }
+        
+        var logs = jobsTracker.GetLogs(purgeId, skip ?? 0).Select(l => new
+        {
+            l.Timestamp,
+            l.Message,
+            l.Level
+        });
+        
+        return Results.Ok(new
+        {
+            job.PurgeId,
+            job.Status,
+            job.Progress,
+            job.TotalPurged,
+            Logs = logs
+        });
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "Error fetching job logs");
+        return Results.Json(new { error = "Failed to fetch job logs" }, statusCode: 500);
     }
 }).RequireAuthorization();
 

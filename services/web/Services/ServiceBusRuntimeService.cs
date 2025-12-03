@@ -335,6 +335,149 @@ public class ServiceBusRuntimeService : IServiceBusRuntimeService
         }
     }
 
+    public async Task<PurgeResult> PurgeDlqFastAsync(
+        PurgeRequest request, 
+        string accessToken, 
+        Func<string, int, int, Task> onProgress,
+        CancellationToken cancellationToken = default)
+    {
+        var stopwatch = Stopwatch.StartNew();
+        int totalPurged = 0;
+        const int batchSize = 250;
+        const int maxConcurrentCompletions = 10;
+
+        try
+        {
+            var fullyQualifiedNamespace = $"{request.Namespace}.servicebus.windows.net";
+            var credential = new AccessTokenCredential(accessToken);
+
+            await onProgress($"Connecting to namespace: {request.Namespace}", 5, 0);
+
+            var clientOptions = new ServiceBusClientOptions
+            {
+                TransportType = ServiceBusTransportType.AmqpTcp,
+                RetryOptions = new ServiceBusRetryOptions
+                {
+                    MaxRetries = 3,
+                    Delay = TimeSpan.FromMilliseconds(500),
+                    MaxDelay = TimeSpan.FromSeconds(5),
+                    Mode = ServiceBusRetryMode.Exponential
+                }
+            };
+
+            await using var client = new ServiceBusClient(fullyQualifiedNamespace, credential, clientOptions);
+
+            var receiverOptions = new ServiceBusReceiverOptions
+            {
+                SubQueue = SubQueue.DeadLetter,
+                ReceiveMode = ServiceBusReceiveMode.ReceiveAndDelete,
+                PrefetchCount = batchSize
+            };
+
+            ServiceBusReceiver receiver;
+            string entityDescription;
+            
+            if (request.EntityType.Equals("queue", StringComparison.OrdinalIgnoreCase))
+            {
+                receiver = client.CreateReceiver(request.EntityName, receiverOptions);
+                entityDescription = $"queue: {request.EntityName}";
+            }
+            else if (request.EntityType.Equals("topic", StringComparison.OrdinalIgnoreCase))
+            {
+                if (string.IsNullOrEmpty(request.TopicSubscriptionName))
+                {
+                    throw new ArgumentException("Topic subscription name is required");
+                }
+                receiver = client.CreateReceiver(request.EntityName, request.TopicSubscriptionName, receiverOptions);
+                entityDescription = $"topic: {request.EntityName}/{request.TopicSubscriptionName}";
+            }
+            else
+            {
+                throw new ArgumentException($"Invalid entity type: {request.EntityType}");
+            }
+
+            await onProgress($"Opening DLQ receiver for {entityDescription}", 10, 0);
+
+            await using (receiver)
+            {
+                await onProgress("Starting fast purge (ReceiveAndDelete mode)...", 15, 0);
+
+                int emptyBatchCount = 0;
+                const int maxEmptyBatches = 2;
+                var lastProgressUpdate = DateTime.UtcNow;
+                const double progressUpdateInterval = 0.5;
+
+                while (emptyBatchCount < maxEmptyBatches && !cancellationToken.IsCancellationRequested)
+                {
+                    var messages = await receiver.ReceiveMessagesAsync(
+                        maxMessages: batchSize,
+                        maxWaitTime: TimeSpan.FromSeconds(3),
+                        cancellationToken: cancellationToken);
+
+                    if (messages == null || messages.Count == 0)
+                    {
+                        emptyBatchCount++;
+                        await onProgress($"No messages received (attempt {emptyBatchCount}/{maxEmptyBatches})", 
+                            Math.Min(95, 20 + (totalPurged / 50)), totalPurged);
+                        continue;
+                    }
+
+                    emptyBatchCount = 0;
+                    totalPurged += messages.Count;
+
+                    var now = DateTime.UtcNow;
+                    if ((now - lastProgressUpdate).TotalSeconds >= progressUpdateInterval || messages.Count >= 100)
+                    {
+                        var rate = totalPurged / Math.Max(1, stopwatch.Elapsed.TotalSeconds);
+                        var progress = Math.Min(90, 20 + (totalPurged / 100));
+                        await onProgress($"Purged {messages.Count} messages (total: {totalPurged}, rate: {rate:F0}/s)", 
+                            progress, totalPurged);
+                        lastProgressUpdate = now;
+                    }
+                }
+            }
+
+            stopwatch.Stop();
+            var finalRate = totalPurged / Math.Max(1, stopwatch.Elapsed.TotalSeconds);
+            _logger.LogInformation("Fast purge completed. Total: {TotalPurged} in {Elapsed:F1}s ({Rate:F0}/s)", 
+                totalPurged, stopwatch.Elapsed.TotalSeconds, finalRate);
+
+            return new PurgeResult
+            {
+                Success = true,
+                TotalPurged = totalPurged,
+                ElapsedSeconds = (int)stopwatch.Elapsed.TotalSeconds,
+                Logs = new List<string>()
+            };
+        }
+        catch (OperationCanceledException)
+        {
+            stopwatch.Stop();
+            return new PurgeResult
+            {
+                Success = false,
+                TotalPurged = totalPurged,
+                ElapsedSeconds = (int)stopwatch.Elapsed.TotalSeconds,
+                Error = "Operation was cancelled",
+                Logs = new List<string>()
+            };
+        }
+        catch (Exception ex)
+        {
+            stopwatch.Stop();
+            _logger.LogError(ex, "Error during fast purge");
+
+            return new PurgeResult
+            {
+                Success = false,
+                TotalPurged = totalPurged,
+                ElapsedSeconds = (int)stopwatch.Elapsed.TotalSeconds,
+                Error = ex.Message,
+                Logs = new List<string>()
+            };
+        }
+    }
+
     private class AccessTokenCredential : TokenCredential
     {
         private readonly string _accessToken;

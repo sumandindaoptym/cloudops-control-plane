@@ -5,8 +5,267 @@
     Layout = "Shared/_DashboardLayout";
 }
 
+<style>
+    .running-jobs-section {
+        background: linear-gradient(135deg, hsl(175, 50%, 15%), hsl(175, 40%, 10%));
+        border: 1px solid hsl(175, 50%, 25%);
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+    }
+    
+    .running-jobs-header {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-bottom: 1rem;
+    }
+    
+    .running-jobs-header h3 {
+        margin: 0;
+        font-size: 1.1rem;
+        color: hsl(175, 70%, 55%);
+    }
+    
+    .running-badge {
+        background: hsl(175, 70%, 50%);
+        color: hsl(220, 15%, 9%);
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        animation: pulse 2s ease-in-out infinite;
+    }
+    
+    @@keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.7; }
+    }
+    
+    .running-job-card {
+        background: hsl(220, 15%, 12%);
+        border: 1px solid hsl(220, 15%, 20%);
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 0.75rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+    
+    .running-job-card:last-child {
+        margin-bottom: 0;
+    }
+    
+    .job-info {
+        flex: 1;
+    }
+    
+    .job-title {
+        font-weight: 600;
+        color: var(--foreground);
+        margin-bottom: 0.25rem;
+    }
+    
+    .job-meta {
+        font-size: 0.8rem;
+        color: var(--muted-foreground);
+    }
+    
+    .job-progress-container {
+        width: 120px;
+    }
+    
+    .job-progress-bar {
+        height: 6px;
+        background: hsl(220, 15%, 20%);
+        border-radius: 3px;
+        overflow: hidden;
+        margin-bottom: 0.25rem;
+    }
+    
+    .job-progress-fill {
+        height: 100%;
+        background: linear-gradient(90deg, hsl(175, 70%, 45%), hsl(175, 70%, 55%));
+        transition: width 0.3s ease;
+    }
+    
+    .job-progress-text {
+        font-size: 0.7rem;
+        color: var(--muted-foreground);
+        text-align: center;
+    }
+    
+    .btn-view-logs {
+        background: transparent;
+        border: 1px solid hsl(175, 70%, 50%);
+        color: hsl(175, 70%, 55%);
+        padding: 0.5rem 1rem;
+        border-radius: 6px;
+        font-size: 0.8rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .btn-view-logs:hover {
+        background: hsl(175, 70%, 50%);
+        color: hsl(220, 15%, 9%);
+    }
+    
+    .logs-modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.7);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.3s ease;
+    }
+    
+    .logs-modal-overlay.active {
+        opacity: 1;
+        visibility: visible;
+    }
+    
+    .logs-modal {
+        background: hsl(220, 15%, 9%);
+        border: 1px solid hsl(220, 15%, 18%);
+        border-radius: 12px;
+        width: 90%;
+        max-width: 900px;
+        max-height: 80vh;
+        display: flex;
+        flex-direction: column;
+        transform: scale(0.95);
+        transition: transform 0.3s ease;
+    }
+    
+    .logs-modal-overlay.active .logs-modal {
+        transform: scale(1);
+    }
+    
+    .logs-modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem 1.5rem;
+        border-bottom: 1px solid hsl(220, 15%, 18%);
+    }
+    
+    .logs-modal-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: var(--foreground);
+    }
+    
+    .logs-modal-close {
+        background: transparent;
+        border: none;
+        color: var(--muted-foreground);
+        font-size: 1.5rem;
+        cursor: pointer;
+        padding: 0.25rem;
+        line-height: 1;
+    }
+    
+    .logs-modal-close:hover {
+        color: var(--foreground);
+    }
+    
+    .logs-modal-body {
+        flex: 1;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .logs-status-bar {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 0.75rem 1.5rem;
+        background: hsl(220, 15%, 7%);
+        border-bottom: 1px solid hsl(220, 15%, 15%);
+        font-size: 0.85rem;
+    }
+    
+    .logs-status-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: var(--muted-foreground);
+    }
+    
+    .logs-status-item strong {
+        color: var(--foreground);
+    }
+    
+    .logs-container {
+        flex: 1;
+        overflow-y: auto;
+        padding: 1rem;
+        font-family: 'Monaco', 'Menlo', 'Consolas', monospace;
+        font-size: 0.8rem;
+        background: hsl(220, 15%, 6%);
+    }
+    
+    .log-entry {
+        padding: 0.25rem 0;
+        border-bottom: 1px solid hsl(220, 15%, 12%);
+        display: flex;
+        gap: 0.75rem;
+    }
+    
+    .log-entry:last-child {
+        border-bottom: none;
+    }
+    
+    .log-timestamp {
+        color: hsl(175, 50%, 50%);
+        flex-shrink: 0;
+    }
+    
+    .log-message {
+        color: hsl(220, 10%, 80%);
+        word-break: break-word;
+    }
+    
+    .log-entry.error .log-message {
+        color: hsl(0, 70%, 60%);
+    }
+    
+    .log-entry.warning .log-message {
+        color: hsl(40, 70%, 60%);
+    }
+    
+    .no-running-jobs {
+        text-align: center;
+        color: var(--muted-foreground);
+        padding: 1rem;
+        font-size: 0.9rem;
+    }
+</style>
+
 <h1 class="page-title">Activity Log</h1>
 <p class="page-description">Track your operations and actions across Azure resources</p>
+
+<div id="runningJobsSection" class="running-jobs-section" style="display: none;">
+    <div class="running-jobs-header">
+        <i class="fas fa-spinner fa-spin" style="color: hsl(175, 70%, 55%);"></i>
+        <h3>Running Jobs</h3>
+        <span class="running-badge" id="runningJobsCount">0</span>
+    </div>
+    <div id="runningJobsList"></div>
+</div>
 
 <div class="grid grid-4" style="margin-bottom: 2rem;">
     <div class="stat-card">
@@ -69,9 +328,159 @@
     </div>
 </div>
 
+<div id="logsModal" class="logs-modal-overlay">
+    <div class="logs-modal">
+        <div class="logs-modal-header">
+            <span class="logs-modal-title" id="logsModalTitle">Job Logs</span>
+            <button class="logs-modal-close" onclick="closeLogsModal()">&times;</button>
+        </div>
+        <div class="logs-modal-body">
+            <div class="logs-status-bar">
+                <div class="logs-status-item">
+                    <span>Status:</span>
+                    <strong id="logsJobStatus">-</strong>
+                </div>
+                <div class="logs-status-item">
+                    <span>Progress:</span>
+                    <strong id="logsJobProgress">-</strong>
+                </div>
+                <div class="logs-status-item">
+                    <span>Messages Purged:</span>
+                    <strong id="logsJobPurged">-</strong>
+                </div>
+            </div>
+            <div class="logs-container" id="logsContent">
+                <div style="text-align: center; color: var(--muted-foreground); padding: 2rem;">
+                    Loading logs...
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
 <script>
     let activities = [];
+    let currentPurgeId = null;
+    let logsPollingInterval = null;
+    let runningJobsPollingInterval = null;
+    
+    async function loadRunningJobs() {
+        try {
+            const response = await fetch('/api/running-jobs');
+            if (!response.ok) return;
+            
+            const jobs = await response.json();
+            const section = document.getElementById('runningJobsSection');
+            const list = document.getElementById('runningJobsList');
+            const countBadge = document.getElementById('runningJobsCount');
+            
+            const activeJobs = jobs.filter(j => j.status === 'Running' || j.status === 'Starting');
+            
+            if (activeJobs.length === 0) {
+                section.style.display = 'none';
+                return;
+            }
+            
+            section.style.display = 'block';
+            countBadge.textContent = activeJobs.length;
+            
+            list.innerHTML = activeJobs.map(job => {
+                const entityDisplay = job.topicSubscriptionName 
+                    ? job.entityName + '/' + job.topicSubscriptionName
+                    : job.entityName;
+                
+                return '<div class="running-job-card">' +
+                    '<div class="job-info">' +
+                        '<div class="job-title">Purge DLQ - ' + escapeHtml(job.namespaceName) + '</div>' +
+                        '<div class="job-meta">' + escapeHtml(job.entityType) + ': ' + escapeHtml(entityDisplay) + '</div>' +
+                    '</div>' +
+                    '<div class="job-progress-container">' +
+                        '<div class="job-progress-bar">' +
+                            '<div class="job-progress-fill" style="width: ' + job.progress + '%;"></div>' +
+                        '</div>' +
+                        '<div class="job-progress-text">' + job.totalPurged + ' purged</div>' +
+                    '</div>' +
+                    '<button class="btn-view-logs" onclick="openLogsModal(\'' + job.purgeId + '\', \'' + escapeHtml(job.namespaceName) + '\')">' +
+                        '<i class="fas fa-terminal"></i> View Logs' +
+                    '</button>' +
+                '</div>';
+            }).join('');
+            
+        } catch (error) {
+            console.error('Error loading running jobs:', error);
+        }
+    }
+    
+    function openLogsModal(purgeId, namespaceName) {
+        currentPurgeId = purgeId;
+        document.getElementById('logsModalTitle').textContent = 'Logs - ' + namespaceName;
+        document.getElementById('logsModal').classList.add('active');
+        document.getElementById('logsContent').innerHTML = '<div style="text-align: center; color: var(--muted-foreground); padding: 2rem;">Loading logs...</div>';
+        
+        fetchLogs();
+        logsPollingInterval = setInterval(fetchLogs, 1000);
+    }
+    
+    function closeLogsModal() {
+        document.getElementById('logsModal').classList.remove('active');
+        currentPurgeId = null;
+        if (logsPollingInterval) {
+            clearInterval(logsPollingInterval);
+            logsPollingInterval = null;
+        }
+    }
+    
+    async function fetchLogs() {
+        if (!currentPurgeId) return;
+        
+        try {
+            const response = await fetch('/api/running-jobs/' + currentPurgeId + '/logs');
+            if (!response.ok) {
+                if (response.status === 404) {
+                    document.getElementById('logsContent').innerHTML = '<div style="text-align: center; color: var(--muted-foreground); padding: 2rem;">Job logs no longer available</div>';
+                    if (logsPollingInterval) {
+                        clearInterval(logsPollingInterval);
+                        logsPollingInterval = null;
+                    }
+                }
+                return;
+            }
+            
+            const data = await response.json();
+            
+            document.getElementById('logsJobStatus').textContent = data.status;
+            document.getElementById('logsJobProgress').textContent = data.progress + '%';
+            document.getElementById('logsJobPurged').textContent = data.totalPurged;
+            
+            const logsContainer = document.getElementById('logsContent');
+            if (data.logs && data.logs.length > 0) {
+                logsContainer.innerHTML = data.logs.map(function(log) {
+                    var levelClass = log.level === 'Error' ? 'error' : (log.level === 'Warning' ? 'warning' : '');
+                    var timestamp = new Date(log.timestamp).toLocaleTimeString();
+                    return '<div class="log-entry ' + levelClass + '">' +
+                        '<span class="log-timestamp">[' + timestamp + ']</span>' +
+                        '<span class="log-message">' + escapeHtml(log.message) + '</span>' +
+                    '</div>';
+                }).join('');
+                logsContainer.scrollTop = logsContainer.scrollHeight;
+            } else {
+                logsContainer.innerHTML = '<div style="text-align: center; color: var(--muted-foreground); padding: 2rem;">Waiting for logs...</div>';
+            }
+            
+            if (data.status === 'Completed' || data.status === 'Failed') {
+                if (logsPollingInterval) {
+                    clearInterval(logsPollingInterval);
+                    logsPollingInterval = null;
+                }
+                loadActivities();
+                loadRunningJobs();
+            }
+            
+        } catch (error) {
+            console.error('Error fetching logs:', error);
+        }
+    }
     
     async function loadActivities() {
         const loadingState = document.getElementById('loadingState');
@@ -207,13 +616,21 @@
     document.getElementById('refreshBtn').addEventListener('click', function() {
         const icon = this.querySelector('i');
         icon.classList.add('fa-spin');
-        loadActivities().finally(function() {
+        Promise.all([loadActivities(), loadRunningJobs()]).finally(function() {
             icon.classList.remove('fa-spin');
         });
     });
     
+    document.getElementById('logsModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeLogsModal();
+        }
+    });
+    
     loadActivities();
+    loadRunningJobs();
     
     setInterval(loadActivities, 30000);
+    runningJobsPollingInterval = setInterval(loadRunningJobs, 3000);
 </script>
 }
